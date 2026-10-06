@@ -30,7 +30,7 @@
         <h1>L’élevage,<br><em>bien rythmé.</em></h1>
         <p>Planifiez les actions de vos montures, suivez leur progression et laissez les minuteurs vous rappeler quand revenir.</p>
         <div class="actions">
-          <a class="button primary" id="hero-download-windows" href="https://github.com/kihw/monture-minute/releases/latest" target="_blank" rel="noreferrer"><span>↓</span> Windows (.exe) <span class="arrow">↗</span></a>
+          <a class="button primary" id="hero-download-windows" href="https://github.com/kihw/monture-minute/releases/latest/download/MontureMinute-Setup.exe"><span>↓</span> Windows (.exe) <span class="arrow">↗</span></a>
           <a class="button secondary" id="hero-download" href="https://github.com/kihw/monture-minute/releases/latest/download/app-release.apk">↓ Android (.apk)</a>
           <a class="button secondary" href="https://github.com/kihw/monture-minute/releases/latest" target="_blank" rel="noreferrer">Notes de version</a>
         </div>
@@ -58,7 +58,7 @@
     </section>
     <section class="wrap download" id="telecharger">
       <div><h2>Prêt à reprendre l’élevage ?</h2><p>Les dernières versions Windows et Android sont toujours disponibles ici.</p></div>
-      <div><div class="actions"><a class="button primary" id="download-button-windows" href="https://github.com/kihw/monture-minute/releases/latest" target="_blank" rel="noreferrer">↓ Windows (.exe)</a><a class="button secondary" id="download-button" href="https://github.com/kihw/monture-minute/releases/latest/download/app-release.apk">↓ Android (.apk)</a><a class="button secondary" href="https://github.com/kihw/monture-minute/releases" target="_blank" rel="noreferrer">Historique</a></div><div class="download-info" id="download-info">Windows · Android</div></div>
+      <div><div class="actions"><a class="button primary" id="download-button-windows" href="https://github.com/kihw/monture-minute/releases/latest/download/MontureMinute-Setup.exe">↓ Windows (.exe)</a><a class="button secondary" id="download-button" href="https://github.com/kihw/monture-minute/releases/latest/download/app-release.apk">↓ Android (.apk)</a><a class="button secondary" href="https://github.com/kihw/monture-minute/releases" target="_blank" rel="noreferrer">Historique</a></div><div class="download-info" id="download-info">Windows · Android</div></div>
     </section>
   </main>
   <footer class="wrap footer"><span>Outil communautaire non officiel, non affilié à Ankama.</span><span><a href="https://github.com/kihw/monture-minute/releases">Releases</a> · <a href="https://github.com/kihw/monture-minute">Code source</a></span></footer>
@@ -67,14 +67,13 @@
       .then(response => { if (!response.ok) throw new Error('release unavailable'); return response.json(); })
       .then(release => {
         const apk = release.assets.find(asset => asset.name.toLowerCase().endsWith('.apk'));
-        const exe = release.assets.find(asset => /setup.*\.exe$/i.test(asset.name)) || release.assets.find(asset => asset.name.toLowerCase().endsWith('.exe'));
+        const exe = release.assets.find(asset => asset.name === 'MontureMinute-Setup.exe') || release.assets.find(asset => asset.name.toLowerCase().endsWith('.exe'));
         const parts = [];
         if (apk) {
           document.querySelectorAll('#hero-download,#download-button').forEach(link => link.href = apk.browser_download_url);
           parts.push(`Android ${(apk.size / 1024 / 1024).toFixed(1)} Mo`);
         }
         if (exe) {
-          document.querySelectorAll('#hero-download-windows,#download-button-windows').forEach(link => { link.href = exe.browser_download_url; link.removeAttribute('target'); link.removeAttribute('rel'); });
           parts.push(`Windows ${(exe.size / 1024 / 1024).toFixed(1)} Mo`);
         }
         if (parts.length) document.getElementById('download-info').textContent = parts.join(' · ');

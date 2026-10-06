@@ -64,7 +64,11 @@
     },
     "nsis": {
       "oneClick": false,
-      "allowToChangeInstallationDirectory": true
+      "allowToChangeInstallationDirectory": true,
+      "artifactName": "MontureMinute-Setup.${ext}"
+    },
+    "portable": {
+      "artifactName": "MontureMinute-Portable.${ext}"
     },
     "directories": {
       "output": "release"
