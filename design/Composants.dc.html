@@ -1,0 +1,226 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&display=swap">
+  <style>
+    body { margin: 0; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; }
+    a { color: #a855f7; } a:hover { color: #c084fc; }
+    .num { font-family: 'Chakra Petch', 'Segoe UI', sans-serif; font-variant-numeric: tabular-nums; font-weight: 600; }
+    .zone { font-family: 'Chakra Petch', 'Segoe UI', sans-serif; font-size: 10px; font-weight: 700;
+            letter-spacing: .16em; text-transform: uppercase; color: #a6a6c0; }
+    .panel { background: #232336; border: 1px solid #34344f; border-radius: 10px; padding: 15px; }
+  </style>
+</helmet>
+
+<div style="width: 1000px; height: 880px; background: #14141f; color: #edeef5; padding: 20px; display: flex; flex-direction: column; gap: 14px; overflow: hidden;">
+
+  <div>
+    <div style="font-size: 17px; font-weight: 700;">Système visuel</div>
+    <div style="font-size: 12px; color: #9494b5; margin-top: 3px;">Tokens repris de <span class="num" style="color: #a6a6c0;">src/renderer/styles/global.css</span> · Chakra Petch pour les chiffres, Segoe UI pour le texte</div>
+  </div>
+
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+
+    <!-- Échelle typographique -->
+    <div class="panel">
+      <div class="zone" style="margin-bottom: 11px;">Échelle typographique</div>
+      <div style="display: flex; flex-direction: column; gap: 9px;">
+        <sc-for list="{{type}}" as="t" hint-placeholder-count="6">
+          <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 12px;">
+            <span style="{{t.style}}">{{t.sample}}</span>
+            <span class="num" style="font-size: 10px; color: #9494b5; white-space: nowrap;">{{t.meta}}</span>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+
+    <!-- Surfaces et texte -->
+    <div class="panel">
+      <div class="zone" style="margin-bottom: 11px;">Surfaces &amp; texte</div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 7px;">
+        <sc-for list="{{swatches}}" as="s" hint-placeholder-count="8">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span style="width: 26px; height: 26px; border-radius: 6px; background: {{s.hex}}; border: 1px solid #45456a; flex-shrink: 0;"></span>
+            <span style="min-width: 0;">
+              <span style="display: block; font-size: 11px; font-weight: 600;">{{s.name}}</span>
+              <span class="num" style="display: block; font-size: 10px; color: #9494b5;">{{s.hex}}</span>
+            </span>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </div>
+
+  <!-- Palette des jauges -->
+  <div class="panel">
+    <div class="zone" style="margin-bottom: 11px;">Palette des jauges — chaque statistique porte la couleur de la jauge qui l'alimente</div>
+    <div style="display: flex; gap: 9px;">
+      <sc-for list="{{gaugeColors}}" as="g" hint-placeholder-count="6">
+        <div style="flex: 1; background: #1a1a29; border: 1px solid #34344f; border-radius: 8px; padding: 10px; display: flex; flex-direction: column; gap: 7px;">
+          <div style="display: flex; align-items: center; gap: 7px;">
+            <span style="width: 26px; height: 26px; border-radius: 7px; background: {{g.hex}}; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="{{g.icon}}" stroke="#14141f" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </span>
+            <span style="font-size: 11px; font-weight: 700;">{{g.name}}</span>
+          </div>
+          <div class="num" style="font-size: 10px; color: #9494b5;">{{g.hex}}</div>
+          <div style="font-size: 10px; color: #a6a6c0; line-height: 1.4;">{{g.effect}}</div>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+
+  <div style="display: grid; grid-template-columns: 300px 1fr; gap: 14px; flex: 1; min-height: 0;">
+
+    <!-- États de jauge -->
+    <div class="panel">
+      <div class="zone" style="margin-bottom: 12px;">États de jauge</div>
+      <div style="display: flex; justify-content: space-around; align-items: flex-start;">
+        <sc-for list="{{states}}" as="s" hint-placeholder-count="3">
+          <div style="display: flex; flex-direction: column; align-items: center; gap: 7px;">
+            <div style="display: flex; align-items: center; gap: 5px;">
+              <span style="width: 8px; height: 8px; border-radius: 50%; border: 1.5px solid #a855f7; background: {{s.dot}};"></span>
+              <span style="font-size: 10px; font-weight: 700; color: {{s.nameColor}};">{{s.label}}</span>
+            </div>
+            <div style="{{s.barStyle}}">
+              <div style="position: absolute; left: 0; right: 0; bottom: 0; height: 64%; background: linear-gradient(to top, #a855f7aa, #a855f7);"></div>
+              <div style="position: absolute; left: 0; right: 0; bottom: 64%; height: 2px; background: rgba(255,255,255,.92);"></div>
+              <div style="position: absolute; left: 0; right: 0; bottom: 40%; height: 1px; background: rgba(255,255,255,.16);"></div>
+            </div>
+            <div style="font-size: 9px; color: #9494b5; text-align: center; max-width: 74px; line-height: 1.4;">{{s.note}}</div>
+          </div>
+        </sc-for>
+      </div>
+      <div style="margin-top: 13px; padding-top: 11px; border-top: 1px solid #34344f; font-size: 10px; color: #9494b5; line-height: 1.6;">
+        La pastille <span style="color: #a6a6c0;">pleine ou creuse</span> double la couleur : l'état actif reste lisible sans distinguer les teintes.
+      </div>
+    </div>
+
+    <!-- Contrôles -->
+    <div class="panel" style="display: flex; flex-direction: column; gap: 13px;">
+      <div class="zone">Contrôles</div>
+
+      <div style="display: flex; align-items: center; gap: 22px;">
+        <div>
+          <div style="font-size: 10px; color: #9494b5; margin-bottom: 6px;">Sélecteur de tier — un objet, pas quatre boutons</div>
+          <div style="display: flex; gap: 1px; background: #34344f; border: 1px solid #34344f; border-radius: 5px; overflow: hidden; height: 22px; width: 118px;">
+            <sc-for list="{{tierSegs}}" as="t" hint-placeholder-count="4">
+              <span style="{{t.style}}">{{t.label}}</span>
+            </sc-for>
+          </div>
+        </div>
+        <div>
+          <div style="font-size: 10px; color: #9494b5; margin-bottom: 6px;">Curseur — zone de saisie 18 px</div>
+          <div style="position: relative; width: 168px; height: 18px; display: flex; align-items: center;">
+            <span style="position: absolute; left: 0; right: 0; height: 6px; background: #2c2c44; border: 1px solid #34344f; border-radius: 3px;"></span>
+            <span style="position: absolute; left: 58%; width: 14px; height: 14px; border-radius: 50%; background: #a855f7; border: 2px solid #232336; box-shadow: 0 1px 3px rgba(0,0,0,.55);"></span>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div style="font-size: 10px; color: #9494b5; margin-bottom: 7px;">Boutons</div>
+        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+          <span style="background: #a855f7; color: #14141f; border-radius: 7px; padding: 7px 15px; font-size: 12px; font-weight: 700;">Ajouter au minuteur</span>
+          <span style="background: #1a1a29; border: 1px solid #34344f; color: #a6a6c0; border-radius: 7px; padding: 7px 15px; font-size: 12px; font-weight: 600;">Secondaire</span>
+          <span style="background: #fbbf24; color: #14141f; border-radius: 7px; padding: 7px 15px; font-size: 12px; font-weight: 700;">Pause</span>
+          <span style="background: transparent; border: 1px solid #f87171; color: #f87171; border-radius: 7px; padding: 7px 15px; font-size: 12px; font-weight: 600;">Supprimer</span>
+        </div>
+      </div>
+
+      <div>
+        <div style="font-size: 10px; color: #9494b5; margin-bottom: 7px;">Pastilles d'état</div>
+        <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+          <sc-for list="{{badges}}" as="b" hint-placeholder-count="4">
+            <span style="{{b.style}}">{{b.label}}</span>
+          </sc-for>
+        </div>
+      </div>
+
+      <div style="margin-top: auto; display: flex; gap: 10px;">
+        <div style="flex: 1; background: #1a1a29; border: 1px solid #34344f; border-left: 2px solid #38bdf8; border-radius: 7px; padding: 8px 11px;">
+          <div style="font-size: 11px; font-weight: 600; margin-bottom: 3px;">Ligne de statistique — accessible</div>
+          <div class="num" style="font-size: 10px; color: #9494b5;">9 040 → 20 000</div>
+        </div>
+        <div style="flex: 1; background: #1a1a29; border: 1px solid #34344f; border-left: 2px solid #34344f; border-radius: 7px; padding: 8px 11px; opacity: .55;">
+          <div style="font-size: 11px; font-weight: 600; margin-bottom: 3px;">Bloquée par la Sérénité</div>
+          <div class="num" style="font-size: 10px; color: #9494b5;">atténuée, jamais masquée</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+
+<script data-dc-script data-props='{"$preview":{"width":1000,"height":880}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const seg = (on) =>
+      'flex:1;display:flex;align-items:center;justify-content:center;height:100%;' +
+      "font-family:'Chakra Petch',sans-serif;font-variant-numeric:tabular-nums;font-size:10px;" +
+      (on ? 'font-weight:700;background:#a855f7;color:#14141f;' : 'font-weight:600;background:#1a1a29;color:#9494b5;');
+
+    const pill = (bg, bd, fg) =>
+      'font-size:9px;font-weight:700;letter-spacing:.05em;border-radius:999px;padding:2px 9px;' +
+      "font-family:'Chakra Petch',sans-serif;background:" + bg + ';border:1px solid ' + bd + ';color:' + fg + ';';
+
+    const bar = (border, glow) =>
+      'position:relative;width:46px;height:104px;background:#15151f;border-radius:7px;overflow:hidden;border:2px solid ' +
+      border + ';' + glow;
+
+    return {
+      type: [
+        { sample: '18min 30s', meta: 'Chakra Petch 700 · 34px', style: "font-family:'Chakra Petch',sans-serif;font-size:34px;font-weight:700;line-height:1;" },
+        { sample: '86 500', meta: 'Chakra Petch 600 · 14px', style: "font-family:'Chakra Petch',sans-serif;font-size:14px;font-weight:600;" },
+        { sample: 'Enclos — carburant', meta: 'Chakra Petch 700 · 10px · 0.16em', style: "font-family:'Chakra Petch',sans-serif;font-size:10px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#a6a6c0;" },
+        { sample: 'Sérénité', meta: 'Segoe UI 700 · 13px', style: 'font-size:13px;font-weight:700;' },
+        { sample: 'Texte courant de l’interface', meta: 'Segoe UI 400 · 12px', style: 'font-size:12px;' },
+        { sample: 'Annotation secondaire', meta: 'Segoe UI 400 · 10px · #9494b5', style: 'font-size:10px;color:#9494b5;' },
+      ],
+      swatches: [
+        { name: 'Fond', hex: '#14141f' },
+        { name: 'Barre d’app', hex: '#1b1b2c' },
+        { name: 'Carte', hex: '#232336' },
+        { name: 'Encart', hex: '#15151f' },
+        { name: 'Champ', hex: '#1a1a29' },
+        { name: 'Bordure', hex: '#34344f' },
+        { name: 'Texte', hex: '#edeef5' },
+        { name: 'Texte atténué', hex: '#9494b5' },
+      ],
+      gaugeColors: [
+        { name: 'Baffeur', hex: '#a855f7', icon: 'M5 12h14', effect: 'Sérénité −' },
+        { name: 'Caresseur', hex: '#e879f9', icon: 'M12 5v14M5 12h14', effect: 'Sérénité +' },
+        { name: 'Foudroyeur', hex: '#f5c518', icon: 'M13 2.5 5 13.5h6l-1 8 8-11h-6z', effect: 'Endurance' },
+        { name: 'Abreuvoir', hex: '#38bdf8', icon: 'M12 3.4c3.3 3.9 5.4 6.5 5.4 9.1a5.4 5.4 0 0 1-10.8 0c0-2.6 2.1-5.2 5.4-9.1z', effect: 'Maturité' },
+        { name: 'Dragofesse', hex: '#fb7185', icon: 'M12 20.4 4.9 13.3a4.3 4.3 0 0 1 6.1-6.1l1 1 1-1a4.3 4.3 0 0 1 6.1 6.1z', effect: 'Amour' },
+        { name: 'Mangeoire', hex: '#ff8c42', icon: 'm12 3.6 2.6 5.5 6 .9-4.3 4.2 1 6-5.3-2.8-5.3 2.8 1-6L3.4 10l6-.9z', effect: 'Expérience' },
+      ],
+      states: [
+        { label: 'Inactive', dot: 'transparent', nameColor: '#9494b5', barStyle: bar('#3d3d5c', ''), note: 'Bordure neutre' },
+        { label: 'Active', dot: '#a855f7', nameColor: '#edeef5', barStyle: bar('#a855f7', 'box-shadow:0 0 0 3px #a855f722;'), note: 'Halo + pastille pleine' },
+        { label: 'Glissement', dot: '#a855f7', nameColor: '#edeef5', barStyle: bar('#a855f7', 'box-shadow:0 0 0 3px #a855f744;'), note: 'Curseur ns-resize' },
+      ],
+      tierSegs: [
+        { label: 'T1', style: seg(false) },
+        { label: 'T2', style: seg(false) },
+        { label: 'T3', style: seg(true) },
+        { label: 'T4', style: seg(false) },
+      ],
+      badges: [
+        { label: 'ATTEIGNABLE', style: pill('#4ade8018', '#4ade8055', '#4ade80') },
+        { label: 'CARBURANT INSUFFISANT', style: pill('#f8717114', '#f8717144', '#f87171') },
+        { label: 'EN PAUSE', style: pill('#fbbf2418', '#fbbf2455', '#fbbf24') },
+        { label: '2 / 2 ACTIVES', style: pill('#15151f', '#34344f', '#a6a6c0') },
+      ],
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Monture Minute</string>
+    <string name="title_activity_main">Monture Minute</string>
+    <string name="package_name">com.community.dofusbreedingtool</string>
+    <string name="custom_url_scheme">com.community.dofusbreedingtool</string>
+</resources>

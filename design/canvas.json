@@ -1,0 +1,40 @@
+{
+  "artboards": [
+    { "file": "Enclos.dc.html", "x": 0, "y": 0, "w": 1200, "h": 800, "title": "Vue d'ensemble — 6 enclos" },
+    { "file": "Main.dc.html", "x": 1320, "y": 0, "w": 1200, "h": 800, "title": "Élevage — enclos 1" },
+    { "file": "Minuteurs.dc.html", "x": 2640, "y": 0, "w": 1200, "h": 800, "title": "Minuteurs" },
+    { "file": "Composants.dc.html", "x": 0, "y": 960, "w": 1000, "h": 880, "title": "Système visuel" },
+    { "file": "Compact.dc.html", "x": 1120, "y": 960, "w": 380, "h": 520, "title": "Mode compact" }
+  ],
+  "annotations": [
+    {
+      "id": "modele",
+      "x": 0,
+      "y": -230,
+      "w": 620,
+      "text": "6 enclos x 6 jauges = 36 jauges.\n\nImpossible de tout afficher en détail : il faut deux niveaux de lecture. Cette planche est le nouveau point d'entrée — un enclos par carte, ses 6 jauges en miniature, son échéance et ses alertes."
+    },
+    {
+      "id": "detail",
+      "x": 1320,
+      "y": -230,
+      "w": 620,
+      "text": "Le dashboard devient la vue DÉTAIL d'un enclos.\n\nLe bandeau ajouté sous la barre d'app montre les 6 enclos, leurs jauges actives (pastilles colorées) et leur compte à rebours — on change d'enclos sans quitter l'écran."
+    },
+    {
+      "id": "impact-code",
+      "x": 2640,
+      "y": -230,
+      "w": 600,
+      "text": "Impact sur le code (à valider avant de coder) :\n\nEnclosureGauges devient une liste d'enclos, chacun avec son id, son nom, ses 6 valeurs et ses jauges actives. La limite de 2 jauges devient 2 PAR enclos. Chaque minuteur porte l'id de son enclos."
+    },
+    {
+      "id": "note-compact",
+      "x": 1120,
+      "y": 1530,
+      "w": 380,
+      "text": "Le mode compact gagne 6 onglets : vert = enclos en activité, gris = inactif. On suit un enclos sans ouvrir la fenêtre principale."
+    }
+  ],
+  "launch": { "view": "canvas" }
+}
