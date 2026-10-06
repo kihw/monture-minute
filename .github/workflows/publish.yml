@@ -63,6 +63,24 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: gh release create "$GITHUB_REF_NAME" android/app/build/outputs/apk/release/app-release.apk --title "$GITHUB_REF_NAME" --generate-notes
 
+  build-windows:
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: build
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - name: Attach Windows build to release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "$GITHUB_REF_NAME" release/*.exe --clobber
+
   deploy:
     if: github.ref == 'refs/heads/main'
     needs: build
