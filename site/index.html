@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#11121a">
+  <meta name="description" content="Monture Minute, l'outil gratuit pour planifier l'élevage de vos montures dans Dofus. Téléchargez la dernière version Android.">
+  <title>Monture Minute — l'élevage, bien rythmé</title>
+  <style>
+    :root{color-scheme:dark;--bg:#11121a;--panel:#191b27;--text:#f4f2fb;--muted:#aaa9bc;--accent:#bca5ff;--mint:#9ae0ce;--line:#303142}
+    *{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 80% 0%,#312451 0,transparent 37rem),var(--bg);color:var(--text);font:16px/1.55 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+    a{color:inherit}.wrap{width:min(1080px,calc(100% - 40px));margin:auto}.top{height:78px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #ffffff12}.brand{display:flex;align-items:center;gap:12px;text-decoration:none;font-weight:750;letter-spacing:-.02em}.brand img{width:38px;height:38px;object-fit:contain}.top nav{display:flex;gap:24px;color:var(--muted);font-size:14px}.top nav a{text-decoration:none}.top nav a:hover{color:var(--text)}
+    .hero{padding:88px 0 70px;display:grid;grid-template-columns:1.25fr .75fr;align-items:center;gap:48px}.eyebrow{display:inline-flex;align-items:center;gap:9px;border:1px solid #bca5ff45;border-radius:99px;padding:6px 11px;color:#ddcffd;font-size:12px;letter-spacing:.07em;text-transform:uppercase}.dot{width:7px;height:7px;background:var(--mint);border-radius:50%;box-shadow:0 0 12px #9ae0ce}.hero h1{font-size:clamp(42px,6vw,68px);letter-spacing:-.055em;line-height:1.02;margin:22px 0}.hero h1 em{color:var(--accent);font-style:normal}.hero p{font-size:18px;color:var(--muted);max-width:560px;margin:0 0 30px}.actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap}.button{display:inline-flex;align-items:center;justify-content:center;gap:10px;border-radius:12px;padding:13px 18px;text-decoration:none;font-weight:700;transition:transform .15s,background .15s}.button:hover{transform:translateY(-2px)}.primary{background:var(--accent);color:#211a32;box-shadow:0 8px 28px #9b7fe944}.secondary{border:1px solid var(--line);background:#ffffff08;color:var(--text)}.arrow{font-size:18px}.version{margin-top:14px;color:var(--muted);font-size:13px}
+    .showcase{position:relative;display:grid;place-items:center;min-height:310px}.halo{position:absolute;width:280px;height:280px;border-radius:50%;background:radial-gradient(circle,#a78bfa35 0,transparent 68%);filter:blur(6px)}.app-card{z-index:1;width:min(100%,330px);padding:23px;border:1px solid #ffffff20;border-radius:24px;background:linear-gradient(155deg,#252438ee,#171823ee);box-shadow:0 26px 90px #0008;transform:rotate(2deg)}.app-logo{width:72px;height:72px;object-fit:contain;display:block;margin:4px auto 14px;filter:drop-shadow(0 8px 16px #a78bfa44)}.app-card h2{text-align:center;margin:0;font-size:21px}.app-card>p{text-align:center;color:var(--muted);font-size:13px;margin:5px 0 20px}.mini-row{display:flex;align-items:center;gap:11px;padding:12px 0;border-top:1px solid #ffffff12}.mini-icon{display:grid;place-items:center;width:34px;height:34px;border-radius:10px;background:#bca5ff18;color:var(--accent);font-size:16px}.mini-row strong{display:block;font-size:13px}.mini-row small{display:block;color:var(--muted);font-size:11px}
+    .features{padding:28px 0 84px}.section-head{text-align:center;margin-bottom:28px}.section-head h2{font-size:30px;letter-spacing:-.035em;margin:0 0 7px}.section-head p{color:var(--muted);margin:0}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.feature{padding:22px;border:1px solid var(--line);background:linear-gradient(145deg,#ffffff08,#ffffff03);border-radius:17px}.feature .mini-icon{width:39px;height:39px;margin-bottom:15px}.feature h3{margin:0 0 5px;font-size:16px}.feature p{margin:0;color:var(--muted);font-size:14px}
+    .download{padding:34px;border:1px solid #bca5ff45;border-radius:22px;background:linear-gradient(115deg,#29223a,#1b1c29 62%);display:flex;align-items:center;justify-content:space-between;gap:26px;margin-bottom:75px}.download h2{margin:0 0 5px;font-size:25px;letter-spacing:-.03em}.download p{margin:0;color:var(--muted);font-size:14px}.download .actions{flex-shrink:0}.download-info{font-size:12px;color:var(--muted);margin-top:8px;text-align:right}.footer{border-top:1px solid #ffffff12;padding:24px 0 34px;color:var(--muted);font-size:12px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}.footer a{color:var(--muted)}
+    @media(max-width:760px){.hero{grid-template-columns:1fr;padding:60px 0 48px;gap:24px}.showcase{min-height:270px}.grid{grid-template-columns:1fr}.features{padding-bottom:54px}.download{align-items:flex-start;flex-direction:column;padding:25px;margin-bottom:52px}.download .actions{width:100%}.download .button{flex:1}.download-info{text-align:left}.top nav{gap:13px;font-size:12px}.top{height:68px}}
+    @media(max-width:440px){.wrap{width:min(100% - 28px,1080px)}.top nav a:first-child{display:none}.hero h1{font-size:45px}.hero p{font-size:16px}.actions .button{width:100%}}
+  </style>
+</head>
+<body>
+  <header class="wrap top">
+    <a class="brand" href="./"><img src="./monture-minute-logo.png" alt=""><span>Monture Minute</span></a>
+    <nav aria-label="Navigation principale"><a href="#fonctions">Fonctionnalités</a><a href="https://github.com/kihw/monture-minute/releases" target="_blank" rel="noreferrer">Toutes les versions</a><a href="https://github.com/kihw/monture-minute" target="_blank" rel="noreferrer">GitHub</a></nav>
+  </header>
+  <main>
+    <section class="wrap hero">
+      <div>
+        <div class="eyebrow"><span class="dot"></span> Gratuit · Communautaire · Android</div>
+        <h1>L’élevage,<br><em>bien rythmé.</em></h1>
+        <p>Planifiez les actions de vos montures, suivez leur progression et laissez les minuteurs vous rappeler quand revenir.</p>
+        <div class="actions">
+          <a class="button primary" id="hero-download" href="https://github.com/kihw/monture-minute/releases/latest/download/app-release.apk"><span>↓</span> Télécharger l’APK <span class="arrow">↗</span></a>
+          <a class="button secondary" href="https://github.com/kihw/monture-minute/releases/latest" target="_blank" rel="noreferrer">Notes de version</a>
+        </div>
+        <div class="version" id="version-line" role="status">Dernière version : <span>chargement…</span></div>
+      </div>
+      <div class="showcase" aria-label="Aperçu de Monture Minute">
+        <div class="halo"></div>
+        <div class="app-card">
+          <img class="app-logo" src="./monture-minute-logo.png" alt="Logo Monture Minute">
+          <h2>Monture Minute</h2>
+          <p>Votre élevage, en un coup d’œil.</p>
+          <div class="mini-row"><span class="mini-icon">◇</span><span><strong>Vos enclos</strong><small>Retrouvez chaque monture</small></span></div>
+          <div class="mini-row"><span class="mini-icon">✳</span><span><strong>Plan d’élevage</strong><small>Choisissez la prochaine action</small></span></div>
+          <div class="mini-row"><span class="mini-icon">◷</span><span><strong>Minuteurs</strong><small>Recevez un rappel à l’échéance</small></span></div>
+        </div>
+      </div>
+    </section>
+    <section class="wrap features" id="fonctions">
+      <div class="section-head"><h2>Moins de calculs, plus de jeu.</h2><p>Les outils essentiels pour organiser votre élevage.</p></div>
+      <div class="grid">
+        <article class="feature"><div class="mini-icon">◇</div><h3>Organisez vos enclos</h3><p>Gardez les montures et leur progression à portée de main.</p></article>
+        <article class="feature"><div class="mini-icon">✳</div><h3>Choisissez la prochaine action</h3><p>Visualisez les gains prévus avant de lancer une séance.</p></article>
+        <article class="feature"><div class="mini-icon">◷</div><h3>Revenez au bon moment</h3><p>Lancez des minuteurs et recevez un rappel à la fin.</p></article>
+      </div>
+    </section>
+    <section class="wrap download" id="telecharger">
+      <div><h2>Prêt à reprendre l’élevage ?</h2><p>L’APK Android le plus récent est toujours disponible ici.</p></div>
+      <div><div class="actions"><a class="button primary" id="download-button" href="https://github.com/kihw/monture-minute/releases/latest/download/app-release.apk">↓ Télécharger l’APK</a><a class="button secondary" href="https://github.com/kihw/monture-minute/releases" target="_blank" rel="noreferrer">Historique</a></div><div class="download-info" id="download-info">Android · APK</div></div>
+    </section>
+  </main>
+  <footer class="wrap footer"><span>Outil communautaire non officiel, non affilié à Ankama.</span><span><a href="https://github.com/kihw/monture-minute/releases">Releases</a> · <a href="https://github.com/kihw/monture-minute">Code source</a></span></footer>
+  <script>
+    fetch('https://api.github.com/repos/kihw/monture-minute/releases/latest', {headers:{Accept:'application/vnd.github+json'}})
+      .then(response => { if (!response.ok) throw new Error('release unavailable'); return response.json(); })
+      .then(release => {
+        const apk = release.assets.find(asset => asset.name.toLowerCase().endsWith('.apk'));
+        if (apk) {
+          document.querySelectorAll('#hero-download,#download-button').forEach(link => link.href = apk.browser_download_url);
+          const size = `${(apk.size / 1024 / 1024).toFixed(1)} Mo`;
+          document.getElementById('download-info').textContent = `Android · APK · ${size}`;
+        }
+        const date = new Date(release.published_at).toLocaleDateString('fr-FR', {day:'numeric',month:'long',year:'numeric'});
+        document.querySelector('#version-line span').textContent = `${release.tag_name} · publiée le ${date}`;
+      })
+      .catch(() => { document.querySelector('#version-line span').textContent = 'Consulter les releases GitHub'; });
+  </script>
+</body>
+</html>

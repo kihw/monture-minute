@@ -4,7 +4,7 @@ Application communautaire de suivi de l'élevage de montures dans Dofus.
 
 ## Téléchargement
 
-- Application web : https://kihw.github.io/monture-minute/
+- Vitrine et téléchargement : https://kihw.github.io/monture-minute/
 - Dernière version Android : https://github.com/kihw/monture-minute/releases/latest
 
 Sur Android, le téléchargement direct d'un APK peut nécessiter d'autoriser l'installation depuis le navigateur utilisé.

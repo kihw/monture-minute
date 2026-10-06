@@ -50,7 +50,10 @@ jobs:
           cp app/build/outputs/apk/release/app-release.apk "$RUNNER_TEMP/site/monture-minute.apk"
       - name: Prepare Pages site
         if: ${{ !startsWith(github.ref, 'refs/tags/') }}
-        run: mkdir -p "$RUNNER_TEMP/site" && cp -R dist-android/. "$RUNNER_TEMP/site/"
+        run: |
+          mkdir -p "$RUNNER_TEMP/site"
+          cp site/index.html "$RUNNER_TEMP/site/index.html"
+          cp assets/monture-minute-logo.png "$RUNNER_TEMP/site/monture-minute-logo.png"
       - uses: actions/upload-pages-artifact@v3
         with:
           path: ${{ runner.temp }}/site
