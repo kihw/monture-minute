@@ -74,12 +74,43 @@ jobs:
           node-version: 20
           cache: npm
       - run: npm ci
-      - run: npm run build
+      - name: Build (capture output)
+        id: build
+        shell: bash
+        run: |
+          set +e
+          npm run build > "$RUNNER_TEMP/build.log" 2>&1
+          code=$?
+          echo "exit_code=$code" >> "$GITHUB_OUTPUT"
+          cat "$RUNNER_TEMP/build.log"
+          exit 0
+      - name: Publish build log to release notes on failure
+        if: steps.build.outputs.exit_code != '0'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          {
+            echo ""
+            echo "---"
+            echo "### build-windows failure log (run $GITHUB_RUN_ID)"
+            echo '```'
+            tail -n 200 "$RUNNER_TEMP/build.log"
+            echo '```'
+          } > "$RUNNER_TEMP/notes-append.md"
+          gh release view "$GITHUB_REF_NAME" --json body -q .body > "$RUNNER_TEMP/notes-current.md" 2>/dev/null || true
+          cat "$RUNNER_TEMP/notes-current.md" "$RUNNER_TEMP/notes-append.md" > "$RUNNER_TEMP/notes-final.md" 2>/dev/null || cp "$RUNNER_TEMP/notes-append.md" "$RUNNER_TEMP/notes-final.md"
+          gh release edit "$GITHUB_REF_NAME" --notes-file "$RUNNER_TEMP/notes-final.md"
       - name: Attach Windows build to release
+        if: steps.build.outputs.exit_code == '0'
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
         run: gh release upload "$GITHUB_REF_NAME" release/*.exe --clobber
+      - name: Fail job if build failed
+        if: steps.build.outputs.exit_code != '0'
+        shell: bash
+        run: exit 1
 
   deploy:
     if: github.ref == 'refs/heads/main'
