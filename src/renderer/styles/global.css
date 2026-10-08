@@ -88,8 +88,9 @@
    largement de celui du canevas et laisse de larges bandes visibles. */
 .app-stage { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; overflow: hidden; background: radial-gradient(ellipse 70% 55% at 50% 50%, color-mix(in srgb, var(--accent-primary) 16%, var(--bg-primary)) 0%, var(--bg-primary) 85%); }
 .app-canvas { flex: 0 0 auto; transform-origin: center center; }
-/* Android / web : pas de canevas figé, l'app remplit tout l'espace réel. */
-.app-stage--fill { display: block; background: var(--bg-primary); }
+/* Android / web : l'échelle est calée pour remplir exactement l'écran (voir
+   AppStage), donc pas de bandes à habiller ni de bordure de « fenêtre ». */
+.app-stage--fill { background: var(--bg-primary); }
 .app-stage--fill .compact-app { border: none; }
 
 /* Interface principale compacte : un seul geste de choix, de tier et de lancement. */
