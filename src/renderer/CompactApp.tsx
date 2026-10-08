@@ -356,8 +356,8 @@ const CompactApp: React.FC = () => {
       <button className={`compact-sound-toggle${settings.timerSound ? ' is-enabled' : ''}`} onClick={() => setSettings(prev => ({ ...prev, timerSound: !prev.timerSound }))} aria-label={settings.timerSound ? 'Désactiver la sonnerie' : 'Activer la sonnerie'} title={settings.timerSound ? 'Sonnerie activée — cliquer pour couper' : 'Sonnerie désactivée — cliquer pour activer'} aria-pressed={settings.timerSound}>
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10v4h3l5 4V6l-5 4H4Z" /><path className="compact-sound-wave" d="M16 9a4 4 0 0 1 0 6m2-9a7 7 0 0 1 0 12" />{!settings.timerSound && <path className="compact-sound-slash" d="m16 9 5 6m0-6-5 6" />}</svg>
       </button>
-      <button className="compact-window-control" onClick={() => electronApi?.window.minimize()} aria-label="Réduire" title="Réduire">−</button>
-      <button className="compact-close" onClick={() => electronApi?.window.hide()} aria-label="Masquer">×</button>
+      {electronApi && <button className="compact-window-control" onClick={() => electronApi.window.minimize()} aria-label="Réduire" title="Réduire">−</button>}
+      {electronApi && <button className="compact-close" onClick={() => electronApi.window.hide()} aria-label="Masquer">×</button>}
     </header>
 
     <div className="compact-content">
