@@ -3,6 +3,9 @@ import {
   startTimer,
   upsertEnclosureTimer,
   enclosureTimer,
+  enclosureTimerForDisplay,
+  enclosuresWithFinishedTimer,
+  getOverdueSeconds,
   nextRunningTimer,
   getRemainingSeconds,
   formatDuration,
@@ -66,6 +69,46 @@ describe('enclosureTimer', () => {
   it('ignore un minuteur terminé', () => {
     const timers = [{ ...make('a', 'enclos-1'), status: 'finished' as const }];
     expect(enclosureTimer(timers, 'enclos-1')).toBeNull();
+  });
+});
+
+describe('enclosureTimerForDisplay', () => {
+  it('trouve aussi bien un minuteur en cours qu’un minuteur terminé non acquitté', () => {
+    const running = [make('a', 'enclos-1')];
+    expect(enclosureTimerForDisplay(running, 'enclos-1')?.id).toBe('a');
+
+    const finished = [{ ...make('a', 'enclos-1'), status: 'finished' as const }];
+    expect(enclosureTimerForDisplay(finished, 'enclos-1')?.id).toBe('a');
+  });
+
+  it('rend null sans minuteur du tout pour cet enclos', () => {
+    expect(enclosureTimerForDisplay([make('a', 'enclos-1')], 'enclos-2')).toBeNull();
+  });
+});
+
+describe('enclosuresWithFinishedTimer', () => {
+  it('ne retient que les enclos dont le minuteur est terminé', () => {
+    const timers = [
+      make('a', 'enclos-1'),
+      { ...make('b', 'enclos-2'), status: 'finished' as const },
+      { ...make('c', 'enclos-3'), status: 'finished' as const },
+    ];
+    expect(enclosuresWithFinishedTimer(timers)).toEqual(new Set(['enclos-2', 'enclos-3']));
+  });
+
+  it('rend un ensemble vide sans minuteur terminé', () => {
+    expect(enclosuresWithFinishedTimer([make('a', 'enclos-1')])).toEqual(new Set());
+  });
+});
+
+describe('getOverdueSeconds', () => {
+  it('compte le retard depuis l’échéance pour un minuteur terminé', () => {
+    const timer = { ...make('a', 'enclos-1'), status: 'finished' as const };
+    expect(getOverdueSeconds(timer, NOW + 600_000 + 45_000)).toBe(45);
+  });
+
+  it('rend zéro pour un minuteur encore en cours', () => {
+    expect(getOverdueSeconds(make('a', 'enclos-1'), NOW + 999_000)).toBe(0);
   });
 });
 

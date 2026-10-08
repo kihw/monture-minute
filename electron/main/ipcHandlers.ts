@@ -1,6 +1,5 @@
-import { ipcMain, BrowserWindow, Notification } from 'electron';
+import { ipcMain, BrowserWindow, Notification, shell } from 'electron';
 import { getValue, setValue, getAll, replaceAll } from './store';
-import { toggleCompactWindow, closeCompactWindow, isCompactOpen } from './compactWindow';
 import { rescheduleAll } from './timerScheduler';
 
 /**
@@ -40,12 +39,16 @@ export function setupIpcHandlers(focusMain: () => void) {
     senderWindow(event)?.setAlwaysOnTop(value);
   });
 
+  // N'ouvre jamais qu'une URL https : jamais un protocole arbitraire
+  // (file:, javascript:...) qui proviendrait d'une release corrompue ou
+  // falsifiée — la mise à jour ne doit jamais être un vecteur d'exécution.
+  ipcMain.handle('shell:openExternal', (_e, url: string) => {
+    if (!/^https:\/\//.test(url)) return;
+    return shell.openExternal(url);
+  });
+
   ipcMain.handle('window:isAlwaysOnTop', (event) => senderWindow(event)?.isAlwaysOnTop() ?? false);
   ipcMain.handle('window:minimize', (event) => senderWindow(event)?.minimize());
   ipcMain.handle('window:hide', (event) => senderWindow(event)?.hide());
   ipcMain.handle('window:close', (event) => senderWindow(event)?.close());
-
-  ipcMain.handle('compact:toggle', () => toggleCompactWindow());
-  ipcMain.handle('compact:close', () => closeCompactWindow());
-  ipcMain.handle('compact:isOpen', () => isCompactOpen());
 }

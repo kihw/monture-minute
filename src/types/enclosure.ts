@@ -1,4 +1,5 @@
-import { EnclosureGauges, GaugeId, Ability, MountStat, Tier } from './breeding';
+import { Ability, MountStat, Tier } from './breeding';
+import type { LoopInstance } from '@/core/loopEngine/types';
 
 /** État de la monture occupant un enclos. `null` côté Enclosure = enclos vide. */
 export interface EnclosureMount {
@@ -14,29 +15,34 @@ export interface EnclosureMount {
   loveTarget: number;
   xp: number;
   xpTarget: number;
+  /**
+   * Déclaré par le joueur, jamais déduit automatiquement d'un seuil : cette
+   * monture est considérée comme déjà stabilisée (sérénité à une extrémité
+   * favorable), donc la stratégie assistée n'a pas à y toucher. Une sérénité
+   * numériquement déjà extrême reste aussi reconnue d'elle-même.
+   */
+  serenityEquilibrated: boolean;
 }
 
 export interface Enclosure {
   id: string;
   name: string;
-  gauges: EnclosureGauges;
-  /** La jauge choisie pour cet enclos, ou `null` si l'enclos est au repos. */
-  activeGauge: GaugeId | null;
   /** Choix du mode compact, indépendant pour chaque enclos. */
   compactStat?: MountStat;
   /** Tier mémorisé séparément pour chaque jauge du mode compact. */
   compactTiers?: Record<MountStat, Tier>;
   mount: EnclosureMount | null;
   createdAt: number;
+  /** Boucle d'élevage active sur cet enclos. Absente = mode manuel pur. */
+  loopInstance?: LoopInstance;
 }
-
-export type EnclosureStatus = 'running' | 'low-fuel' | 'idle' | 'empty';
 
 export interface AppSettings {
   alwaysOnTop: boolean;
   notifications: boolean;
   timerSound: boolean;
-  compactBounds?: { x: number; y: number; width: number; height: number };
+  /** Tag de la dernière release que l'utilisateur a explicitement reportée (« Plus tard »). */
+  dismissedUpdateVersion?: string;
 }
 
 export const DEFAULT_SETTINGS: AppSettings = {
@@ -44,17 +50,6 @@ export const DEFAULT_SETTINGS: AppSettings = {
   notifications: true,
   timerSound: true,
 };
-
-export function emptyGauges(): EnclosureGauges {
-  return {
-    baffeur: 0,
-    caresseur: 0,
-    foudroyeur: 0,
-    abreuvoir: 0,
-    dragofesse: 0,
-    mangeoire: 0,
-  };
-}
 
 export function createMount(name = 'Nouvelle monture'): EnclosureMount {
   return {
@@ -70,6 +65,7 @@ export function createMount(name = 'Nouvelle monture'): EnclosureMount {
     loveTarget: 20_000,
     xp: 0,
     xpTarget: 0,
+    serenityEquilibrated: false,
   };
 }
 
@@ -77,8 +73,6 @@ export function createEnclosure(name: string, id: string, createdAt: number): En
   return {
     id,
     name,
-    gauges: emptyGauges(),
-    activeGauge: null,
     compactStat: 'serenity',
     compactTiers: { serenity: 1, endurance: 1, love: 1, maturity: 1, xp: 1 },
     mount: null,

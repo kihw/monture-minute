@@ -11,17 +11,15 @@ contextBridge.exposeInMainWorld('electronAPI', {
   notification: {
     show: (title: string, body: string) => ipcRenderer.invoke('notification:show', title, body),
   },
+  shell: {
+    openExternal: (url: string) => ipcRenderer.invoke('shell:openExternal', url),
+  },
   window: {
     setAlwaysOnTop: (value: boolean) => ipcRenderer.invoke('window:setAlwaysOnTop', value),
     isAlwaysOnTop: () => ipcRenderer.invoke('window:isAlwaysOnTop'),
     minimize: () => ipcRenderer.invoke('window:minimize'),
     hide: () => ipcRenderer.invoke('window:hide'),
     close: () => ipcRenderer.invoke('window:close'),
-  },
-  compact: {
-    toggle: () => ipcRenderer.invoke('compact:toggle'),
-    close: () => ipcRenderer.invoke('compact:close'),
-    isOpen: () => ipcRenderer.invoke('compact:isOpen'),
   },
   /** Diffusion des écritures faites par l'autre fenêtre. */
   onStoreChanged: (callback: (key: string, value: unknown) => void) => {

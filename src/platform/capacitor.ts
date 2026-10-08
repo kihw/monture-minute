@@ -2,6 +2,7 @@ import { Preferences } from '@capacitor/preferences';
 import { LocalNotifications } from '@capacitor/local-notifications';
 import { BreedingTimer } from '@/types/timer';
 import { Platform } from './types';
+import { fetchLatestGitHubRelease } from './githubReleases';
 
 /**
  * Android a besoin d'un entier 32 bits pour identifier une notification, là où
@@ -52,8 +53,6 @@ async function scheduleTimer(timer: BreedingTimer) {
  */
 export const androidPlatform: Platform = {
   name: 'android',
-  hasCompactWindow: false,
-  openCompactWindow: () => {},
 
   storage: {
     getAll: async () => {
@@ -80,5 +79,16 @@ export const androidPlatform: Platform = {
     cancel: timerId => {
       void LocalNotifications.cancel({ notifications: [{ id: notificationId(timerId) }] });
     },
+  },
+
+  updates: {
+    supported: true,
+    fetchLatestRelease: fetchLatestGitHubRelease,
+    // Pas de Play Store, pas de plugin natif de téléchargement/installation
+    // en phase 1 : on ouvre l'APK dans le navigateur système — Android gère
+    // ensuite lui-même le téléchargement et l'écran « installer depuis une
+    // source inconnue ». `_system` est la cible comprise par les WebViews
+    // Capacitor/Cordova pour sortir de l'application.
+    openAsset: asset => { window.open(asset.browserDownloadUrl, '_system'); },
   },
 };

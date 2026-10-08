@@ -26,6 +26,10 @@ jobs:
           java-version: '17'
       - uses: actions/configure-pages@v5
       - run: npm ci
+      - run: npm run typecheck
+      - run: npm run typecheck:electron
+      - run: npm run lint
+      - run: npm test
       - run: npm run build:android
       - name: Build signed release APK
         if: startsWith(github.ref, 'refs/tags/')

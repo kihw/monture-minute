@@ -77,8 +77,20 @@
   background-color: var(--bg-primary);
 }
 
+/*
+ * Scène de mise à l'échelle : le canevas a une taille fixe (voir AppStage,
+ * 360×450) et se redimensionne en bloc via `transform: scale` — jamais de
+ * reflow interne. `.app-stage` centre le canevas mis à l'échelle dans la
+ * fenêtre réelle, quelle que soit sa taille.
+ */
+/* Fond du bandeau de lettrebox : un dégradé de marque discret plutôt qu'un
+   aplat — nécessaire sur téléphone, où le ratio de l'écran s'éloigne
+   largement de celui du canevas et laisse de larges bandes visibles. */
+.app-stage { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; overflow: hidden; background: radial-gradient(ellipse 70% 55% at 50% 50%, color-mix(in srgb, var(--accent-primary) 16%, var(--bg-primary)) 0%, var(--bg-primary) 85%); }
+.app-canvas { flex: 0 0 auto; transform-origin: center center; }
+
 /* Interface principale compacte : un seul geste de choix, de tier et de lancement. */
-.compact-app { height: 100vh; display: flex; flex-direction: column; overflow: hidden; background: var(--bg-primary); border: 1px solid var(--border-strong); }
+.compact-app { width: 100%; height: 100%; display: flex; flex-direction: column; overflow: hidden; background: var(--bg-primary); border: 1px solid var(--border-strong); }
 .compact-titlebar { width: 100%; min-width: 0; height: 33px; flex: 0 0 33px; display: flex; align-items: center; justify-content: space-between; overflow: hidden; padding-left: 10px; background: linear-gradient(90deg, color-mix(in srgb, var(--compact-accent) 12%, var(--bg-secondary)), var(--bg-secondary) 62%); border-bottom: 1px solid var(--border-color); -webkit-app-region: drag; }
 .compact-brand-mark { width: 25px; height: 25px; flex: 0 0 25px; margin-right: 7px; object-fit: contain; }
 .compact-title { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--fs-md); font-weight: 700; }
@@ -91,13 +103,50 @@
 .compact-sound-toggle:not(.is-enabled) .compact-sound-wave { display: none; }
 .compact-window-control { margin-left: 4px; border-left: 1px solid var(--border-color); font-size: 19px; }
 .compact-close { font-size: 20px; border-left: 1px solid var(--border-color); }
-.compact-content { min-height: 0; flex: 1; display: flex; flex-direction: column; gap: 7px; padding: 8px 9px 9px; }
+.compact-content { min-height: 0; flex: 1; display: flex; flex-direction: column; justify-content: space-between; gap: 7px; padding: 8px 9px 9px; overflow-y: auto; }
+/* Bascule Manuel/Assisté : une seule ligne, jamais une carte à part entière. */
+.compact-assist { display: flex; align-items: center; gap: 7px; }
+.compact-assist-toggle { flex: 0 0 auto; display: flex; border: 1px solid var(--border-color); border-radius: 999px; overflow: hidden; }
+.compact-assist-toggle button { min-height: 0; padding: 3px 8px; border-radius: 0; background: var(--bg-secondary); color: var(--text-muted); font-size: 9px; font-weight: 700; }
+.compact-assist-toggle button[aria-selected='true'] { background: var(--compact-accent); color: #17121f; }
+.compact-assist-status { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-secondary); font-size: 10px; }
+.compact-strategy-card { display: grid; gap: 6px; padding: 8px 9px; border: 1px solid color-mix(in srgb, var(--compact-accent) 30%, var(--border-color)); border-radius: 9px; background: linear-gradient(145deg, color-mix(in srgb, var(--compact-accent) 9%, var(--bg-secondary)), var(--bg-secondary) 68%); }
+.compact-strategy-head { display: flex; align-items: center; gap: 8px; font-size: var(--fs-md); font-weight: 700; }
+.compact-strategy-head .action-icon { width: 26px; height: 26px; flex: 0 0 26px; }
+.compact-strategy-values { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.compact-strategy-values .compact-value-field { flex: 0 0 auto; }
+.compact-strategy-values .compact-value-field input[type='number'] { width: 76px; text-align: right; }
+.compact-strategy-target { font-size: 13px; font-weight: 750; font-variant-numeric: tabular-nums; color: var(--compact-accent); }
+.compact-strategy-tier { display: flex; align-items: center; gap: 8px; margin-top: 2px; }
+.compact-strategy-tier-buttons { flex: 1; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; }
+.compact-strategy-tier-buttons button { min-height: 22px; padding: 2px 0; background: var(--bg-card); color: var(--text-secondary); border: 1px solid var(--border-color); font-size: 10px; font-weight: 700; }
+.compact-strategy-tier-buttons button.is-selected { background: var(--compact-accent); color: #17121f; border-color: var(--compact-accent); }
+.compact-strategy-done { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 11px; color: var(--text-secondary); }
+.compact-strategy-done button { background: var(--bg-card); color: var(--text-secondary); border: 1px solid var(--border-color); font-size: 10px; padding: 3px 8px; min-height: 0; }
+
+/* Mise à jour : une icône discrète dans la barre de titre, un panneau en
+   superposition au clic — ne pousse jamais le contenu de l'enclos. */
+.compact-update-wrap { position: relative; flex: 0 0 auto; display: flex; align-items: center; -webkit-app-region: no-drag; }
+.compact-update-trigger { position: relative; flex: 0 0 24px; width: 24px; height: 24px; min-height: 0; padding: 0; margin: 0 2px; display: grid; place-items: center; border: 0; border-radius: 50%; background: transparent; color: var(--text-muted); font-size: 13px; line-height: 1; }
+.compact-update-trigger.has-update { color: var(--compact-accent); }
+.compact-update-dot { position: absolute; top: 1px; right: 1px; width: 6px; height: 6px; border-radius: 50%; background: var(--accent-red); box-shadow: 0 0 0 1.5px var(--bg-secondary); }
+.compact-update-panel { position: absolute; top: calc(100% + 6px); right: -4px; z-index: 20; width: 220px; padding: 8px 9px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-card); box-shadow: 0 10px 28px #000a; display: grid; gap: 5px; font-size: 10px; color: var(--text-secondary); -webkit-app-region: no-drag; }
+.compact-update--ok { flex-direction: row; display: flex; align-items: center; justify-content: space-between; gap: 6px; color: var(--accent-green); border-color: color-mix(in srgb, var(--accent-green) 35%, var(--border-color)); }
+.compact-update--error { color: var(--accent-red); border-color: color-mix(in srgb, var(--accent-red) 35%, var(--border-color)); }
+.compact-update--ok button, .compact-update--error button { background: var(--bg-secondary); color: var(--text-secondary); border: 1px solid var(--border-color); font-size: 10px; padding: 2px 6px; min-height: 0; }
+.compact-update-title { font-weight: 750; color: var(--text-primary); font-size: 11px; }
+.compact-update-versions { color: var(--text-muted); font-variant-numeric: tabular-nums; }
+.compact-update-notes { margin: 0; padding-left: 14px; color: var(--text-secondary); }
+.compact-update-notes li { margin: 1px 0; }
+.compact-update-actions { display: flex; gap: 6px; }
+.compact-update-primary { flex: 1; min-height: 24px; background: var(--accent-primary); color: #fff; font-size: 10px; }
 .compact-enclosure-select { display: flex; align-items: center; gap: 7px; }
 .compact-enclosure-select > .compact-caption { flex: 0 0 auto; width: 48px; }
 .compact-enclosures { flex: 1; min-width: 0; display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none; }
 .compact-enclosures::-webkit-scrollbar { display: none; }
-.compact-enclosures button { flex: 0 0 28px; width: 28px; min-width: 28px; height: 20px; min-height: 20px; padding: 0 2px; border: 1px solid var(--border-color); border-radius: 4px; background: var(--bg-secondary); color: var(--text-secondary); font-size: 10px; font-weight: 700; }
+.compact-enclosures button { position: relative; flex: 0 0 28px; width: 28px; min-width: 28px; height: 20px; min-height: 20px; padding: 0 2px; border: 1px solid var(--border-color); border-radius: 4px; background: var(--bg-secondary); color: var(--text-secondary); font-size: 10px; font-weight: 700; }
 .compact-enclosures button.is-selected { color: #17121f; background: var(--compact-accent); border-color: var(--compact-accent); }
+.compact-enclosure-dot { position: absolute; top: -3px; right: -3px; width: 7px; height: 7px; border-radius: 50%; background: var(--accent-red); box-shadow: 0 0 0 1.5px var(--bg-primary); }
 .compact-enclosure-tools { display: flex; gap: 3px; flex: 0 0 auto; }
 .compact-enclosure-tools button { width: 22px; height: 20px; min-height: 20px; padding: 0; border: 1px solid var(--border-color); border-radius: 4px; background: var(--bg-secondary); color: var(--text-primary); font-size: 13px; line-height: 1; }
 .compact-enclosure-tools button:disabled { opacity: .35; cursor: not-allowed; }
@@ -142,6 +191,10 @@
 .compact-level-range::-webkit-slider-thumb, .compact-xp-current-range::-webkit-slider-thumb { width: 11px; height: 11px; margin-top: -3.5px; appearance: none; border: 2px solid var(--bg-secondary); border-radius: 50%; background: var(--range-color); box-shadow: 0 0 0 1px var(--range-color); }
 .compact-level-range::-moz-range-thumb, .compact-xp-current-range::-moz-range-thumb { width: 8px; height: 8px; border: 2px solid var(--bg-secondary); border-radius: 50%; background: var(--range-color); box-shadow: 0 0 0 1px var(--range-color); }
 .compact-xp-levels { display: flex; justify-content: space-between; gap: 6px; color: var(--text-muted); font-size: 9px; font-variant-numeric: tabular-nums; }
+.compact-serenity-quick { display: grid; gap: 5px; padding: 6px 8px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-secondary); }
+.compact-serenity-quick .compact-value-field input[type='number'] { text-align: right; }
+.compact-equilibrated { display: flex; align-items: center; gap: 5px; color: var(--text-secondary); font-size: 9px; }
+.compact-equilibrated input { margin: 0; accent-color: var(--compact-accent); }
 .compact-level-range:focus-visible, .compact-xp-current-range:focus-visible { outline: 1px solid var(--compact-accent); outline-offset: 1px; }
 .compact-values .compact-caption span { color: var(--compact-accent); padding-inline: 3px; }
 .compact-dual-slider { position: relative; height: 24px; margin: 0 5px; touch-action: none; cursor: ew-resize; user-select: none; }
@@ -150,54 +203,23 @@
 .compact-dual-thumb:active { cursor: grabbing; }
 .compact-dual-thumb--current { z-index: 1; left: var(--range-current); background: #c8cad3; box-shadow: 0 0 0 1px #797d8c; }
 .compact-dual-thumb--target { z-index: 2; left: var(--range-target); background: var(--range-accent); box-shadow: 0 0 0 1px var(--range-accent); }
+.compact-dual-thumb--target[aria-disabled='true'] { cursor: not-allowed; opacity: .55; }
 .compact-dual-thumb:focus-visible { outline: 2px solid var(--text-primary); outline-offset: 3px; }
 .compact-timer { padding: 7px 8px 6px; border: 1px solid color-mix(in srgb, var(--compact-accent) 30%, var(--border-color)); border-radius: 9px; background: linear-gradient(145deg, color-mix(in srgb, var(--compact-accent) 9%, var(--bg-secondary)), var(--bg-secondary) 68%); text-align: center; }
 .compact-timer--running { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, .85fr); align-items: center; gap: 8px; padding: 8px 7px; }
+.compact-timer--finished { border-color: color-mix(in srgb, var(--accent-red) 45%, var(--border-color)); background: linear-gradient(145deg, color-mix(in srgb, var(--accent-red) 12%, var(--bg-secondary)), var(--bg-secondary) 68%); }
+.compact-timer--finished .compact-time { color: var(--accent-red); }
 .compact-timer-reading { min-width: 0; }
 .compact-timer-reading--forecast { padding-left: 8px; border-left: 1px solid var(--border-color); }
 .compact-time { margin: 1px 0; font-family: var(--font-display); font-size: clamp(26px, 8vw, 35px); font-weight: 750; font-variant-numeric: tabular-nums; letter-spacing: -.035em; line-height: 1.1; }
 .compact-forecast-time { margin: 4px 0 2px; color: var(--text-primary); font-family: var(--font-display); font-size: clamp(15px, 4.4vw, 21px); font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: -.025em; line-height: 1.2; white-space: nowrap; }
 .compact-status { min-height: 15px; color: var(--text-muted); font-size: 9px; }
 .compact-hint { color: var(--accent-amber); text-align: center; font-size: 10px; }
-.compact-start { width: 100%; min-height: 33px; margin-top: auto; border-radius: 8px; background: var(--compact-accent); color: #17121f; font-size: 11px; }
+.compact-start { width: 100%; min-height: 33px; border-radius: 8px; background: var(--compact-accent); color: #17121f; font-size: 11px; }
 .compact-start.is-stopping { background: #f87171; color: #241116; }
 .compact-action:focus-visible, .compact-tier-slider input:focus-visible, .compact-dual-thumb:focus-visible, .compact-enclosures button:focus-visible, .compact-sound-toggle:focus-visible, .compact-close:focus-visible, .compact-window-control:focus-visible { outline: 2px solid var(--compact-accent); outline-offset: 1px; }
 .compact-loading { height: 100vh; display: grid; place-items: center; color: var(--text-muted); background: var(--bg-primary); }
 
-/* Densité d’interface commune : davantage de contenu utile dans la fenêtre. */
-.app-header { flex-basis: 38px !important; padding-inline: 10px !important; }
-.app-nav button { min-height: 28px; padding: 4px 9px; }
-.app-main { padding: 8px !important; }
-.app-footer { padding: 3px 8px !important; }
-.card { padding: 9px; }
-.card-header { margin-bottom: 6px; }
-.enclosures-stats { gap: 6px !important; }
-.enclosures-stats .card { display: grid; grid-template-columns: minmax(100px, auto) 1fr; align-items: center; gap: 8px; }
-.enclosures-stats .card .zone { margin: 0 !important; }
-.enclosures-stats .card .num { font-size: var(--fs-lg) !important; }
-.timer-summary { padding: 9px 11px; }
-.timer-summary .num[style*='font-size: var(--fs-display)'] { font-size: var(--fs-xl) !important; }
-.timer-notice { padding: 7px 9px !important; }
-
-/* Chiffres : police display + chasse fixe pour ne pas tressauter pendant un glissement */
-.num {
-  font-family: var(--font-display);
-  font-variant-numeric: tabular-nums;
-  font-weight: 600;
-}
-
-/* Titre de section : discret, en majuscules — la couleur reste réservée aux données */
-.zone {
-  font-family: var(--font-display);
-  font-size: var(--fs-xs);
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--text-secondary);
-}
-
-/* Sélecteur de tier : un seul objet visuel, pas quatre boutons */
-/* Pastille pleine (actif) ou creuse (inactif) : repère de forme, pas de couleur */
 body {
   min-height: 100vh;
   overflow-x: hidden;
@@ -212,8 +234,7 @@ body {
 /* =========================================================
    Champs
    ========================================================= */
-input[type='number'],
-input[type='text'] {
+input[type='number'] {
   background: var(--bg-input);
   border: 1px solid var(--border-color);
   color: var(--text-primary);
@@ -232,41 +253,17 @@ input[type='number']::-webkit-outer-spin-button {
   margin: 0;
 }
 
-input[type='number']:focus,
-input[type='text']:focus {
+input[type='number']:focus {
   border-color: var(--accent-primary);
   box-shadow: 0 0 0 3px var(--focus-ring);
 }
 
-select {
-  background: var(--bg-input);
-  border: 1px solid var(--border-color);
-  color: var(--text-primary);
-  padding: 4px 6px;
-  border-radius: var(--radius-sm);
-  font-size: var(--fs-sm);
-  outline: none;
-  cursor: pointer;
+/* Cible verrouillée en mode assisté : la stratégie la pilote, pas la saisie manuelle. */
+input[type='number']:disabled {
+  opacity: .5;
+  cursor: not-allowed;
 }
 
-select:focus {
-  border-color: var(--accent-primary);
-  box-shadow: 0 0 0 3px var(--focus-ring);
-}
-
-/* =========================================================
-   CURSEURS (input[type=range])
-
-   Bug corrigé : avec `-webkit-appearance: none`, la zone de saisie
-   de l'élément se limite EXACTEMENT à sa boîte de contenu. L'ancienne
-   règle `height: 6px` réduisait donc la cible du pointeur à une bande
-   de 6 px ; le thumb de 16 px était peint en débordement mais restait
-   insaisissable → le curseur paraissait mort.
-
-   Correctif : l'élément fait 24 px de haut (vraie zone de saisie),
-   la piste visuelle est dessinée par ::-webkit-slider-runnable-track.
-   ========================================================= */
-/* Variante « Cible » — accord avec la légende verte */
 /* =========================================================
    Boutons
    ========================================================= */
@@ -298,253 +295,6 @@ button:disabled {
   cursor: not-allowed;
 }
 
-.btn-ghost {
-  background: var(--bg-input);
-  border-color: var(--border-color);
-  color: var(--text-secondary);
-  font-weight: 500;
-}
-
-.btn-ghost:hover:not(:disabled) {
-  background: var(--bg-card-hover);
-  color: var(--text-primary);
-}
-
-.btn-ghost[aria-pressed='true'] {
-  background: var(--accent-primary);
-  border-color: var(--accent-primary);
-  color: #fff;
-}
-
-.btn-danger {
-  background: transparent;
-  border-color: var(--accent-red);
-  color: var(--accent-red);
-}
-
-.btn-danger:hover:not(:disabled) {
-  background: var(--accent-red);
-  color: #fff;
-}
-
-.btn-sm {
-  padding: 3px 8px;
-  font-size: var(--fs-xs);
-}
-
-/* Bouton de tier : carré compact, aligné le long de la jauge */
-.btn-tier {
-  background: var(--bg-input);
-  border: 1px solid var(--border-color);
-  color: var(--text-secondary);
-  padding: 0;
-  font-size: var(--fs-xs);
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-  border-radius: var(--radius-sm);
-  width: 100%;
-  flex: 1;
-}
-
-.btn-tier:hover:not(:disabled) {
-  background: var(--bg-card-hover);
-  color: var(--text-primary);
-}
-
-/* Le tier courant est mis en avant avec la couleur de sa jauge */
-.btn-tier[aria-pressed='true'] {
-  background: var(--tier-accent, var(--accent-primary));
-  border-color: var(--tier-accent, var(--accent-primary));
-  color: #12121c;
-}
-
-/* =========================================================
-   Cartes
-   ========================================================= */
-.card {
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
-  padding: var(--sp-3);
-}
-
-.card-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--sp-2);
-  margin-bottom: var(--sp-2);
-}
-
-/* Titre de section : discret, en majuscules — la couleur est réservée aux données */
-.card-title {
-  font-size: var(--fs-sm);
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--text-secondary);
-}
-
-.label {
-  display: block;
-  font-size: var(--fs-sm);
-  color: var(--text-secondary);
-  margin-bottom: var(--sp-1);
-}
-
-.value-lg {
-  font-size: var(--fs-xl);
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-  line-height: 1.2;
-}
-
-.hint {
-  font-size: var(--fs-sm);
-  color: var(--text-muted);
-}
-
-/* Pastille de couleur : identifie une stat sans colorer le texte */
-/* =========================================================
-   Badges
-   ========================================================= */
-.badge {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--sp-1);
-  padding: 1px 6px;
-  border-radius: var(--radius-pill);
-  font-size: var(--fs-xs);
-  font-weight: 700;
-  letter-spacing: 0.02em;
-  white-space: nowrap;
-  line-height: 1.5;
-}
-
-.badge--ok {
-  background: rgba(74, 222, 128, 0.15);
-  color: var(--accent-green);
-  border: 1px solid rgba(74, 222, 128, 0.4);
-}
-
-.badge--error {
-  background: rgba(248, 113, 113, 0.15);
-  color: var(--accent-red);
-  border: 1px solid rgba(248, 113, 113, 0.4);
-}
-
-.badge--warn {
-  background: rgba(251, 191, 36, 0.12);
-  color: var(--accent-amber);
-  border: 1px solid rgba(251, 191, 36, 0.35);
-}
-
-.badge--neutral {
-  background: var(--bg-inset);
-  color: var(--text-secondary);
-  border: 1px solid var(--border-color);
-}
-
-/* Grille du parc : s'adapte au nombre réel d'enclos (3, 6, 9…) */
-.enclosure-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 410px), 1fr));
-  gap: 7px;
-  align-items: stretch;
-}
-
-.enclosure-card {
-  display: grid !important;
-  grid-template-columns: minmax(72px, .9fr) minmax(90px, 1.1fr) 48px 98px;
-  grid-template-areas: 'heading summary details controls';
-  align-items: center;
-  gap: 8px !important;
-  padding: 8px 10px;
-}
-.enclosure-card__heading { min-width: 0; }
-.enclosure-card__heading { grid-area: heading; }
-.enclosure-card__quick-summary { grid-area: summary; }
-.enclosure-card__desktop-details { grid-area: details; }
-.enclosure-card > div:last-child { grid-area: controls; }
-.enclosure-card__heading > span:last-child { display: none !important; }
-.enclosure-card__desktop-details > summary { white-space: nowrap; }
-.enclosure-card__desktop-details > summary { font-size: 0; }
-.enclosure-card__desktop-details > summary::after { content: 'Jauges'; font-size: var(--fs-xs); }
-.enclosure-card__desktop-details > div { display: none !important; }
-.enclosure-card__state { display: none !important; }
-.enclosure-card__configure { min-height: 30px; white-space: nowrap; padding-inline: 6px; }
-.enclosure-card__choice { white-space: nowrap; }
-.enclosure-card__menu > summary { min-height: 30px; min-width: 32px; }
-.enclosure-card__menu-items { min-width: 230px; }
-.enclosures-stats .card { padding: 8px 10px; }
-
-/* =========================================================
-   Disposition du dashboard
-   ========================================================= */
-.dashboard {
-  display: grid;
-  grid-template-columns: minmax(0, 1.7fr) minmax(260px, .9fr);
-  grid-template-areas:
-    'gauges gauges'
-    'main   side';
-  gap: 8px;
-  max-width: 1440px;
-  margin: 0 auto;
-  align-items: start; /* requis pour que le sticky de la colonne droite fonctionne */
-}
-
-.dashboard__gauges {
-  grid-area: gauges;
-}
-
-.dashboard__main {
-  grid-area: main;
-  display: flex;
-  flex-direction: column;
-  gap: var(--sp-2);
-  min-width: 0;
-}
-
-.dashboard__side {
-  grid-area: side;
-  position: sticky;
-  top: 0;
-  display: flex;
-  flex-direction: column;
-  gap: var(--sp-2);
-  min-width: 0;
-}
-
-.quick-setup-outcome { display: flex; flex-direction: column; gap: 8px; }
-.quick-setup-outcome > .card { padding: 9px; }
-.quick-setup-values { padding: 9px; }
-.quick-setup-tier > .card { padding: 9px; }
-.choice { padding: 6px 8px; gap: 3px; }
-.choice__bar { height: 3px; }
-.field-list { gap: 8px; }
-.field input[type='number'] { padding: 5px 7px; }
-
-@media (max-width: 1100px) {
-  .dashboard {
-    grid-template-columns: 1fr;
-    grid-template-areas:
-      'gauges'
-      'main'
-      'side';
-  }
-
-  .dashboard__side {
-    position: static;
-  }
-}
-
-@media (min-width: 561px) and (max-width: 900px) {
-  .enclosure-card { grid-template-columns: minmax(100px, 1fr) minmax(110px, 1fr) 70px 90px; gap: 6px !important; }
-  .enclosure-card__desktop-details > summary { font-size: 0; }
-  .enclosure-card__desktop-details > summary::after { content: 'Jauges'; font-size: var(--fs-xs); }
-  .dashboard { grid-template-columns: minmax(0, 1fr) minmax(230px, .8fr); grid-template-areas: 'gauges gauges' 'main side'; }
-}
-
 /* =========================================================
    Barre de défilement
    ========================================================= */
@@ -566,481 +316,14 @@ button:disabled {
   background: var(--text-muted);
 }
 
-/* ── Le choix : que faire monter ou descendre ───────────────────────────── */
-.choice-grid {
-  display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
-  gap: var(--sp-2);
-}
-
-.choice {
-  --choice-accent: var(--accent-primary);
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  gap: 5px;
-  padding: 9px 11px;
-  text-align: left;
-  background: var(--bg-input);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
-  color: var(--text-secondary);
-  font-weight: 500;
-  transition: border-color 0.15s, background 0.15s, color 0.15s;
-}
-
-.choice:hover:not(:disabled) {
-  background: var(--bg-card-hover);
-  border-color: var(--choice-accent);
-  color: var(--text-primary);
-}
-
-.choice[aria-checked='true'] {
-  background: color-mix(in srgb, var(--choice-accent) 12%, var(--bg-input));
-  border-color: var(--choice-accent);
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--choice-accent) 22%, transparent);
-  color: var(--text-primary);
-}
-
-.choice__head {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.choice__label {
-  font-size: var(--fs-md);
-  font-weight: 700;
-  letter-spacing: -0.01em;
-}
-
-.choice__sub {
-  font-size: var(--fs-xs);
-  color: var(--text-muted);
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-}
-
-.choice__bar {
-  position: relative;
-  display: block;
-  height: 4px;
-  border-radius: var(--radius-pill);
-  background: var(--gauge-track);
-  overflow: hidden;
-}
-
-.choice__fill {
-  position: absolute;
-  inset: 0 auto 0 0;
-  background: var(--choice-accent);
-  border-radius: var(--radius-pill);
-  transition: width 0.15s ease-out;
-}
-
-.choice__fuel {
-  font-size: var(--fs-xs);
-  color: var(--text-muted);
-}
-
-/* ── Les valeurs à saisir, une fois le choix fait ───────────────────────── */
-.field-list {
-  display: flex;
-  flex-direction: column;
-  gap: var(--sp-3);
-}
-
-.field-pair {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--sp-3);
-}
-
-.field {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  min-width: 0;
-}
-
-.field__label {
-  font-size: var(--fs-sm);
-  font-weight: 600;
-  color: var(--text-secondary);
-  letter-spacing: 0.02em;
-}
-
-.field__input {
-  display: flex;
-  align-items: stretch;
-  gap: 5px;
-  min-width: 0;
-}
-
-.field input[type='number'] {
-  flex: 1;
-  min-width: 0;
-  font-size: var(--fs-lg);
-  padding: 7px 9px;
-  text-align: right;
-}
-
-.field__sign {
-  flex: 0 0 auto;
-  width: 34px;
-  padding: 0;
-  font-size: var(--fs-lg);
-  line-height: 1;
-}
-
-.field__hint {
-  font-size: var(--fs-xs);
-  color: var(--text-muted);
-  line-height: 1.45;
-}
-
-.field__range {
-  --range-accent: var(--accent-primary);
-  width: 100%;
-  height: 28px;
-  margin: 1px 0;
-  accent-color: var(--range-accent);
-  cursor: pointer;
-  touch-action: pan-y;
-}
-
-.quick-setup-mount {
-  display: flex;
-  flex-direction: column;
-  gap: var(--sp-2);
-}
-
-.quick-setup-mount__name {
-  width: 100%;
-  min-height: 38px;
-  font-size: var(--fs-base) !important;
-}
-
-.enclosure-card__quick-summary {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 3px var(--sp-2);
-  padding: var(--sp-2);
-  background: var(--bg-inset);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
-}
-
-.enclosure-card__choice { font-size: var(--fs-sm); font-weight: 600; }
-.enclosure-card__time { grid-column: 2; grid-row: 1 / span 2; font-size: var(--fs-xl); font-weight: 700; }
-.enclosure-card__end { font-size: var(--fs-xs); }
-.enclosure-card__details > summary,
-.enclosure-card__menu > summary { cursor: pointer; list-style: none; }
-.enclosure-card__details > summary::-webkit-details-marker,
-.enclosure-card__menu > summary::-webkit-details-marker { display: none; }
-.enclosure-card__details > summary { color: var(--text-secondary); font-size: var(--fs-xs); padding: 3px 0; }
-.enclosure-card__desktop-details { display: block; }
-.enclosure-card__state { display: flex; }
-.enclosure-card__menu { position: relative; }
-.enclosure-card__menu > summary { display: inline-flex; align-items: center; justify-content: center; min-width: 38px; }
-.enclosure-card__menu-items { position: absolute; z-index: 2; right: 0; bottom: calc(100% + 5px); display: flex; flex-direction: column; gap: 4px; min-width: 118px; padding: 6px; background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: var(--radius-md); box-shadow: 0 8px 24px #0006; }
-
-/* ── Le sélecteur d'enclos, partagé par l'Élevage et le mode compact ────── */
-.picker {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  overflow-x: auto;
-}
-
-.picker__item {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  flex: 1 1 0;
-  min-width: 118px;
-  height: 38px;
-  padding: 0 9px;
-  text-align: left;
-  font-weight: 500;
-  background: var(--bg-input);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
-  color: var(--text-secondary);
-}
-
-.picker__item:hover:not(:disabled) {
-  background: var(--bg-card-hover);
-  border-color: var(--border-strong);
-}
-
-.picker__item[aria-selected='true'] {
-  background: rgba(168, 85, 247, 0.11);
-  border-color: var(--accent-primary);
-  color: var(--text-primary);
-}
-
-.picker__num {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  width: 20px;
-  height: 20px;
-  border-radius: 6px;
-  font-size: var(--fs-xs);
-  font-weight: 700;
-  background: var(--bg-inset);
-  border: 1px solid var(--border-color);
-  color: var(--text-muted);
-}
-
-.picker__item[aria-selected='true'] .picker__num {
-  background: var(--accent-primary);
-  border-color: transparent;
-  color: #14141f;
-}
-
-.picker__body {
-  flex: 1;
-  min-width: 0;
-}
-
-.picker__name {
-  display: block;
-  font-size: var(--fs-xs);
-  font-weight: 700;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.picker__state {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  margin-top: 2px;
-}
-
-.picker__dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-
-.picker__dash {
-  width: 10px;
-  height: 2px;
-  border-radius: 1px;
-  background: var(--gauge-border);
-}
-
-.picker__time {
-  font-size: var(--fs-xs);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-/* Fenêtre étroite : le numéro et, au plus, la pastille du choix. */
-.picker--compact .picker__item {
-  flex: 1;
-  min-width: 0;
-  height: 24px;
-  padding: 0;
-  justify-content: center;
-  gap: 4px;
-}
-
-.picker--compact .picker__num {
-  width: auto;
-  height: auto;
-  border: none;
-  background: none;
-  font-size: var(--fs-xs);
-}
-
-.picker--compact .picker__item[aria-selected='true'] {
-  background: var(--accent-primary);
-  border-color: transparent;
-}
-
-.picker--compact .picker__item[aria-selected='true'] .picker__num {
-  background: none;
-  color: #14141f;
-}
-
-.app-title {
-  font-size: var(--fs-md);
-  font-weight: 700;
-  white-space: nowrap;
-}
-.app-brand-mark { width: 26px; height: 26px; flex: 0 0 26px; object-fit: contain; }
-
-.timer-card {
-  display: grid;
-  grid-template-columns: 26px minmax(0, 170px) minmax(0, 1fr) 90px 70px auto;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 10px;
-}
-
-.timer-card__bar > div:first-child { margin-bottom: 2px !important; }
-
-/* =========================================================
-   Adaptation aux écrans étroits
-
-   Cette section vient après toutes les règles de base : une
-   media query de même spécificité placée avant se ferait
-   écraser par la règle qu'elle est censée corriger.
-   ========================================================= */
-@media (max-width: 900px) {
-  .choice-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-}
-
-@media (max-width: 640px) {
-  .choice-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .field-pair {
-    grid-template-columns: 1fr;
-  }
-}
-
-/* =========================================================
-   Téléphone
-   L'interface d'origine est une surcouche de bureau, dense et
-   pilotée à la souris. Sur un écran tactile il faut du texte
-   lisible et des cibles qu'on atteint au pouce.
-   ========================================================= */
-@media (max-width: 560px) {
-  :root {
-    --fs-xs: 12px;
-    --fs-sm: 13px;
-    --fs-base: 14px;
-    --fs-md: 15px;
-    --fs-lg: 17px;
-    --fs-xl: 21px;
-    --fs-display: 30px;
-  }
-
-  body {
-    /* Encoche et barre de gestes. */
-    padding: env(safe-area-inset-top) env(safe-area-inset-right)
-             env(safe-area-inset-bottom) env(safe-area-inset-left);
-  }
-
-  button {
-    min-height: 40px;
-    padding: 8px 14px;
-  }
-
-  .btn-sm {
-    min-height: 36px;
-    padding: 6px 12px;
-  }
-
-  .choice {
-    min-height: 64px;
-  }
-
-  .picker__item {
-    min-width: 96px;
-    height: 46px;
-  }
-
-  .picker::-webkit-scrollbar {
-    height: 3px;
-  }
-
-  /* Le titre et trois onglets ne tiennent pas sur 393 px : le logo
-     suffit à identifier l'application, les onglets sont la navigation. */
-  .app-title {
-    display: none;
-  }
-
-  .enclosure-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .enclosure-grid > .card {
-    display: grid !important;
-    grid-template-columns: minmax(0, 1fr) auto;
-    grid-template-areas: 'heading configure' 'summary menu';
-    gap: 4px 7px !important;
-    padding: 6px 8px;
-  }
-
-  .enclosure-card__heading { grid-area: heading; }
-  .enclosure-card__quick-summary { grid-area: summary; min-height: 30px; }
-  .enclosure-card > div:last-child { display: contents !important; }
-  .enclosure-card__configure { grid-area: configure; min-height: 30px; }
-  .enclosure-card__menu { grid-area: menu; }
-  .enclosure-card__menu > summary { min-height: 30px; }
-
-  .enclosure-add { min-height: 40px; }
-
-  .enclosures-stats { display: none !important; }
-  .enclosure-card__desktop-details { display: none; }
-  .enclosure-card__state { display: none !important; }
-  .enclosure-card__quick-summary { min-height: 30px; padding: 3px 7px; }
-  .enclosure-card__choice { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
-  .enclosure-card__time { font-size: var(--fs-base); }
-  .enclosure-card__menu-items .gauge-strip { max-width: 270px; }
-  .enclosure-card__menu-items > button { min-height: 40px; }
-  .enclosure-grid > .card > div:first-child .hint { display: none !important; }
-  .enclosure-grid > .card > div:first-child .badge { display: none !important; }
-
-  .enclosure-card__configure { min-height: 30px; font-size: var(--fs-xs); }
-
-  .enclosure-card__quick-summary { padding: 8px 10px; }
-
-  .enclosure-card__details[open] { display: flex; flex-direction: column; gap: var(--sp-2); }
-
-  .quick-setup-tier { order: 1; }
-  .quick-setup-values-area { order: 2; }
-  .quick-setup-outcome { display: flex; flex-direction: column; gap: var(--sp-2); }
-  .quick-setup-mount { order: 1; }
-  .quick-setup-outcome > .card { order: 2; position: sticky; bottom: 0; box-shadow: 0 -8px 24px rgba(20, 20, 31, .8); }
-
-  .field__range { height: 38px; }
-
-  .field input[type='number'] {
-    /* Sous 16px, Android zoome à la mise au point du champ. */
-    font-size: 16px;
-    min-height: 44px;
-  }
-
-  .field__sign {
-    width: 46px;
-    min-height: 44px;
-  }
-
-  /* La carte de minuteur passe d'une ligne large à un bloc. */
-  .timer-card {
-    grid-template-columns: 34px minmax(0, 1fr) auto;
-    grid-template-areas:
-      'num  title  status'
-      'bar  bar    bar'
-      'left left   right';
-    row-gap: var(--sp-2);
-  }
-
-  .timer-card__num { grid-area: num; }
-  .timer-card__title { grid-area: title; }
-  .timer-card__bar { grid-area: bar; }
-  .timer-card__remaining { grid-area: left; text-align: left; }
-  .timer-card__end { grid-area: right; text-align: right; }
-  .timer-card__actions { grid-area: status; }
-
-  .dashboard { display: flex; flex-direction: column; gap: 7px; }
-  .dashboard > div { width: 100%; }
-  .quick-setup-tier .choice { min-height: 50px; padding: 5px 7px; }
-  .quick-setup-outcome > .card { position: sticky; bottom: 0; z-index: 1; padding: 8px; box-shadow: 0 -8px 24px rgba(20, 20, 31, .8); }
-  .enclosure-card__menu-items { right: 0; min-width: min(280px, 85vw); }
+/*
+ * Téléphone : le design interne reste unique et fixe (360×500, voir
+ * AppStage) — c'est la mise à l'échelle proportionnelle qui l'adapte à
+ * n'importe quelle taille d'écran, jamais une variante de tailles de police.
+ * Seule l'encoche/barre de gestes reste à prendre en compte, en réservant
+ * la marge sur la scène plutôt que sur le canevas mis à l'échelle.
+ */
+.app-stage {
+  padding: env(safe-area-inset-top) env(safe-area-inset-right)
+           env(safe-area-inset-bottom) env(safe-area-inset-left);
 }

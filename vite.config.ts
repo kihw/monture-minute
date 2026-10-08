@@ -3,6 +3,11 @@ import react from '@vitejs/plugin-react';
 import electron from 'vite-plugin-electron';
 import electronRenderer from 'vite-plugin-electron-renderer';
 import path from 'path';
+import fs from 'fs';
+
+// Source de vérité unique de la version : package.json. Jamais dupliquée en dur
+// ailleurs — voir src/core/version.ts.
+const pkg = JSON.parse(fs.readFileSync(path.resolve(__dirname, 'package.json'), 'utf-8')) as { version: string };
 
 /**
  * Deux cibles depuis la même base.
@@ -20,6 +25,10 @@ export default defineConfig(({ mode }) => {
     // Les chemins relatifs conviennent aussi au serveur Vite en développement.
     base: './',
 
+    define: {
+      __APP_VERSION__: JSON.stringify(pkg.version),
+    },
+
     plugins: [
       react(),
       ...(isAndroid
@@ -31,7 +40,7 @@ export default defineConfig(({ mode }) => {
                 vite: {
                   build: {
                     outDir: 'dist-electron/main',
-                    rollupOptions: { external: ['electron', 'electron-store'] },
+                    rollupOptions: { external: ['electron'] },
                   },
                 },
               },

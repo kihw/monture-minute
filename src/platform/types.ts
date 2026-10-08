@@ -1,4 +1,5 @@
 import { BreedingTimer } from '@/types/timer';
+import type { GitHubRelease, GitHubReleaseAsset } from '@/core/updateEngine';
 
 /** Le magasin de l'application, réduit à ce dont `useAppState` a besoin. */
 export interface PlatformStorage {
@@ -23,11 +24,22 @@ export interface PlatformTimers {
   cancel(timerId: string): void;
 }
 
+/**
+ * Mise à jour in-app, distribuée via GitHub Releases. Indépendante du reste
+ * (storage/timers) : un échec ici ne doit jamais affecter l'élevage.
+ */
+export interface PlatformUpdates {
+  /** `false` pour le web : pas de binaire à installer, toujours la dernière version déployée. */
+  readonly supported: boolean;
+  /** `null` si GitHub est inaccessible ou la réponse inexploitable — jamais d'exception. */
+  fetchLatestRelease(): Promise<GitHubRelease | null>;
+  /** Ouvre l'asset via le mécanisme approprié à la plateforme (navigateur système). */
+  openAsset(asset: GitHubReleaseAsset): void;
+}
+
 export interface Platform {
   name: 'electron' | 'android' | 'web';
-  /** La fenêtre flottante n'existe que sur le bureau. */
-  hasCompactWindow: boolean;
-  openCompactWindow(): void;
   storage: PlatformStorage;
   timers: PlatformTimers;
+  updates: PlatformUpdates;
 }

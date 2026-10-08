@@ -8,8 +8,6 @@ const memory: Record<string, unknown> = {};
 
 export const webPlatform: Platform = {
   name: 'web',
-  hasCompactWindow: false,
-  openCompactWindow: () => {},
   storage: {
     getAll: async () => ({ ...memory }),
     set: (key, value) => { memory[key] = value; },
@@ -17,5 +15,12 @@ export const webPlatform: Platform = {
   timers: {
     schedule: () => {},
     cancel: () => {},
+  },
+  updates: {
+    // Pas de binaire à installer : la page web est toujours la dernière
+    // version déployée. Non applicable, pas un échec.
+    supported: false,
+    fetchLatestRelease: async () => null,
+    openAsset: () => {},
   },
 };

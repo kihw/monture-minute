@@ -1,9 +1,6 @@
-import { GaugeId, MountStat } from '@/types/breeding';
-import { Enclosure, EnclosureMount, EnclosureStatus } from '@/types/enclosure';
-import { BreedingTimer } from '@/types/timer';
-import { getDrainSeconds, getGaugeConfig, GAUGE_MAX, STAT_LABELS } from './breedingRules';
-import { enclosureTimer, nextRunningTimer } from './timerEngine';
-import { BreedingOutcome, simulateBreeding } from './simulator';
+import { MountStat, Tier } from '@/types/breeding';
+import { EnclosureMount } from '@/types/enclosure';
+import { TICK_INTERVAL_SECONDS, TIER_EFFECT, getAbilityMultiplier } from './breedingRules';
 
 /** Valeur actuelle de la statistique élevée par une jauge. */
 export function statValue(mount: EnclosureMount, stat: MountStat): number {
@@ -38,115 +35,46 @@ export function statFields(stat: MountStat): { value: keyof EnclosureMount; targ
   }
 }
 
+export type ActionDirection = 'increase' | 'decrease';
+
+export interface ActionPlan {
+  stat: MountStat;
+  direction: ActionDirection;
+  current: number;
+  target: number;
+  delta: number;
+  /** Faux quand la cible ne définit aucun trajet exploitable (ex. cible XP ≤ XP actuelle). */
+  directionOkay: boolean;
+  durationSeconds: number;
+}
+
 /**
- * Calcule l'élevage en cours dans un enclos.
- * `null` si l'enclos est vide ou si aucune jauge n'a été choisie.
+ * Durée pour amener `stat` de sa valeur actuelle à une valeur cible arbitraire,
+ * à ce tier d'équipement — indépendant de la cible saisie manuellement sur la
+ * monture. Permet au moteur de boucles d'estimer une durée vers la borne
+ * d'une condition sans jamais écrire dans l'état de l'enclos.
  */
-export function planEnclosure(enclosure: Enclosure): BreedingOutcome | null {
-  const { mount, activeGauge } = enclosure;
-  if (!mount || !activeGauge) return null;
-
-  const stat = getGaugeConfig(activeGauge).stat;
-
-  return simulateBreeding({
-    gaugeId: activeGauge,
-    fuel: enclosure.gauges[activeGauge],
-    ability: mount.ability,
-    serenity: mount.serenity,
-    from: statValue(mount, stat),
-    to: statTarget(mount, stat),
-  });
+export function estimateDurationSeconds(mount: EnclosureMount, stat: MountStat, tier: Tier, targetValue: number): number {
+  const current = statValue(mount, stat);
+  const delta = Math.abs(targetValue - current);
+  if (delta === 0) return 0;
+  const multiplier = getAbilityMultiplier(mount.ability, stat);
+  return Math.ceil(delta / (TIER_EFFECT[tier] * multiplier)) * TICK_INTERVAL_SECONDS;
 }
 
 /**
- * État d'un enclos, dans l'ordre de priorité d'affichage :
- *  - `empty`    : aucune monture placée
- *  - `idle`     : monture présente, aucune jauge choisie
- *  - `low-fuel` : la jauge choisie n'a pas de quoi atteindre la cible
- *  - `running`  : l'objectif est atteignable
- */
-export function getEnclosureStatus(enclosure: Enclosure, outcome: BreedingOutcome | null): EnclosureStatus {
-  if (!enclosure.mount) return 'empty';
-  if (!enclosure.activeGauge) return 'idle';
-  if (outcome && !outcome.success) return 'low-fuel';
-  return 'running';
-}
-
-/** Secondes avant que la jauge choisie ne s'épuise. `null` s'il n'y en a pas. */
-export function secondsUntilExhaustion(enclosure: Enclosure): number | null {
-  const { activeGauge } = enclosure;
-  if (!activeGauge) return null;
-  return getDrainSeconds(enclosure.gauges[activeGauge]);
-}
-
-export interface EnclosureSummary {
-  enclosure: Enclosure;
-  status: EnclosureStatus;
-  outcome: BreedingOutcome | null;
-  timer: BreedingTimer | null;
-  /** Libellé de l'élevage en cours, ex. « Sérénité − ». */
-  actionLabel: string;
-  exhaustionSeconds: number | null;
-}
-
-export function summarizeEnclosure(enclosure: Enclosure, timers: BreedingTimer[]): EnclosureSummary {
-  const outcome = planEnclosure(enclosure);
-
-  return {
-    enclosure,
-    outcome,
-    timer: enclosureTimer(timers, enclosure.id),
-    status: getEnclosureStatus(enclosure, outcome),
-    actionLabel: enclosure.activeGauge ? choiceLabel(enclosure.activeGauge) : '',
-    exhaustionSeconds: secondsUntilExhaustion(enclosure),
-  };
-}
-
-export interface ParkSummary {
-  activeEnclosures: number;
-  totalEnclosures: number;
-  alerts: number;
-  /** L'enclos dont le minuteur échoit en premier, et ce minuteur. */
-  nextDeadline: { enclosureId: string; enclosureName: string; timer: BreedingTimer } | null;
-}
-
-export function summarizePark(summaries: EnclosureSummary[]): ParkSummary {
-  const timer = nextRunningTimer(summaries.map(s => s.timer).filter((t): t is BreedingTimer => t !== null));
-  const owner = timer ? summaries.find(s => s.enclosure.id === timer.enclosureId) : undefined;
-
-  return {
-    activeEnclosures: summaries.filter(s => s.status === 'running' || s.status === 'low-fuel').length,
-    totalEnclosures: summaries.length,
-    alerts: summaries.filter(s => s.status === 'low-fuel').length,
-    nextDeadline:
-      timer && owner
-        ? { enclosureId: owner.enclosure.id, enclosureName: owner.enclosure.name, timer }
-        : null,
-  };
-}
-
-/**
- * Libellé du choix, du point de vue du joueur : la statistique et le sens.
- * Le nom de l'équipement en jeu reste disponible via `getGaugeConfig`.
- */
-export function choiceLabel(id: GaugeId): string {
-  const config = getGaugeConfig(id);
-  return `${STAT_LABELS[config.stat]} ${config.direction === 'decrease' ? '−' : '+'}`;
-}
-
-/**
- * Affichage d'une valeur de statistique.
+ * Combien de temps — et dans quel sens — pour amener `stat` de sa valeur
+ * actuelle à sa cible saisie, à ce tier d'équipement.
  *
- * La sérénité porte toujours son signe : « −1 000 » et « +2 000 » se lisent
- * sans ambiguïté, là où « 1 000 » laisse deviner de quel côté de zéro on est.
+ * Fonction pure : aucune dépendance au rendu, réutilisée telle quelle par le
+ * moteur de décision des boucles d'élevage.
  */
-export function formatStat(stat: MountStat, value: number): string {
-  const text = Math.abs(value).toLocaleString('fr-FR');
-  if (stat !== 'serenity') return value.toLocaleString('fr-FR');
-  return value < 0 ? `−${text}` : `+${text}`;
-}
-
-/** Pourcentage de remplissage d'une jauge, pour l'affichage. */
-export function gaugeFillPercent(value: number): number {
-  return Math.max(0, Math.min(100, (value / GAUGE_MAX) * 100));
+export function planAction(mount: EnclosureMount, stat: MountStat, tier: Tier): ActionPlan {
+  const current = statValue(mount, stat);
+  const target = statTarget(mount, stat);
+  const direction: ActionDirection = target < current ? 'decrease' : 'increase';
+  const directionOkay = stat === 'xp' ? target > current : stat === 'serenity' ? target !== current : true;
+  const delta = Math.abs(target - current);
+  const durationSeconds = directionOkay ? estimateDurationSeconds(mount, stat, tier, target) : 0;
+  return { stat, direction, current, target, delta, directionOkay, durationSeconds };
 }

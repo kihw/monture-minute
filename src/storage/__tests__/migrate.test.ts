@@ -3,14 +3,9 @@ import { migrate, SCHEMA_VERSION, DEFAULT_ENCLOSURE_COUNT } from '../migrate';
 
 const NOW = 1_700_000_000_000;
 
-/** Store tel qu'écrit par la version mono-enclos (13 clés à plat). */
+/** Store tel qu'écrit par la version mono-enclos (clés à plat). */
 function legacyStore() {
   return {
-    enclosureGauges: {
-      baffeur: 86_500, caresseur: 50_000, foudroyeur: 50_000,
-      abreuvoir: 50_000, dragofesse: 50_000, mangeoire: 62_000,
-    },
-    activeGauges: ['baffeur', 'mangeoire'],
     serenity: 4_320,
     serenityTarget: 1_000,
     endurance: 0,
@@ -34,7 +29,6 @@ describe('Migration depuis un store vide', () => {
     expect(s.schemaVersion).toBe(SCHEMA_VERSION);
     expect(s.enclosures).toHaveLength(DEFAULT_ENCLOSURE_COUNT);
     expect(s.enclosures.every(e => e.mount === null)).toBe(true);
-    expect(s.enclosures.every(e => e.activeGauge === null)).toBe(true);
     expect(s.selectedEnclosureId).toBe(s.enclosures[0].id);
     expect(s.timers).toEqual([]);
   });
@@ -46,13 +40,6 @@ describe('Migration depuis un store vide', () => {
 });
 
 describe('Migration depuis le store hérité mono-enclos', () => {
-  it('reporte les jauges sur l’enclos nº1', () => {
-    const s = migrate(legacyStore(), NOW);
-    expect(s.enclosures[0].gauges.baffeur).toBe(86_500);
-    expect(s.enclosures[0].gauges.mangeoire).toBe(62_000);
-    expect(s.enclosures[0].activeGauge).toBe('baffeur');
-  });
-
   it('reporte l’état complet de la monture', () => {
     const m = migrate(legacyStore(), NOW).enclosures[0].mount!;
     expect(m).not.toBeNull();
@@ -78,7 +65,7 @@ describe('Migration depuis le store hérité mono-enclos', () => {
     expect(s.timers[0].status).toBe('running');
   });
 
-  it('ne perd rien si seules les clés monture existent (sans jauges)', () => {
+  it('reporte l’état monture même store minimal', () => {
     const s = migrate({ serenity: -1_200, ability: 'sage' }, NOW);
     expect(s.enclosures[0].mount!.serenity).toBe(-1_200);
     expect(s.enclosures[0].mount!.ability).toBe('sage');
@@ -95,34 +82,17 @@ describe('Idempotence', () => {
   it('préserve un parc déjà migré et modifié par l’utilisateur', () => {
     const first = migrate(legacyStore(), NOW);
     first.enclosures[3].name = 'Sufokia';
-    first.enclosures.push({
-      id: 'enclos-7', name: 'Ajouté', createdAt: NOW,
-      gauges: { baffeur: 1, caresseur: 2, foudroyeur: 3, abreuvoir: 4, dragofesse: 5, mangeoire: 6 },
-      activeGauge: null, mount: null,
-    });
+    first.enclosures.push({ id: 'enclos-7', name: 'Ajouté', createdAt: NOW, mount: null });
 
     const again = migrate({ ...first } as unknown as Record<string, unknown>, NOW);
     expect(again.enclosures).toHaveLength(7);
     expect(again.enclosures[3].name).toBe('Sufokia');
-    expect(again.enclosures[6].gauges.mangeoire).toBe(6);
+    expect(again.enclosures[6].name).toBe('Ajouté');
+    expect(again.enclosures[6].compactStat).toBe('serenity');
   });
 });
 
 describe('Robustesse', () => {
-  it('ne garde qu’une jauge même si le store hérité en contient plusieurs', () => {
-    const s = migrate({ ...legacyStore(), activeGauges: ['baffeur', 'mangeoire', 'abreuvoir'] }, NOW);
-    expect(s.enclosures[0].activeGauge).toBe('baffeur');
-  });
-
-  it('convertit un enclos v2 à deux jauges en gardant la première', () => {
-    const v2 = migrate(legacyStore(), NOW) as unknown as Record<string, unknown>;
-    const enclosures = (v2.enclosures as Record<string, unknown>[]).map((e, i) =>
-      i === 0 ? { ...e, activeGauge: undefined, activeGauges: ['mangeoire', 'baffeur'] } : e,
-    );
-    const s = migrate({ ...v2, enclosures }, NOW);
-    expect(s.enclosures[0].activeGauge).toBe('mangeoire');
-  });
-
   it('ignore un selectedEnclosureId qui ne correspond à aucun enclos', () => {
     const migrated = migrate(legacyStore(), NOW);
     const s = migrate({ ...migrated, selectedEnclosureId: 'inexistant' } as unknown as Record<string, unknown>, NOW);
@@ -150,6 +120,27 @@ describe('Robustesse', () => {
     expect(s.timers[0].status).toBe('finished');
   });
 
+  it('préserve une instance de boucle valide', () => {
+    const loopInstance = { loopId: 'preparation-standard', stepId: 'descente-serenite', status: 'running' as const, startedAt: NOW };
+    const first = migrate(legacyStore(), NOW);
+    first.enclosures[0] = { ...first.enclosures[0], loopInstance };
+    const s = migrate({ ...first } as unknown as Record<string, unknown>, NOW);
+    expect(s.enclosures[0].loopInstance).toEqual(loopInstance);
+  });
+
+  it('abandonne une instance de boucle corrompue sans toucher au reste de l’enclos', () => {
+    const first = migrate(legacyStore(), NOW);
+    first.enclosures[0] = { ...first.enclosures[0], loopInstance: { loopId: 'x' } as never };
+    const s = migrate({ ...first } as unknown as Record<string, unknown>, NOW);
+    expect(s.enclosures[0].loopInstance).toBeUndefined();
+    expect(s.enclosures[0].mount!.serenity).toBe(4_320);
+  });
+
+  it('un enclos sans loopInstance reste en mode manuel pur (champ absent)', () => {
+    const s = migrate(legacyStore(), NOW);
+    expect(s.enclosures[0].loopInstance).toBeUndefined();
+  });
+
   it('ne garde qu’un minuteur par enclos, le plus récent', () => {
     const s = migrate(
       {
@@ -163,12 +154,5 @@ describe('Robustesse', () => {
     );
     expect(s.timers).toHaveLength(1);
     expect(s.timers[0].id).toBe('recent');
-  });
-
-  it('remplace des jauges partielles par des valeurs complètes', () => {
-    const s = migrate({ enclosureGauges: { baffeur: 500 } }, NOW);
-    expect(s.enclosures[0].gauges).toEqual({
-      baffeur: 500, caresseur: 0, foudroyeur: 0, abreuvoir: 0, dragofesse: 0, mangeoire: 0,
-    });
   });
 });

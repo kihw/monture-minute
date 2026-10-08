@@ -9,17 +9,15 @@ export interface ElectronAPI {
   notification: {
     show: (title: string, body: string) => Promise<void>;
   };
+  shell: {
+    openExternal: (url: string) => Promise<void>;
+  };
   window: {
     setAlwaysOnTop: (value: boolean) => Promise<void>;
     isAlwaysOnTop: () => Promise<boolean>;
     minimize: () => Promise<void>;
     hide: () => Promise<void>;
     close: () => Promise<void>;
-  };
-  compact: {
-    toggle: () => Promise<boolean>;
-    close: () => Promise<void>;
-    isOpen: () => Promise<boolean>;
   };
   onStoreChanged: (callback: (key: string, value: unknown) => void) => void;
 }

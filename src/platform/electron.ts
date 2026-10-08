@@ -1,4 +1,5 @@
 import { Platform } from './types';
+import { fetchLatestGitHubRelease } from './githubReleases';
 
 /**
  * Bureau. Les échéances appartiennent au processus principal : il les relit au
@@ -8,8 +9,6 @@ import { Platform } from './types';
 export function createElectronPlatform(api: NonNullable<Window['electronAPI']>): Platform {
   return {
     name: 'electron',
-    hasCompactWindow: true,
-    openCompactWindow: () => { void api.compact.toggle(); },
     storage: {
       getAll: async () => (await api.store.getAll()) ?? {},
       set: (key, value) => { void api.store.set(key, value); },
@@ -18,6 +17,14 @@ export function createElectronPlatform(api: NonNullable<Window['electronAPI']>):
     timers: {
       schedule: () => {},
       cancel: () => {},
+    },
+    updates: {
+      supported: true,
+      fetchLatestRelease: fetchLatestGitHubRelease,
+      // electron-builder a son propre publish désactivé (releases manuelles) :
+      // pas d'installation silencieuse ici — on ouvre l'installeur/portable
+      // téléchargé par le navigateur système, l'utilisateur le lance lui-même.
+      openAsset: asset => { void api.shell.openExternal(asset.browserDownloadUrl); },
     },
   };
 }

@@ -1,16 +1,16 @@
-import { EnclosureGauges, GaugeId, Ability, MountStat, Tier } from '@/types/breeding';
+import { Ability, MountStat, Tier } from '@/types/breeding';
 import { BreedingTimer } from '@/types/timer';
 import {
   Enclosure,
   EnclosureMount,
   AppSettings,
   DEFAULT_SETTINGS,
-  emptyGauges,
   createEnclosure,
   createMount,
 } from '@/types/enclosure';
+import { LoopInstance, LoopStatus } from '@/core/loopEngine/types';
 
-export const SCHEMA_VERSION = 4;
+export const SCHEMA_VERSION = 5;
 
 export const DEFAULT_ENCLOSURE_COUNT = 6;
 
@@ -60,17 +60,6 @@ function mountFromLegacy(store: RawStore): EnclosureMount {
   return mount;
 }
 
-function gaugesFromLegacy(store: RawStore): EnclosureGauges {
-  const raw = store.enclosureGauges as Partial<EnclosureGauges> | undefined;
-  const base = emptyGauges();
-  if (!raw || typeof raw !== 'object') return base;
-  for (const key of Object.keys(base) as GaugeId[]) {
-    const v = raw[key];
-    if (typeof v === 'number' && Number.isFinite(v)) base[key] = v;
-  }
-  return base;
-}
-
 function isEnclosureArray(v: unknown): v is Enclosure[] {
   return Array.isArray(v) && v.every(e => e && typeof e === 'object' && typeof (e as Enclosure).id === 'string');
 }
@@ -103,13 +92,11 @@ export function migrate(store: RawStore, now: number = Date.now()): AppState {
 
   const enclosures = defaultEnclosures(now);
 
-  // Store hérité : l'enclos nº1 reprend l'unique jeu de jauges et l'unique monture.
-  if (store.enclosureGauges !== undefined || store.serenity !== undefined) {
+  // Store hérité : l'enclos nº1 reprend l'unique monture à plat.
+  if (store.serenity !== undefined) {
     enclosures[0] = {
       ...enclosures[0],
       name: 'Enclos 1',
-      gauges: gaugesFromLegacy(store),
-      activeGauge: firstGauge(store.activeGauges),
       mount: mountFromLegacy(store),
     };
   }
@@ -123,23 +110,29 @@ export function migrate(store: RawStore, now: number = Date.now()): AppState {
   };
 }
 
+const LOOP_STATUSES: LoopStatus[] = ['running', 'paused', 'interrupted', 'completed'];
+
 /**
- * Une seule jauge par enclos depuis le schéma v3 : un parc hérité qui en
- * portait deux garde la première, celle par laquelle le joueur avait commencé.
+ * Valide la forme d'une instance de boucle persistée. N'exige pas que
+ * `loopId`/`stepId` existent dans le catalogue courant : un catalogue peut
+ * évoluer entre deux versions sans provoquer de migration — le moteur de
+ * décision gère déjà une référence devenue invalide (`donnees-manquantes`).
  */
-function firstGauge(raw: unknown): GaugeId | null {
-  if (typeof raw === 'string') return raw as GaugeId;
-  if (Array.isArray(raw) && typeof raw[0] === 'string') return raw[0] as GaugeId;
-  return null;
+function normalizeLoopInstance(raw: unknown): LoopInstance | undefined {
+  if (!raw || typeof raw !== 'object') return undefined;
+  const candidate = raw as Partial<LoopInstance>;
+  if (typeof candidate.loopId !== 'string' || typeof candidate.stepId !== 'string') return undefined;
+  if (!LOOP_STATUSES.includes(candidate.status as LoopStatus)) return undefined;
+  if (typeof candidate.startedAt !== 'number') return undefined;
+  return {
+    loopId: candidate.loopId,
+    stepId: candidate.stepId,
+    status: candidate.status as LoopStatus,
+    startedAt: candidate.startedAt,
+  };
 }
 
 function normalizeEnclosure(e: Enclosure): Enclosure {
-  const legacy = (e as Enclosure & { activeGauges?: unknown }).activeGauges;
-  const activeGauge = firstGauge(e.activeGauge ?? legacy);
-  const statByGauge: Record<GaugeId, MountStat> = {
-    baffeur: 'serenity', caresseur: 'serenity', foudroyeur: 'endurance',
-    dragofesse: 'love', abreuvoir: 'maturity', mangeoire: 'xp',
-  };
   const stats: MountStat[] = ['serenity', 'endurance', 'love', 'maturity', 'xp'];
   const rawTiers = (e as Enclosure & { compactTiers?: Partial<Record<MountStat, unknown>> }).compactTiers;
   const compactTiers: Record<MountStat, Tier> = { serenity: 1, endurance: 1, love: 1, maturity: 1, xp: 1 };
@@ -148,16 +141,16 @@ function normalizeEnclosure(e: Enclosure): Enclosure {
     if (tier === 1 || tier === 2 || tier === 3 || tier === 4) compactTiers[stat] = tier;
   }
   const storedStat = (e as Enclosure & { compactStat?: unknown }).compactStat;
-  const compactStat = stats.includes(storedStat as MountStat)
-    ? storedStat as MountStat
-    : activeGauge ? (statByGauge[activeGauge] ?? 'serenity') : 'serenity';
+  const compactStat = stats.includes(storedStat as MountStat) ? (storedStat as MountStat) : 'serenity';
+  // Affectation explicite (jamais via spread) : un `loopInstance` corrompu
+  // porté par `...e` ne doit pas survivre à la normalisation.
+  const loopInstance = normalizeLoopInstance(e.loopInstance);
   return {
     ...e,
-    gauges: { ...emptyGauges(), ...(e.gauges ?? {}) },
-    activeGauge,
     compactStat,
     compactTiers,
     mount: e.mount ?? null,
+    loopInstance,
   };
 }
 

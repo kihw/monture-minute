@@ -42,6 +42,28 @@ export function enclosureTimer(timers: BreedingTimer[], enclosureId: string): Br
   return timers.find(t => t.enclosureId === enclosureId && t.status === 'running') ?? null;
 }
 
+/**
+ * Le minuteur à afficher pour un enclos : en cours, ou terminé mais pas
+ * encore acquitté par le joueur (clic sur « Stopper »). Un minuteur terminé
+ * ne doit pas disparaître silencieusement de l'écran — seul un geste
+ * explicite de l'utilisateur, ou le démarrage d'un nouveau minuteur sur cet
+ * enclos, l'efface.
+ */
+export function enclosureTimerForDisplay(timers: BreedingTimer[], enclosureId: string): BreedingTimer | null {
+  return timers.find(t => t.enclosureId === enclosureId && (t.status === 'running' || t.status === 'finished')) ?? null;
+}
+
+/** Enclos dont un minuteur vient de se terminer sans avoir encore été acquitté. */
+export function enclosuresWithFinishedTimer(timers: BreedingTimer[]): Set<string> {
+  return new Set(timers.filter(t => t.status === 'finished').map(t => t.enclosureId));
+}
+
+/** Depuis combien de temps un minuteur terminé est en retard (0 s'il tourne encore). */
+export function getOverdueSeconds(timer: BreedingTimer, now: number = Date.now()): number {
+  if (timer.status !== 'finished') return 0;
+  return Math.max(0, Math.floor((now - timer.endAt) / 1000));
+}
+
 export function getRemainingSeconds(timer: BreedingTimer, now: number = Date.now()): number {
   if (timer.status === 'finished') return 0;
   return Math.max(0, Math.ceil((timer.endAt - now) / 1000));

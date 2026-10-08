@@ -3,7 +3,6 @@ import path from 'path';
 import { setupIpcHandlers } from './ipcHandlers';
 import { createTray } from './tray';
 import { rescheduleAll, disposeScheduler } from './timerScheduler';
-import { closeCompactWindow } from './compactWindow';
 
 let mainWindow: BrowserWindow | null = null;
 let tray: Tray | null = null;
@@ -22,9 +21,9 @@ function focusMain() {
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: 360,
-    height: 450,
+    height: 500,
     minWidth: 330,
-    minHeight: 430,
+    minHeight: 480,
     frame: false,
     icon: app.isPackaged ? path.join(process.resourcesPath, 'monture-minute.ico') : path.join(__dirname, '../../assets/monture-minute.ico'),
     darkTheme: true,
@@ -68,7 +67,6 @@ app.whenReady().then(() => {
 app.on('before-quit', () => {
   isQuitting = true;
   disposeScheduler();
-  closeCompactWindow();
 });
 
 app.on('window-all-closed', () => {
