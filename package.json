@@ -1,6 +1,6 @@
 {
   "name": "dofus-breeding-tool",
-  "version": "1.2.3",
+  "version": "1.2.4",
   "description": "Monture Minute — minuteur compact pour l'élevage de montures dans Dofus",
   "main": "dist-electron/main/main.js",
   "scripts": {
