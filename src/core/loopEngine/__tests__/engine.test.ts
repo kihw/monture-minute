@@ -8,120 +8,97 @@ import { LoopDefinition } from '../types';
 const TIER_1 = () => 1 as const;
 
 describe('evaluate — stratégie d’élevage, cas nominal', () => {
-  it('recommande de stabiliser la sérénité vers l’extrémité la plus proche (-5000) avant toute jauge', () => {
+  it('sérénité très négative (< -1000) : seule Endurance est recommandée', () => {
     const mount = createMount();
-    mount.serenity = -1_000; // plus proche de -5000 que de +5000
+    mount.serenity = -2_000;
     const instance = startLoopInstance(BREEDING_STRATEGY, 0);
 
     const result = evaluate(mount, instance, STRATEGY_CATALOG, TIER_1);
 
     expect(result.decision.reason).toBe('objectif-non-atteint');
-    expect(result.decision.action).toEqual({ stat: 'serenity', direction: 'decrease', tier: 1 });
-    expect(result.decision.targetValue).toBe(-5_000);
-    expect(result.instance.stepId).toBe('guard1');
-  });
-
-  it('vise l’extrémité haute (+5000) quand elle est la plus proche', () => {
-    const mount = createMount();
-    mount.serenity = 1_000; // plus proche de +5000 que de -5000
-    const instance = startLoopInstance(BREEDING_STRATEGY, 0);
-
-    const result = evaluate(mount, instance, STRATEGY_CATALOG, TIER_1);
-
-    expect(result.decision.action).toEqual({ stat: 'serenity', direction: 'increase', tier: 1 });
-    expect(result.decision.targetValue).toBe(5_000);
-  });
-
-  it('une monture déjà « équilibrée » (sérénité déjà à une extrémité) saute directement au remplissage des jauges, sans action inutile', () => {
-    const mount = createMount();
-    mount.serenity = -5_000; // déjà à l'extrémité : rien à faire ici
-    const instance = startLoopInstance(BREEDING_STRATEGY, 0);
-
-    const result = evaluate(mount, instance, STRATEGY_CATALOG, TIER_1);
-
-    expect(result.instance.stepId).toBe('fill-endurance');
     expect(result.decision.action).toEqual({ stat: 'endurance', direction: 'increase', tier: 1 });
+    expect(result.decision.targetValue).toBe(20_000);
+    expect(result.instance.stepId).toBe('train');
   });
 
-  it('le joueur peut déclarer la monture déjà équilibrée même loin d’une extrémité numérique : la stratégie ne force rien', () => {
+  it('sérénité négative proche de zéro (entre -1000 et -1) : Endurance d’abord, puis Maturité une fois Endurance au plafond', () => {
     const mount = createMount();
-    mount.serenity = -100; // ni à -5000 ni à +5000
-    mount.serenityEquilibrated = true; // mais le joueur sait que ce n'est pas la peine ici
-    const instance = startLoopInstance(BREEDING_STRATEGY, 0);
+    mount.serenity = -500;
 
-    const result = evaluate(mount, instance, STRATEGY_CATALOG, TIER_1);
+    const first = evaluate(mount, startLoopInstance(BREEDING_STRATEGY, 0), STRATEGY_CATALOG, TIER_1);
+    expect(first.decision.action?.stat).toBe('endurance');
 
-    expect(result.instance.stepId).toBe('fill-endurance');
-    expect(result.decision.action?.stat).toBe('endurance');
-  });
-
-  it('sans la déclaration du joueur, la même sérénité à -100 recommande bien de la stabiliser', () => {
-    const mount = createMount();
-    mount.serenity = -100;
-    const instance = startLoopInstance(BREEDING_STRATEGY, 0);
-
-    const result = evaluate(mount, instance, STRATEGY_CATALOG, TIER_1);
-
-    expect(result.decision.action?.stat).toBe('serenity');
-  });
-
-  it('l’autre extrémité (+5000) suffit tout autant : peu importe laquelle, pas de trajet imposé', () => {
-    const mount = createMount();
-    mount.serenity = 5_000;
-    const instance = startLoopInstance(BREEDING_STRATEGY, 0);
-
-    const result = evaluate(mount, instance, STRATEGY_CATALOG, TIER_1);
-
-    expect(result.instance.stepId).toBe('fill-endurance');
-  });
-
-  it('saute directement à Maturité si la sérénité est déjà extrême et Endurance déjà au plafond, en une seule évaluation (aucun temps perdu)', () => {
-    const mount = createMount();
-    mount.serenity = 5_000;
     mount.endurance = 20_000;
-    const instance = startLoopInstance(BREEDING_STRATEGY, 0);
-
-    const result = evaluate(mount, instance, STRATEGY_CATALOG, TIER_1);
-
-    expect(result.instance.stepId).toBe('fill-maturity');
+    const second = evaluate(mount, first.instance, STRATEGY_CATALOG, TIER_1);
+    expect(second.decision.action?.stat).toBe('maturity');
   });
 
-  it('régule de nouveau la sérénité entre deux jauges si elle a dérivé en jeu depuis la dernière visite', () => {
-    const mount = createMount();
-    mount.serenity = 2_000; // ni à -5000 ni à +5000 : a dérivé depuis la dernière stabilisation
-    mount.endurance = 20_000; // Endurance déjà terminée
-    const instance = { loopId: BREEDING_STRATEGY.id, stepId: 'guard2', status: 'running' as const, startedAt: 0 };
-
-    const result = evaluate(mount, instance, STRATEGY_CATALOG, TIER_1);
-
-    expect(result.instance.stepId).toBe('guard2');
-    expect(result.decision.action?.direction).toBe('increase'); // 2000 plus proche de +5000
-    expect(result.decision.targetValue).toBe(5_000);
-  });
-
-  it('termine la stratégie sans phase XP si aucun niveau cible n’a été configuré', () => {
+  it('sérénité positive proche de zéro (entre 0 et 1000) : Maturité d’abord, puis Amour une fois Maturité au plafond', () => {
     const mount = createMount();
     mount.serenity = 500;
+
+    const first = evaluate(mount, startLoopInstance(BREEDING_STRATEGY, 0), STRATEGY_CATALOG, TIER_1);
+    expect(first.decision.action?.stat).toBe('maturity');
+
+    mount.maturity = 20_000;
+    const second = evaluate(mount, first.instance, STRATEGY_CATALOG, TIER_1);
+    expect(second.decision.action?.stat).toBe('love');
+  });
+
+  it('sérénité très positive (> 1000) : seule Amour est recommandée', () => {
+    const mount = createMount();
+    mount.serenity = 2_000;
+    const instance = startLoopInstance(BREEDING_STRATEGY, 0);
+
+    const result = evaluate(mount, instance, STRATEGY_CATALOG, TIER_1);
+
+    expect(result.decision.action).toEqual({ stat: 'love', direction: 'increase', tier: 1 });
+  });
+
+  it('continue de recommander la jauge de la bande même une fois toutes les jauges pleines, tant que la sérénité n’a pas atteint une extrémité', () => {
+    const mount = createMount();
+    mount.serenity = 2_000; // bande « Amour seul »
+    mount.endurance = 20_000;
+    mount.maturity = 20_000;
+    mount.love = 20_000; // la jauge recommandée elle-même est déjà pleine
+
+    const result = evaluate(mount, startLoopInstance(BREEDING_STRATEGY, 0), STRATEGY_CATALOG, TIER_1);
+
+    expect(result.decision.reason).toBe('objectif-non-atteint');
+    expect(result.decision.action?.stat).toBe('love');
+    expect(result.decision.estimatedDurationSeconds).toBe(0); // plus rien à faire progresser sur cette jauge
+  });
+
+  it('une sérénité déjà à une extrémité, jauges pleines et aucune cible XP : fin directe de la stratégie', () => {
+    const mount = createMount();
+    mount.serenity = 5_000; // déjà à l'extrémité : rien à faire ici
     mount.endurance = 20_000;
     mount.maturity = 20_000;
     mount.love = 20_000;
     // xpTarget par défaut (0) <= xp (0) : pas de cible réelle configurée.
-    const instance = { loopId: BREEDING_STRATEGY.id, stepId: 'fill-love', status: 'running' as const, startedAt: 0 };
+    const instance = { loopId: BREEDING_STRATEGY.id, stepId: 'train', status: 'running' as const, startedAt: 0 };
 
     const result = evaluate(mount, instance, STRATEGY_CATALOG, TIER_1);
 
     expect(result.decision.reason).toBe('boucle-terminee');
   });
 
+  it('le joueur peut déclarer la monture déjà équilibrée même loin d’une extrémité numérique : la stratégie ne force rien', () => {
+    const mount = createMount();
+    mount.serenity = -100; // ni à -5000 ni à +5000
+    mount.serenityEquilibrated = true; // mais le joueur sait que ce n'est pas la peine ici
+
+    const result = evaluate(mount, startLoopInstance(BREEDING_STRATEGY, 0), STRATEGY_CATALOG, TIER_1);
+
+    expect(result.decision.reason).toBe('boucle-terminee');
+  });
+
   it('enchaîne sur la phase XP si un niveau cible a été configuré au-delà de l’XP actuelle', () => {
     const mount = createMount();
-    mount.serenity = 500;
-    mount.endurance = 20_000;
-    mount.maturity = 20_000;
-    mount.love = 20_000;
+    mount.serenity = 5_000; // déjà à l'extrémité
     mount.xp = 1_000;
     mount.xpTarget = 50_000; // le joueur vise un niveau précis
-    const instance = { loopId: BREEDING_STRATEGY.id, stepId: 'fill-love', status: 'running' as const, startedAt: 0 };
+    const instance = { loopId: BREEDING_STRATEGY.id, stepId: 'train', status: 'running' as const, startedAt: 0 };
 
     const result = evaluate(mount, instance, STRATEGY_CATALOG, TIER_1);
 
@@ -143,7 +120,8 @@ describe('evaluate — stratégie d’élevage, cas nominal', () => {
 
   it('résout le tier par jauge : la jauge recommandée peut utiliser un tier différent', () => {
     const mount = createMount();
-    const instance = { loopId: BREEDING_STRATEGY.id, stepId: 'fill-endurance', status: 'running' as const, startedAt: 0 };
+    mount.serenity = -2_000; // bande « Endurance seul », pour une jauge déterministe
+    const instance = { loopId: BREEDING_STRATEGY.id, stepId: 'train', status: 'running' as const, startedAt: 0 };
     const tierFor = (stat: MountStat): Tier => (stat === 'endurance' ? 3 : 1);
 
     const result = evaluate(mount, instance, STRATEGY_CATALOG, tierFor);
@@ -154,7 +132,7 @@ describe('evaluate — stratégie d’élevage, cas nominal', () => {
 
   it('est stable/répétable : une réévaluation sans changement d’état redonne la même décision', () => {
     const mount = createMount();
-    mount.serenity = -1_000;
+    mount.serenity = -500;
     const instance = startLoopInstance(BREEDING_STRATEGY, 0);
 
     const first = evaluate(mount, instance, STRATEGY_CATALOG, TIER_1);
@@ -196,7 +174,7 @@ describe('evaluate — pause / interruption / reprise', () => {
   });
 
   it('n’interrompt pas une boucle déjà terminée', () => {
-    const completed = { loopId: BREEDING_STRATEGY.id, stepId: 'fill-love', status: 'completed' as const, startedAt: 0 };
+    const completed = { loopId: BREEDING_STRATEGY.id, stepId: 'train', status: 'completed' as const, startedAt: 0 };
     expect(interruptLoopInstance(completed).status).toBe('completed');
   });
 });

@@ -1,5 +1,6 @@
 import { MountStat, Tier } from '@/types/breeding';
 import { EnclosureMount } from '@/types/enclosure';
+import { STAT_LABELS, STAT_MAX } from '../breedingRules';
 import { statValue, estimateDurationSeconds } from '../enclosureRules';
 import { areConditionsMet, conditionObjective, isConditionMet } from './conditions';
 import { Decision, EvaluationResult, LoopDefinition, LoopInstance, LoopStep } from './types';
@@ -103,19 +104,28 @@ export function evaluate(
 
   if (!objective) return missingDataResult(resolvedInstance);
 
-  const { targetValue, direction } = conditionObjective(mount, objective);
-  const tier = tierFor(step.stat);
-  const estimatedDurationSeconds = estimateDurationSeconds(mount, step.stat, tier, targetValue);
+  // Une étape à `resolveStat` (ex. « entraîner selon la sérénité ») vise
+  // toujours le plafond de la jauge recommandée pour l'affichage/la durée,
+  // indépendamment de ce que vérifient ses conditions de sortie (qui portent
+  // sur la sérénité, pas sur cette jauge) : l'étape continue de recommander
+  // une jauge même pleine, tant que la sérénité n'a pas atteint une extrémité.
+  const stat = step.resolveStat ? step.resolveStat(mount) : step.stat;
+  const stepLabel = step.resolveStat ? `Remplir ${STAT_LABELS[stat]}` : step.label;
+  const { targetValue, direction } = step.resolveStat
+    ? { targetValue: STAT_MAX, direction: 'increase' as const }
+    : conditionObjective(mount, objective);
+  const tier = tierFor(stat);
+  const estimatedDurationSeconds = estimateDurationSeconds(mount, stat, tier, targetValue);
 
   return {
     instance: resolvedInstance,
     decision: {
       reason: 'objectif-non-atteint',
       stepId: step.id,
-      stepLabel: step.label,
-      action: { stat: step.stat, direction, tier },
+      stepLabel,
+      action: { stat, direction, tier },
       objective,
-      currentValue: statValue(mount, step.stat),
+      currentValue: statValue(mount, stat),
       targetValue,
       estimatedDurationSeconds,
     },

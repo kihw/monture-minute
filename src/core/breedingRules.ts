@@ -35,3 +35,17 @@ export function getAbilityMultiplier(ability: Ability, stat: MountStat): number 
   if (entry && entry.stat === stat) return entry.multiplier;
   return 1;
 }
+
+/**
+ * Jauge(s) pertinente(s) à monter pour la bande de sérénité courante, dans
+ * l'ordre de préférence (la première non pleine est retenue par l'appelant).
+ *
+ * Sérénité positive pousse vers Amour, négative vers Endurance ; Maturité est
+ * la jauge-pont utilisable des deux côtés tant qu'on reste proche de zéro
+ * (±1 000). Au-delà, seule la jauge de l'extrémité visée reste pertinente.
+ */
+export function recommendedTrainingStats(serenity: number): MountStat[] {
+  const nearCenter = Math.abs(serenity) <= 1_000;
+  if (serenity >= 0) return nearCenter ? ['maturity', 'love'] : ['love'];
+  return nearCenter ? ['endurance', 'maturity'] : ['endurance'];
+}

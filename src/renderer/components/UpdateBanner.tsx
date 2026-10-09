@@ -75,7 +75,12 @@ const UpdateBanner: React.FC<UpdateBannerProps> = ({ settings, setSettings }) =>
 
   const openUpdate = () => {
     if (!result?.release) return;
-    const asset = findAsset(result.release, name => name.endsWith('.exe')) ?? findAsset(result.release, name => name.endsWith('.apk'));
+    // Une même release GitHub porte à la fois l'APK Android et l'exe Windows :
+    // il faut choisir selon la plateforme courante, jamais essayer l'un puis
+    // l'autre (sur Android, un `.exe` serait trouvé en premier et proposé à tort).
+    const asset = platform.name === 'android'
+      ? findAsset(result.release, name => name.endsWith('.apk'))
+      : findAsset(result.release, name => name.endsWith('.exe'));
     if (!asset) {
       setView('error');
       return;

@@ -1,12 +1,20 @@
 import { MountStat, Tier } from '@/types/breeding';
+import type { EnclosureMount } from '@/types/enclosure';
 import type { ActionDirection } from '../enclosureRules';
 import type { Condition } from './conditions';
 
 export interface LoopStep {
   id: string;
   label: string;
-  /** Statistique que cette étape fait évoluer. */
+  /** Statistique que cette étape fait évoluer. Valeur de repli quand `resolveStat` est fourni. */
   stat: MountStat;
+  /**
+   * Quand fourni, calcule la statistique à faire évoluer à partir de l'état
+   * réel plutôt que de `stat` figé au catalogue — ex. la jauge recommandée
+   * selon la sérénité courante, qui peut changer d'une évaluation à l'autre
+   * sans que l'étape elle-même se termine.
+   */
+  resolveStat?: (mount: EnclosureMount) => MountStat;
   /** Conditions de sortie de l'étape — ET implicite entre elles. */
   exitConditions: Condition[];
   /**
