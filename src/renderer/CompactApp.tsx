@@ -383,12 +383,21 @@ const CompactApp: React.FC = () => {
         {strategyStatusText && <span className="compact-assist-status">{strategyStatusText}</span>}
       </div>
 
-      {mount && <div className="compact-serenity-quick">
-        {stat !== 'serenity' && <CompactValue label="Sérénité actuelle" value={mount.serenity} min={SERENITY_MIN} max={SERENITY_MAX} onChange={setSerenityCurrent} />}
-        <label className="compact-equilibrated">
+      {mount && (isAssistedOn || stat !== 'serenity') && <div className="compact-serenity-quick">
+        {/* La sérénité a déjà son propre éditeur de valeur plus bas quand la
+            jauge active EN EST une (mode manuel, ou assisté avec une action en
+            cours) — ce champ ne fait alors que doublonner. Mais une fois la
+            stratégie terminée/indisponible, ce panneau de valeurs ne
+            s'affiche plus du tout : sans ce champ, la sérénité resterait
+            totalement illisible et non modifiable dans cet état. */}
+        {!(stat === 'serenity' && (!isAssistedOn || assisted)) && <CompactValue label="Sérénité actuelle" value={mount.serenity} min={SERENITY_MIN} max={SERENITY_MAX} onChange={setSerenityCurrent} />}
+        {/* Déclaratif pour la stratégie assistée uniquement : en mode manuel,
+            aucune régulation de sérénité n'est pilotée, la case n'aurait
+            aucun effet et n'a donc rien à faire là. */}
+        {isAssistedOn && <label className="compact-equilibrated">
           <input type="checkbox" checked={mount.serenityEquilibrated} onChange={e => setSerenityEquilibrated(e.target.checked)} />
           Sérénité déjà équilibrée (plus besoin de régulation)
-        </label>
+        </label>}
       </div>}
 
       {isAssistedOn ? <section className="compact-strategy-card">
@@ -411,6 +420,16 @@ const CompactApp: React.FC = () => {
         </> : <div className="compact-strategy-done">
           <span>{loopResult?.decision.reason === 'boucle-terminee' ? '✓ Stratégie terminée' : 'Stratégie indisponible'}</span>
           <button onClick={enableAssist}>Relancer</button>
+          {/* Terminée ne veut pas dire « plus rien à régler » : le panneau du
+              bas affiche toujours une durée prévisionnelle pour la dernière
+              jauge/tier manuels retenus, qui doit donc rester ajustable ici
+              sans avoir à quitter le mode Assisté. */}
+          <div className="compact-strategy-tier">
+            <span className="compact-caption">TIER</span>
+            <div className="compact-strategy-tier-buttons">
+              {([1, 2, 3, 4] as Tier[]).map(value => <button key={value} className={tier === value ? 'is-selected' : ''} onClick={() => setTier(value)}>T{value}</button>)}
+            </div>
+          </div>
         </div>}
       </section> : mount && <>
         <div className="compact-block">
