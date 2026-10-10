@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Dofus Élevage — assistant d'élevage de montures</title>
+<meta name="description" content="Dofus Élevage guide chaque enclos étape par étape : jauges à activer, carburant, timers et notifications, jusqu'à des montures fécondes. Android et Windows, gratuit.">
+<link rel="icon" href="favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@600;700;800&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="barre">
+  <a class="marque" href="#">
+    <img src="icon.png" alt="" width="28" height="28">
+    <span>Dofus Élevage</span>
+  </a>
+  <nav aria-label="Sections">
+    <a href="#fonctions">Fonctions</a>
+    <a href="#telecharger">Télécharger</a>
+    <a href="#versions">Versions</a>
+    <a href="https://github.com/kihw/DoDinde">GitHub</a>
+  </nav>
+</header>
+
+<main>
+  <section class="hero">
+    <div class="hero-texte">
+      <p class="sur-titre">DOFUS 3.7 · Android &amp; Windows · gratuit</p>
+      <h1>Tes enclos tournent.<br>L’app s’occupe du reste.</h1>
+      <p class="accroche">
+        Dofus Élevage guide chaque enclos étape par étape : quelles jauges activer, combien de carburant
+        mettre, quand revenir. Tu reçois une notification à chaque palier et à chaque fin d’étape,
+        jusqu’à des montures fécondes au niveau voulu.
+      </p>
+      <div class="actions">
+        <a class="bouton bouton-or" href="https://github.com/kihw/DoDinde/releases/latest/download/DoDinde-Setup.exe">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5.5l7.5-1v7H3zm0 13l7.5 1v-7H3zm8.5 1.2L21 21v-8.5h-9.5zm0-15.4v7.2H21V3z"/></svg>
+          Windows (.exe)
+        </a>
+        <a class="bouton" href="https://github.com/kihw/DoDinde/releases/latest/download/DoDinde-Android.apk">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17.6 9.48l1.84-3.18a.38.38 0 00-.66-.38l-1.86 3.22a11.4 11.4 0 00-9.84 0L5.22 5.92a.38.38 0 00-.66.38L6.4 9.48A10.8 10.8 0 001 18h22a10.8 10.8 0 00-5.4-8.52zM7 15.25a1.25 1.25 0 110-2.5 1.25 1.25 0 010 2.5zm10 0a1.25 1.25 0 110-2.5 1.25 1.25 0 010 2.5z"/></svg>
+          Android (.apk)
+        </a>
+      </div>
+      <p class="version-actuelle" id="version-actuelle">Dernière version : chargement…</p>
+    </div>
+
+    <div class="fenetre" aria-label="Aperçu de l'app">
+      <div class="fenetre-barre">
+        <span class="onglet actif">E1 <b>0:23</b></span>
+        <span class="onglet alerte">E2 <i></i></span>
+        <span class="onglet">E3</span>
+      </div>
+      <div class="fenetre-corps">
+        <div class="ligne-etape">
+          <span class="avatar"><img src="icon.png" alt=""></span>
+          <span class="etape"><b>Enclos 1</b> · 2/4 Cap +500<small>Sérénité −3 120 → +500 · fin 18:45</small></span>
+          <span class="minuteur">0:23:41</span>
+        </div>
+        <div class="progres"><span style="width: 22%"></span></div>
+        <div class="jauges">
+          <div class="jauge"><small>—</small><span class="tube"></span><i style="--c:#c35be0">−</i></div>
+          <div class="jauge active"><small>×30</small><span class="tube"><span style="height:84%; --c:#da70f0"></span></span><i style="--c:#da70f0">+</i></div>
+          <div class="sep"></div>
+          <div class="jauge"><small>×10</small><span class="tube"><span style="height:25%; --c:#f4c331; opacity:.55"></span></span><i style="--c:#f4c331">⚡</i></div>
+          <div class="jauge"><small>—</small><span class="tube"></span><i style="--c:#3ec4e8">●</i></div>
+          <div class="jauge"><small>—</small><span class="tube"></span><i style="--c:#f27474">♥</i></div>
+          <div class="sep"></div>
+          <div class="jauge active"><small>×20</small><span class="tube"><span style="height:60%; --c:#c9e83d"></span></span><i style="--c:#c9e83d">XP</i></div>
+        </div>
+        <div class="stats">
+          <span><small>Niveau</small><b>48/100</b></span>
+          <span><small>Endurance</small><b>20k ✓</b></span>
+          <span><small>Maturité</small><b>0</b></span>
+          <span><small>Amour</small><b>0</b></span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="fonctions" class="fonctions">
+    <h2>Pensé pour jouer, pas pour remplir des tableaux</h2>
+    <div class="grille">
+      <article>
+        <h3>Un parcours par enclos</h3>
+        <p>Indique la sérénité de départ et le niveau visé : l’app calcule l’ordre optimal des étapes (unification, endurance, maturité, amour, XP) et les jauges à poser à chaque fois.</p>
+      </article>
+      <article>
+        <h3>Le carburant simulé comme en jeu</h3>
+        <p>Jauges de 200 000, paliers à 80k, 140k et 180k : la durée de chaque étape tient compte du rendement qui baisse quand la jauge se vide.</p>
+      </article>
+      <article>
+        <h3>Notifications au bon moment</h3>
+        <p>Changement de palier, jauge vide, étape terminée : tu es prévenu, même l’app fermée sur Android et en arrière-plan sur Windows.</p>
+      </article>
+      <article>
+        <h3>Ultra compact</h3>
+        <p>Une fenêtre de 400 px qui tient à côté du jeu, avec l’option « toujours au premier plan » sur Windows. Tout se modifie dans des popups, sans quitter l’écran.</p>
+      </article>
+      <article>
+        <h3>Mises à jour automatiques</h3>
+        <p>Chaque version est publiée sur GitHub. Windows se met à jour tout seul ; Android te propose le nouvel APK, tes données sont conservées.</p>
+      </article>
+      <article>
+        <h3>Libre et local</h3>
+        <p>Pas de compte, pas de serveur : ton élevage reste sur ton appareil. Le code est ouvert sur GitHub.</p>
+      </article>
+    </div>
+  </section>
+
+  <section id="telecharger" class="telecharger">
+    <h2>Installer</h2>
+    <div class="grille deux">
+      <article>
+        <h3>Windows</h3>
+        <ol>
+          <li>Télécharge <a href="https://github.com/kihw/DoDinde/releases/latest/download/DoDinde-Setup.exe">DoDinde-Setup.exe</a>.</li>
+          <li>Lance l’installateur. Windows peut afficher « Windows a protégé votre ordinateur » : l’app n’est pas signée par un éditeur payant, clique sur « Informations complémentaires » puis « Exécuter quand même ».</li>
+          <li>Les mises à jour suivantes s’installent toutes seules.</li>
+        </ol>
+      </article>
+      <article>
+        <h3>Android</h3>
+        <ol>
+          <li>Télécharge <a href="https://github.com/kihw/DoDinde/releases/latest/download/DoDinde-Android.apk">DoDinde-Android.apk</a> sur ton téléphone.</li>
+          <li>Ouvre le fichier et autorise l’installation depuis ton navigateur si Android le demande.</li>
+          <li>Quand une version sort, l’app te propose le nouvel APK : installe-le par-dessus.</li>
+        </ol>
+      </article>
+    </div>
+  </section>
+
+  <section id="versions" class="versions">
+    <h2>Notes de version</h2>
+    <div id="liste-versions" class="liste-versions">
+      <p class="discret">Chargement des versions depuis GitHub…</p>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <p>Dofus Élevage est un projet de fan, non affilié à Ankama. DOFUS est une marque d’Ankama Games.</p>
+  <p><a href="https://github.com/kihw/DoDinde">Code source sur GitHub</a> · licence MIT</p>
+</footer>
+
+<script src="app.js"></script>
+</body>
+</html>

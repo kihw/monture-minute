@@ -1,0 +1,117 @@
+# Release multi-plateforme, déclenchée par un tag vX.Y.Z (voir docs/RELEASE.md) :
+# vérifications → APK Android + installateur Windows → release GitHub avec les fichiers.
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  verifier:
+    name: Vérifications
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Le tag correspond à la version de package.json
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          if [ "v$VERSION" != "$GITHUB_REF_NAME" ]; then
+            echo "Le tag $GITHUB_REF_NAME ne correspond pas à la version $VERSION" >&2
+            exit 1
+          fi
+      - run: npx expo lint
+      - run: npx tsc --noEmit
+      - run: npm test -- --ci
+
+  android:
+    name: APK Android
+    needs: verifier
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - name: Clé de signature présente
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: |
+          if [ -z "$ANDROID_KEYSTORE_BASE64" ]; then
+            echo "Secret ANDROID_KEYSTORE_BASE64 absent : lance scripts/creer-cle-android.ps1 (voir docs/RELEASE.md)" >&2
+            exit 1
+          fi
+          echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/dodinde-release.keystore"
+      - run: npm ci
+      - run: npx expo prebuild --platform android --no-install
+      - run: node scripts/signer-android.mjs
+      - name: Compilation de l'APK signé
+        working-directory: android
+        env:
+          ANDROID_KEYSTORE_PATH: ${{ runner.temp }}/dodinde-release.keystore
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: ./gradlew assembleRelease --no-daemon
+      - run: cp android/app/build/outputs/apk/release/app-release.apk DoDinde-Android.apk
+      - uses: actions/upload-artifact@v4
+        with:
+          name: android
+          path: DoDinde-Android.apk
+
+  windows:
+    name: Installateur Windows
+    needs: verifier
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx expo export --platform web
+      - run: node scripts/preparer-bureau.mjs
+      - name: Installateur NSIS
+        working-directory: desktop
+        run: |
+          npm ci
+          npx electron-builder --win --publish never
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows
+          path: |
+            desktop/release/DoDinde-Setup.exe
+            desktop/release/DoDinde-Setup.exe.blockmap
+            desktop/release/latest.yml
+
+  publier:
+    name: Release GitHub
+    needs: [android, windows]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: fichiers
+          merge-multiple: true
+      - uses: softprops/action-gh-release@v2
+        with:
+          name: Dofus Élevage ${{ github.ref_name }}
+          generate_release_notes: true
+          files: |
+            fichiers/DoDinde-Android.apk
+            fichiers/DoDinde-Setup.exe
+            fichiers/DoDinde-Setup.exe.blockmap
+            fichiers/latest.yml

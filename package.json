@@ -1,0 +1,67 @@
+{
+  "name": "dodinde",
+  "version": "1.0.0",
+  "main": "expo-router/entry",
+  "dependencies": {
+    "@expo/vector-icons": "^15.1.1",
+    "@react-native-async-storage/async-storage": "^2.2.0",
+    "@react-navigation/bottom-tabs": "^7.20.0",
+    "@react-navigation/native": "^7.5.0",
+    "@react-navigation/native-stack": "^7.20.0",
+    "expo": "~57.0.27",
+    "expo-blur": "^57.0.3",
+    "expo-constants": "^57.0.21",
+    "expo-device": "^57.0.2",
+    "expo-linear-gradient": "^57.0.2",
+    "expo-linking": "^57.0.12",
+    "expo-notifications": "~57.0.22",
+    "expo-router": "^57.0.25",
+    "expo-status-bar": "~57.0.1",
+    "react": "19.2.3",
+    "react-dom": "^19.2.3",
+    "react-native": "0.86.3",
+    "react-native-gesture-handler": "^3.3.0",
+    "react-native-reanimated": "^4.7.1",
+    "react-native-safe-area-context": "~5.7.0",
+    "react-native-screens": "~4.26.0",
+    "react-native-svg": "^15.15.5",
+    "react-native-web": "^0.21.4",
+    "zustand": "^5.0.15"
+  },
+  "devDependencies": {
+    "@react-native/jest-preset": "^0.86.3",
+    "@types/jest": "^29.5.14",
+    "@types/react": "~19.2.2",
+    "eslint": "^9.0.0",
+    "eslint-config-expo": "~57.0.2",
+    "jest": "^29.7.0",
+    "jest-expo": "~57.0.5",
+    "typescript": "~6.0.3"
+  },
+  "scripts": {
+    "start": "expo start",
+    "android": "expo start --android",
+    "web": "expo start --web",
+    "lint": "expo lint",
+    "typecheck": "tsc --noEmit",
+    "test": "jest",
+    "verifier": "expo lint && tsc --noEmit && jest",
+    "bureau:preparer": "expo export --platform web && node scripts/preparer-bureau.mjs",
+    "bureau:demarrer": "npm run bureau:preparer && cd desktop && npm install && npm start",
+    "version": "node scripts/sync-version.mjs && git add desktop/package.json"
+  },
+  "private": true,
+  "description": "Assistant d'élevage de montures pour DOFUS 3.7 — Android et Windows",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kihw/DoDinde.git"
+  },
+  "homepage": "https://kihw.github.io/DoDinde/",
+  "license": "MIT",
+  "jest": {
+    "preset": "jest-expo",
+    "testMatch": [
+      "**/__tests__/**/*.test.ts"
+    ]
+  }
+}

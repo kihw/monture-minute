@@ -1,0 +1,47 @@
+{
+  "name": "dodinde-desktop",
+  "productName": "Dofus Élevage",
+  "version": "1.0.0",
+  "description": "Assistant d'élevage de montures pour DOFUS — version Windows",
+  "author": "kihw",
+  "license": "MIT",
+  "private": true,
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --win --publish never"
+  },
+  "dependencies": {
+    "electron-updater": "6.3.9"
+  },
+  "devDependencies": {
+    "electron": "33.2.1",
+    "electron-builder": "25.1.8"
+  },
+  "build": {
+    "appId": "io.github.kihw.dodinde",
+    "productName": "Dofus Élevage",
+    "directories": {
+      "output": "release"
+    },
+    "files": ["main.js", "preload.js", "package.json", "app/**/*", "build/icon.png"],
+    "win": {
+      "target": "nsis",
+      "icon": "build/icon.png",
+      "artifactName": "DoDinde-Setup.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "shortcutName": "Dofus Élevage"
+    },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "kihw",
+        "repo": "DoDinde"
+      }
+    ]
+  }
+}
