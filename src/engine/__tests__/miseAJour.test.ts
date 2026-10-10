@@ -16,7 +16,7 @@ describe('verifierMiseAJour', () => {
       json: async () => ({
         tag_name: tag,
         body: 'Nouveautés',
-        html_url: 'https://github.com/kihw/DoDinde/releases/tag/' + tag,
+        html_url: 'https://github.com/kihw/monture-minute/releases/tag/' + tag,
         assets: [{ name: NOM_APK, browser_download_url: 'https://example.invalid/apk' }],
       }),
     } as Response);

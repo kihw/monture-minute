@@ -4,17 +4,12 @@ Tout passe par GitHub : un tag `vX.Y.Z` déclenche `.github/workflows/release.ym
 code, compile l'APK Android et l'installateur Windows, puis crée la release GitHub avec les notes
 générées et les fichiers. L'app installée détecte ensuite la nouvelle version.
 
-## Une seule fois : clé de signature Android
+## Clé de signature Android
 
 L'APK doit toujours être signé avec la même clé, sinon Android refuse de l'installer par-dessus
-l'ancien. Le propriétaire du dépôt crée cette clé et l'enregistre dans les secrets GitHub :
-
-```powershell
-powershell -ExecutionPolicy Bypass -File scripts/creer-cle-android.ps1
-```
-
-La clé et son mot de passe sont rangés dans `%USERPROFILE%\.dodinde\`. **Sauvegarde ce dossier** :
-le perdre empêche toute mise à jour Android pour les utilisateurs existants.
+l'ancien. La clé est celle de l'ancienne app Monture Minute, déjà dans les secrets du dépôt : ne la
+remplace jamais. L'identifiant `com.community.dofusbreedingtool` ne change pas et le versionCode
+doit toujours croître, sinon les installations existantes ne pourront plus se mettre à jour.
 
 Secrets utilisés par la release : `ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD`,
 `ANDROID_KEY_ALIAS`, `ANDROID_KEY_PASSWORD`.
@@ -34,9 +29,9 @@ Suivi : onglet **Actions** du dépôt. En fin de workflow, la release contient :
 
 | Fichier | Rôle |
 |---|---|
-| `DoDinde-Android.apk` | APK signé, proposé par l'app Android |
-| `DoDinde-Setup.exe` | Installateur Windows |
-| `latest.yml`, `DoDinde-Setup.exe.blockmap` | Métadonnées lues par `electron-updater` |
+| `MontureMinute-Android.apk` | APK signé, proposé par l'app Android |
+| `MontureMinute-Setup.exe` | Installateur Windows |
+| `latest.yml`, `MontureMinute-Setup.exe.blockmap` | Métadonnées lues par `electron-updater` |
 
 ## Mises à jour côté utilisateurs
 

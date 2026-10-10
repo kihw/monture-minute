@@ -18,7 +18,7 @@ export default function Bienvenue() {
         <View style={styles.halo}>
           <Dragodinde taille={132} index={0} />
         </View>
-        <Text style={styles.titre}>Dofus Élevage</Text>
+        <Text style={styles.titre}>Monture Minute</Text>
         <Text style={styles.sousTitre}>Ton assistant de cycles</Text>
         <Text style={styles.accroche}>Des cycles optimisés.{'\n'}Des montures plus fortes.</Text>
       </View>

@@ -3,9 +3,9 @@
 
 import { version as versionInstallee } from '../../package.json';
 
-export const DEPOT = 'kihw/DoDinde';
+export const DEPOT = 'kihw/monture-minute';
 export const VERSION_APP: string = versionInstallee;
-export const NOM_APK = 'DoDinde-Android.apk';
+export const NOM_APK = 'MontureMinute-Android.apk';
 
 export interface Release {
   version: string;

@@ -8,9 +8,9 @@ const [majeur, mineur, correctif] = version.split('.').map((n) => parseInt(n, 10
 
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
-  name: 'Dofus Élevage',
-  slug: 'DoDinde',
-  scheme: 'dodinde',
+  name: 'Monture Minute',
+  slug: 'monture-minute',
+  scheme: 'monture-minute',
   version,
   orientation: 'portrait',
   icon: './assets/icon.png',
@@ -19,7 +19,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     supportsTablet: true,
   },
   android: {
-    package: 'io.github.kihw.dodinde',
+    package: 'com.community.dofusbreedingtool',
     versionCode: majeur * 10000 + mineur * 100 + correctif,
     adaptiveIcon: {
       backgroundColor: '#0b0a14',

@@ -108,8 +108,8 @@ export default function Reglages() {
           icone="github"
           couleur={couleurs.texteAttenue}
           titre="Site et notes de version"
-          sousTitre="kihw.github.io/DoDinde"
-          onPress={() => Linking.openURL('https://kihw.github.io/DoDinde/')}
+          sousTitre="kihw.github.io/monture-minute"
+          onPress={() => Linking.openURL('https://kihw.github.io/monture-minute/')}
         />
       </Carte>
 

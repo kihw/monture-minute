@@ -1,4 +1,4 @@
-# Dofus Élevage — plan produit et technique
+# Monture Minute — plan produit et technique
 
 Assistant d'élevage de montures pour DOFUS 3.7 : l'app guide chaque enclos étape par
 étape (jauges à activer, carburant, timers, notifications) jusqu'à des montures fécondes.
@@ -45,15 +45,15 @@ docs/                 Ce plan, procédure de release
 - **Publier** : `npm version patch|minor|major` (commit + tag `vX.Y.Z`) puis `git push --follow-tags`.
 - **Workflow `release.yml`** (déclenché par un tag `v*`) :
   1. vérifications (lint, types, tests) ;
-  2. APK Android (Ubuntu) → `DoDinde-Android.apk` ;
-  3. installateur Windows (Windows) → `DoDinde-Setup.exe` + `latest.yml` pour `electron-updater` ;
+  2. APK Android (Ubuntu) → `MontureMinute-Android.apk` ;
+  3. installateur Windows (Windows) → `MontureMinute-Setup.exe` + `latest.yml` pour `electron-updater` ;
   4. release GitHub avec notes générées et les fichiers ci-dessus.
-- Noms de fichiers stables : `…/releases/latest/download/DoDinde-Android.apk` reste valable.
+- Noms de fichiers stables : `…/releases/latest/download/MontureMinute-Android.apk` reste valable.
 
 ## 4. Système de mise à jour
 
 - **Android** : au démarrage puis toutes les 6 h, l'app interroge l'API publique
-  `GET /repos/kihw/DoDinde/releases/latest`. Si la version est plus récente, une popup affiche
+  `GET /repos/kihw/monture-minute/releases/latest`. Si la version est plus récente, une popup affiche
   les notes et ouvre l'APK. Réglages : version installée et « Rechercher une mise à jour ».
 - **Windows** : `electron-updater` (fournisseur GitHub) vérifie au démarrage et toutes les 6 h,
   télécharge en arrière-plan, puis l'app propose « Redémarrer pour mettre à jour ».

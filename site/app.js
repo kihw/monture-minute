@@ -1,5 +1,5 @@
 // Vitrine : affiche la dernière version et les notes de version depuis l'API publique GitHub.
-const DEPOT = 'kihw/DoDinde';
+const DEPOT = 'kihw/monture-minute';
 
 function element(tag, texte, classe) {
   const el = document.createElement(tag);

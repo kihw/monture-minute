@@ -1,6 +1,6 @@
 {
-  "name": "dodinde",
-  "version": "1.0.0",
+  "name": "monture-minute",
+  "version": "2.0.0",
   "main": "expo-router/entry",
   "dependencies": {
     "@expo/vector-icons": "^15.1.1",
@@ -54,9 +54,9 @@
   "description": "Assistant d'élevage de montures pour DOFUS 3.7 — Android et Windows",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/kihw/DoDinde.git"
+    "url": "git+https://github.com/kihw/monture-minute.git"
   },
-  "homepage": "https://kihw.github.io/DoDinde/",
+  "homepage": "https://kihw.github.io/monture-minute/",
   "license": "MIT",
   "jest": {
     "preset": "jest-expo",

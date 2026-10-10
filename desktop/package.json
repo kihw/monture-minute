@@ -1,7 +1,7 @@
 {
-  "name": "dodinde-desktop",
-  "productName": "Dofus Élevage",
-  "version": "1.0.0",
+  "name": "monture-minute-desktop",
+  "productName": "Monture Minute",
+  "version": "2.0.0",
   "description": "Assistant d'élevage de montures pour DOFUS — version Windows",
   "author": "kihw",
   "license": "MIT",
@@ -19,28 +19,34 @@
     "electron-builder": "25.1.8"
   },
   "build": {
-    "appId": "io.github.kihw.dodinde",
-    "productName": "Dofus Élevage",
+    "appId": "com.community.dofusbreedingtool",
+    "productName": "Monture Minute",
     "directories": {
       "output": "release"
     },
-    "files": ["main.js", "preload.js", "package.json", "app/**/*", "build/icon.png"],
+    "files": [
+      "main.js",
+      "preload.js",
+      "package.json",
+      "app/**/*",
+      "build/icon.png"
+    ],
     "win": {
       "target": "nsis",
       "icon": "build/icon.png",
-      "artifactName": "DoDinde-Setup.${ext}"
+      "artifactName": "MontureMinute-Setup.${ext}"
     },
     "nsis": {
       "oneClick": false,
       "perMachine": false,
       "allowToChangeInstallationDirectory": true,
-      "shortcutName": "Dofus Élevage"
+      "shortcutName": "Monture Minute"
     },
     "publish": [
       {
         "provider": "github",
         "owner": "kihw",
-        "repo": "DoDinde"
+        "repo": "monture-minute"
       }
     ]
   }

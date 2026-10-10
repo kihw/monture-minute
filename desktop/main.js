@@ -1,4 +1,4 @@
-// Coquille Windows de Dofus Élevage : charge l'export web de l'app (dossier app/),
+// Coquille Windows de Monture Minute : charge l'export web de l'app (dossier app/),
 // gère les mises à jour via GitHub Releases (electron-updater) et les notifications.
 
 const { app, BrowserWindow, ipcMain, Notification, net, protocol, shell } = require('electron');
@@ -7,7 +7,7 @@ const path = require('node:path');
 const { pathToFileURL } = require('node:url');
 const { autoUpdater } = require('electron-updater');
 
-const ID_APP = 'io.github.kihw.dodinde';
+const ID_APP = 'com.community.dofusbreedingtool';
 const DOSSIER_APP = path.join(__dirname, 'app');
 const INTERVALLE_MAJ_MS = 6 * 60 * 60 * 1000;
 const FICHIER_FENETRE = () => path.join(app.getPath('userData'), 'fenetre.json');
@@ -51,7 +51,7 @@ function creerFenetre() {
     y: bornes.y,
     minWidth: 360,
     minHeight: 480,
-    title: 'Dofus Élevage',
+    title: 'Monture Minute',
     backgroundColor: '#0b0a14',
     autoHideMenuBar: true,
     icon: path.join(__dirname, 'build', 'icon.png'),

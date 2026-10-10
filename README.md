@@ -1,12 +1,12 @@
-# Dofus Élevage
+# Monture Minute
 
 Assistant d'élevage de montures pour **DOFUS 3.7**. L'app guide chaque enclos étape par étape —
 jauges à activer, carburant à mettre, timers, notifications — jusqu'à des montures fécondes au
 niveau voulu. Ultra compacte, elle tient à côté du jeu.
 
-- **Site** : https://kihw.github.io/DoDinde/
-- **Télécharger** : [Windows (.exe)](https://github.com/kihw/DoDinde/releases/latest/download/DoDinde-Setup.exe) ·
-  [Android (.apk)](https://github.com/kihw/DoDinde/releases/latest/download/DoDinde-Android.apk)
+- **Site** : https://kihw.github.io/monture-minute/
+- **Télécharger** : [Windows (.exe)](https://github.com/kihw/monture-minute/releases/latest/download/MontureMinute-Setup.exe) ·
+  [Android (.apk)](https://github.com/kihw/monture-minute/releases/latest/download/MontureMinute-Android.apk)
 
 ## Fonctionnement
 
