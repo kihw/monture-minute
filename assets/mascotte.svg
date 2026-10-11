@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <!-- Mascotte originale de Monture Minute : une petite monture ronde, selle dorée frappée d'une horloge. -->
+  <path d="M46 110 C30 112 18 100 20 84 C22 76 30 72 36 76 C32 84 34 92 42 96 C38 88 42 80 50 82 C48 90 50 98 56 104 Z" fill="#6f5fd6"/>
+  <rect x="60" y="132" width="16" height="42" rx="8" fill="#6f5fd6"/>
+  <rect x="124" y="132" width="16" height="42" rx="8" fill="#6f5fd6"/>
+  <rect x="58" y="166" width="20" height="10" rx="5" fill="#241d44"/>
+  <rect x="122" y="166" width="20" height="10" rx="5" fill="#241d44"/>
+  <path d="M132 112 C134 94 140 82 148 72 L172 84 C162 94 156 108 154 124 Z" fill="#9b8cff"/>
+  <ellipse cx="100" cy="118" rx="60" ry="38" fill="#9b8cff"/>
+  <path d="M62 128 C78 146 124 146 140 128 C128 138 76 138 62 128 Z" fill="#c9c0ff"/>
+  <rect x="78" y="136" width="17" height="44" rx="8.5" fill="#8b7cf0"/>
+  <rect x="142" y="134" width="17" height="44" rx="8.5" fill="#8b7cf0"/>
+  <rect x="76" y="170" width="21" height="11" rx="5.5" fill="#2b2450"/>
+  <rect x="140" y="168" width="21" height="11" rx="5.5" fill="#2b2450"/>
+  <path d="M66 90 C82 76 114 76 130 90 C132 102 126 114 118 118 L80 118 C70 112 64 102 66 90 Z" fill="#f2c94c"/>
+  <path d="M72 94 C86 84 110 84 124 94" stroke="#b8890f" stroke-width="2.4" stroke-dasharray="4 4" fill="none" stroke-linecap="round"/>
+  <path d="M92 118 L90 150 L97 150 L99 118 Z" fill="#e0a91d"/>
+  <circle cx="98" cy="102" r="11" fill="#fff6d6" stroke="#b8890f" stroke-width="2.6"/>
+  <path d="M98 95.5 V102 L102.5 105" stroke="#2b2450" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <path d="M142 44 C136 32 138 20 146 16 C148 26 152 34 156 40 Z" fill="#8b7cf0"/>
+  <path d="M144 40 C141 32 142 25 146 22 C148 29 150 34 152 38 Z" fill="#ffb3c7"/>
+  <path d="M172 42 C174 30 182 22 190 22 C188 32 184 40 178 46 Z" fill="#8b7cf0"/>
+  <path d="M175 42 C177 34 181 29 186 27 C185 34 182 39 179 43 Z" fill="#ffb3c7"/>
+  <circle cx="160" cy="66" r="30" fill="#9b8cff"/>
+  <ellipse cx="180" cy="80" rx="18" ry="14" fill="#d9d2ff"/>
+  <ellipse cx="188" cy="78" rx="2.6" ry="2" fill="#5a4bb8"/>
+  <path d="M172 90 C178 93 185 93 190 89" stroke="#5a4bb8" stroke-width="2" stroke-linecap="round" fill="none"/>
+  <path d="M150 40 C154 28 166 26 170 32 C163 32 159 37 157 44 Z" fill="#f2c94c"/>
+  <ellipse cx="162" cy="62" rx="8" ry="9" fill="#ffffff"/>
+  <circle cx="164" cy="63" r="5" fill="#1a1530"/>
+  <circle cx="166" cy="60.5" r="1.8" fill="#ffffff"/>
+  <ellipse cx="172" cy="74" rx="5" ry="3" fill="#ff9fbe" opacity="0.7"/>
+</svg>

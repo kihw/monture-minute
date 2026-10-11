@@ -4,7 +4,7 @@ import { Redirect, router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import { Animated, StyleSheet, Text, View } from 'react-native';
 
-import Dragodinde from '../../components/Dragodinde';
+import Mascotte from '../../components/Mascotte';
 import { PopupDepart } from '../../components/FormulaireDepart';
 import { BoutonContour, BoutonPrincipal, Carte, Ecran } from '../../components/ui';
 import { CARACTERISTIQUE_MAX } from '../../data/constants';
@@ -76,7 +76,7 @@ export default function Objectifs() {
             { transform: [{ scale: apparition.interpolate({ inputRange: [0, 1], outputRange: [0.7, 1] }) }] },
           ]}
         >
-          <Dragodinde taille={s(150)} index={Math.max(0, index)} />
+          <Mascotte taille={s(150)} index={Math.max(0, index)} />
         </Animated.View>
       </View>
       <Text style={styles.titre}>Objectifs atteints !</Text>

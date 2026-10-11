@@ -9,7 +9,9 @@ const source = readFileSync('assets/icone.svg', 'utf8');
 // Variante sans fond (dragodinde + anneau) pour l'avant-plan de l'icône adaptative Android.
 const sansFond = source.replace(/<rect[^>]*\/>/, '');
 // Variante monochrome (silhouette blanche) pour les icônes à thème d'Android 13+.
-const monochrome = sansFond.replace(/fill="[^"]+"/g, 'fill="#ffffff"').replace(/stroke="[^"]+"/g, 'stroke="#ffffff"');
+const monochrome = sansFond
+  .replace(/fill="(?!none")[^"]+"/g, 'fill="#ffffff"')
+  .replace(/stroke="(?!none")[^"]+"/g, 'stroke="#ffffff"');
 
 const rendre = (svg, taille, sortie) => sharp(Buffer.from(svg), { density: 384 }).resize(taille, taille).png().toFile(sortie);
 

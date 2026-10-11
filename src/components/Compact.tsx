@@ -11,7 +11,7 @@ import { ContexteCalcul, niveauLot } from '../engine/parcours';
 import { VueEnclos } from '../engine/statut';
 import { couleurs, rayon } from '../theme';
 import { CARACTERISTIQUES, Enclos, EtapeValidee, Etape, EtatLot, INFO_SUIVI } from '../types/domain';
-import Dragodinde from './Dragodinde';
+import Mascotte from './Mascotte';
 import { s } from '../echelle';
 
 /** Minutes restantes très courtes pour une puce d'onglet : « 0:23 », « 2h », « 1j ». */
@@ -87,7 +87,7 @@ export function BarreEnclos({
   );
 }
 
-/** Portrait de la dragodinde de l'enclos, cerclé de l'avancement de son parcours. */
+/** Portrait de la mascotte de l'enclos, cerclé de l'avancement de son parcours. */
 export function AvatarAnneau({
   index,
   avancement,
@@ -123,7 +123,7 @@ export function AvatarAnneau({
         )}
       </Svg>
       <View style={{ width: interieur, height: interieur, borderRadius: interieur / 2, overflow: 'hidden' }}>
-        <Dragodinde taille={interieur} index={index} />
+        <Mascotte taille={interieur} index={index} />
       </View>
     </View>
   );
