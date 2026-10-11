@@ -112,6 +112,10 @@ export default function Reglages() {
           sousTitre="kihw.github.io/monture-minute"
           onPress={() => Linking.openURL('https://kihw.github.io/monture-minute/')}
         />
+        <Text style={styles.note}>
+          Projet de fan non lucratif, non affilié à Ankama. DOFUS et les images de dragodindes sont la propriété
+          d’Ankama Games.
+        </Text>
       </Carte>
 
       <Carte style={styles.groupe}>
