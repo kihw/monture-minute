@@ -68,7 +68,14 @@ interface EleveurState {
   corrigerJauge: (id: string, jauge: JaugeType, niveau: number) => void;
 }
 
-const DEPART_PAR_DEFAUT: DepartEnclos = { unifiee: true, serenite: -5000, niveauDepart: 1, niveauCible: 100 };
+const DEPART_PAR_DEFAUT: DepartEnclos = {
+  famille: 'dragodinde',
+  robe: 0,
+  unifiee: true,
+  serenite: -5000,
+  niveauDepart: 1,
+  niveauCible: 100,
+};
 
 const REGLAGES_PAR_DEFAUT: Reglages = {
   configuree: false,
@@ -77,6 +84,7 @@ const REGLAGES_PAR_DEFAUT: Reglages = {
   prudent: false,
   seuilConseilMin: 15,
   anticipationMin: 5,
+  guideVu: false,
   premierPlan: false,
   notifications: true,
   son: true,
@@ -97,7 +105,14 @@ function nouvelId(prefixe: string) {
 
 /** Ne garde que les champs de départ d'un enclos (d'anciennes données portent aussi nbEnclos). */
 function departPropre(d: DepartEnclos): DepartEnclos {
-  return { unifiee: d.unifiee, serenite: d.serenite, niveauDepart: d.niveauDepart, niveauCible: d.niveauCible };
+  return {
+    famille: d.famille ?? 'dragodinde',
+    robe: d.robe ?? 0,
+    unifiee: d.unifiee,
+    serenite: d.serenite,
+    niveauDepart: d.niveauDepart,
+    niveauCible: d.niveauCible,
+  };
 }
 
 function creerEnclos(nom: string, depart: DepartEnclos): Enclos {
@@ -374,7 +389,8 @@ export const useEleveurStore = create<EleveurState>()(
       // v7 : niveau de départ propre à chaque enclos.
       // v8 : option « premier plan » de l'app Windows.
       // v9 : recharges en cours d'étape, seuil de conseil et délai d'alerte des jauges.
-      version: 9,
+      // v10 : famille (dragodinde, muldo, volkorne) et robe de chaque enclos ; guide vu ou non.
+      version: 10,
       migrate: (persiste, version) => {
         if (version < 3) {
           return { reglages: REGLAGES_PAR_DEFAUT, enclos: {}, ordre: [], journal: [] } as unknown as EleveurState;
@@ -384,6 +400,8 @@ export const useEleveurStore = create<EleveurState>()(
           const renommer = (j: string) => (ANCIENS_NOMS_JAUGES[j] ?? j) as JaugeType;
           for (const e of Object.values(etat.enclos)) {
             e.depart = {
+              famille: 'dragodinde',
+              robe: 0,
               unifiee: etat.reglages.depart.unifiee,
               serenite: etat.reglages.depart.serenite,
               niveauDepart: 1,
@@ -420,6 +438,13 @@ export const useEleveurStore = create<EleveurState>()(
         if (version < 9) {
           etat.reglages = { ...etat.reglages, seuilConseilMin: 15, anticipationMin: 5 };
           for (const e of Object.values(etat.enclos)) if (e.enCours) e.enCours.segments = e.enCours.segments ?? [];
+        }
+        if (version < 10) {
+          etat.reglages = { ...etat.reglages, guideVu: true, depart: { ...etat.reglages.depart, famille: 'dragodinde', robe: 0 } };
+          etat.ordre.forEach((id, i) => {
+            const e = etat.enclos[id];
+            if (e) e.depart = { ...e.depart, famille: 'dragodinde', robe: i % 7 };
+          });
         }
         return etat;
       },

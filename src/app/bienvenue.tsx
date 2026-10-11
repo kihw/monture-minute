@@ -1,7 +1,7 @@
 import { router } from 'expo-router';
 import { StyleSheet, Text, View } from 'react-native';
 
-import Dragodinde from '../components/Dragodinde';
+import Monture from '../components/Monture';
 import { BoutonPrincipal, Carte, Ecran, Pastille } from '../components/ui';
 import { couleurs, esp } from '../theme';
 import { s } from '../echelle';
@@ -17,7 +17,7 @@ export default function Bienvenue() {
     <Ecran basDePage={<BoutonPrincipal label="Commencer" icone="arrow-right" onPress={() => router.push('/configuration')} />}>
       <View style={styles.hero}>
         <View style={styles.halo}>
-          <Dragodinde taille={s(132)} index={2} />
+          <Monture famille="dragodinde" robe={2} taille={s(132)} />
         </View>
         <Text style={styles.titre}>Monture Minute</Text>
         <Text style={styles.sousTitre}>Ton assistant de cycles</Text>

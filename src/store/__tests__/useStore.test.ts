@@ -36,7 +36,7 @@ beforeEach(() => {
   programmes.length = 0;
   annules.length = 0;
   useEleveurStore.getState().reinitialiserTout();
-  useEleveurStore.getState().configurer({ unifiee: true, serenite: -5000, niveauDepart: 1, niveauCible: 100 });
+  useEleveurStore.getState().configurer({ famille: 'volkorne', robe: 3, unifiee: true, serenite: -5000, niveauDepart: 1, niveauCible: 100 });
 });
 
 afterEach(() => jest.useRealTimers());

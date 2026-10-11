@@ -1,5 +1,5 @@
 // Génère toutes les icônes de l'app : fond et anneau doré de assets/icone.svg, avec la dragodinde
-// Dorée officielle (assets/dragodindes/doree.png, rendu DOFUS Touch © Ankama Games) au centre.
+// Dorée officielle (assets/montures/dragodinde/doree.png, rendu DOFUS Touch © Ankama Games) au centre.
 // Usage : npm install --no-save sharp && node scripts/generer-icones.mjs
 // (sharp n'est pas une dépendance du projet : on ne s'en sert que pour régénérer les PNG.)
 
@@ -14,7 +14,7 @@ const anneauBlanc = sansFond
   .replace(/fill="(?!none")[^"]+"/g, 'fill="#ffffff"')
   .replace(/stroke="(?!none")[^"]+"/g, 'stroke="#ffffff"');
 
-const DRAGODINDE = 'assets/dragodindes/doree.png';
+const DRAGODINDE = 'assets/montures/dragodinde/doree.png';
 const HAUTEUR = 600; // sur 1024
 
 const rendreSvg = (svg) => sharp(Buffer.from(svg), { density: 384 }).resize(1024, 1024).png().toBuffer();

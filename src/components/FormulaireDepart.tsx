@@ -1,18 +1,19 @@
-// Saisie de l'état de départ d'un enclos (sérénité, niveau actuel, niveau cible).
+// Saisie de l'état de départ d'un enclos (famille et robe, sérénité, niveau actuel, niveau cible).
 // `ChampsDepart` sert à l'écran de configuration initiale ; `PopupDepart` à l'ajout
 // et au redémarrage d'un enclos.
 
 import { useMemo, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { SERENITE_MAX, SERENITE_MIN } from '../data/constants';
 import { NIVEAU_MAX_MONTURE } from '../data/xpTable';
 import { contexteDepuis, genererParcours } from '../engine/parcours';
 import { useCalcul } from '../hooks/useElevage';
-import { couleurs, esp } from '../theme';
-import { DepartEnclos, lotInitial } from '../types/domain';
+import { couleurs, esp, rayon } from '../theme';
+import { DepartEnclos, FAMILLE_LISTE, FAMILLES, lotInitial } from '../types/domain';
 import { formatDuree, formatSerenite } from '../utils/format';
 import Curseur from './Curseur';
+import Monture, { nomRobe, ROBES } from './Monture';
 import Popup from './Popup';
 import SegmentedTabs from './SegmentedTabs';
 import { BoutonContour, BoutonPrincipal, Carte, Titre } from './ui';
@@ -29,9 +30,56 @@ export function useResumeParcours(depart: DepartEnclos): string {
 
 export function ChampsDepart({ valeur, onChange }: { valeur: DepartEnclos; onChange: (d: DepartEnclos) => void }) {
   const { unifiee, serenite, niveauDepart, niveauCible } = valeur;
+  const famille = valeur.famille ?? 'dragodinde';
+  const robeChoisie = valeur.robe ?? 0;
   const maj = (patch: Partial<DepartEnclos>) => onChange({ ...valeur, ...patch });
   return (
     <>
+      <Carte style={{ gap: esp.md }}>
+        <View style={styles.ligne}>
+          <Titre style={{ flex: 1 }}>Monture</Titre>
+          <Text style={styles.compteurPetit}>
+            {FAMILLES[famille].nom} {nomRobe(famille, robeChoisie)}
+          </Text>
+        </View>
+        <View style={styles.familles}>
+          {FAMILLE_LISTE.map((f) => {
+            const active = f === famille;
+            return (
+              <Pressable
+                key={f}
+                onPress={() => maj({ famille: f })}
+                style={[styles.famille, active && styles.familleActive]}
+                accessibilityRole="radio"
+                accessibilityState={{ checked: active }}
+                accessibilityLabel={FAMILLES[f].nom}
+              >
+                <Monture famille={f} robe={robeChoisie} taille={s(46)} fond={false} />
+                <Text style={[styles.familleNom, active && { color: couleurs.accent }]}>{FAMILLES[f].nom}</Text>
+              </Pressable>
+            );
+          })}
+        </View>
+        <View style={styles.robes}>
+          {ROBES.map((r, i) => {
+            const active = i === robeChoisie;
+            return (
+              <Pressable
+                key={r.nom}
+                onPress={() => maj({ robe: i })}
+                style={[styles.robe, active && { borderColor: couleurs.accent }]}
+                accessibilityRole="radio"
+                accessibilityState={{ checked: active }}
+                accessibilityLabel={`Robe ${nomRobe(famille, i)}`}
+                hitSlop={3}
+              >
+                <Monture famille={famille} robe={i} taille={s(32)} />
+              </Pressable>
+            );
+          })}
+        </View>
+      </Carte>
+
       <Carte style={{ gap: esp.md }}>
         <Titre>Sérénité de départ</Titre>
         <SegmentedTabs
@@ -149,6 +197,22 @@ const styles = StyleSheet.create({
   grandChiffre: { color: couleurs.texte, fontSize: s(22), fontWeight: '600', textAlign: 'center', fontVariant: ['tabular-nums'] },
   note: { color: couleurs.texteAttenue, fontSize: s(11) },
   compteur: { color: couleurs.texte, fontSize: s(15), fontWeight: '600', minWidth: s(22), textAlign: 'center' },
+  compteurPetit: { color: couleurs.texteAttenue, fontSize: s(12), fontWeight: '700' },
+  familles: { flexDirection: 'row', gap: esp.sm },
+  famille: {
+    flex: 1,
+    alignItems: 'center',
+    gap: s(4),
+    paddingVertical: s(8),
+    borderRadius: rayon.md,
+    borderWidth: 1.2,
+    borderColor: couleurs.liseret,
+    backgroundColor: couleurs.surface,
+  },
+  familleActive: { borderColor: couleurs.accent, backgroundColor: couleurs.accentDoux },
+  familleNom: { color: couleurs.texte, fontSize: s(11.5), fontWeight: '700' },
+  robes: { flexDirection: 'row', justifyContent: 'space-between' },
+  robe: { padding: s(2), borderRadius: s(20), borderWidth: 2, borderColor: 'transparent' },
   resume: { color: couleurs.texteAttenue, fontSize: s(11), textAlign: 'center' },
   message: { color: couleurs.texteAttenue, fontSize: s(13) },
   boutons: { flexDirection: 'row', gap: esp.sm },

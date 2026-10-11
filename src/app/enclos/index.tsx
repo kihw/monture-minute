@@ -76,7 +76,7 @@ export default function ListeEnclos() {
             onPress={() => router.push(vue.statut === 'termine' ? `/objectifs/${e.id}` : `/enclos/${e.id}`)}
             style={({ pressed }) => [styles.ligne, aValider && styles.ligneAlerte, pressed && { opacity: 0.8 }]}
           >
-            <AvatarAnneau index={index} avancement={vue.avancement} taille={s(30)} couleur={aValider ? couleurs.attention : couleurs.accent} />
+            <AvatarAnneau famille={e.depart.famille ?? 'dragodinde'} robe={e.depart.robe ?? index} avancement={vue.avancement} taille={s(30)} couleur={aValider ? couleurs.attention : couleurs.accent} />
             <View style={{ flex: 1, minWidth: 0, gap: s(4) }}>
               <Text style={styles.nom} numberOfLines={1}>
                 {e.nom}
@@ -144,7 +144,7 @@ export default function ListeEnclos() {
         visible={ajout}
         titre={`Enclos ${liste.length + 1}`}
         message="État de départ de ce nouvel enclos."
-        initial={departDefaut}
+        initial={{ ...departDefaut, robe: liste.length % 7 }}
         libelle="Ajouter"
         onFermer={() => setAjout(false)}
         onValider={(depart) => {

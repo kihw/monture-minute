@@ -174,7 +174,7 @@ export default function DetailEnclos() {
       }
     >
       <View style={styles.ligne}>
-        <AvatarAnneau index={index} avancement={vue.avancement} />
+        <AvatarAnneau famille={enclos.depart.famille ?? 'dragodinde'} robe={enclos.depart.robe ?? index} avancement={vue.avancement} />
         <View style={{ flex: 1, minWidth: 0 }}>
           <Text style={styles.titre} numberOfLines={1}>
             {enclos.nom}
@@ -327,7 +327,7 @@ export default function DetailEnclos() {
         visible={popup === 'ajout'}
         titre={`Enclos ${liste.length + 1}`}
         message="État de départ de ce nouvel enclos."
-        initial={departDefaut}
+        initial={{ ...departDefaut, robe: liste.length % 7 }}
         libelle="Ajouter"
         onFermer={fermer}
         onValider={(depart) => {

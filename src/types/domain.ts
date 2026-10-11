@@ -121,8 +121,21 @@ export interface EtapeEnCours {
   notificationIds?: string[];
 }
 
+/** Les trois familles de montures élevées en enclos (mêmes jauges et mêmes règles). */
+export type Famille = 'dragodinde' | 'muldo' | 'volkorne';
+export const FAMILLE_LISTE: Famille[] = ['dragodinde', 'muldo', 'volkorne'];
+export const FAMILLES: Record<Famille, { nom: string; pluriel: string; feminin: boolean }> = {
+  dragodinde: { nom: 'Dragodinde', pluriel: 'Dragodindes', feminin: true },
+  muldo: { nom: 'Muldo', pluriel: 'Muldos', feminin: false },
+  volkorne: { nom: 'Volkorne', pluriel: 'Volkornes', feminin: false },
+};
+
 /** État de départ d'un enclos, choisi à sa création ou à son redémarrage. */
 export interface DepartEnclos {
+  /** Famille des montures du lot (illustration de l'enclos). */
+  famille: Famille;
+  /** Robe choisie pour illustrer l'enclos (index dans les 7 robes unies). */
+  robe: number;
   unifiee: boolean;
   serenite: number;
   /** Niveau des montures au départ (1 pour des bébés, 60 pour des montures sauvages capturées). */
@@ -152,13 +165,15 @@ export interface Reglages {
   seuilConseilMin: number;
   /** Délai (min) d'alerte avant une baisse de palier ou une jauge vide. */
   anticipationMin: number;
+  /** Le guide de prise en main a été parcouru (il n'est plus proposé d'office). */
+  guideVu: boolean;
   /** App Windows : fenêtre toujours au premier plan (par-dessus le jeu). */
   premierPlan: boolean;
   notifications: boolean;
   son: boolean;
 }
 
-export function lotInitial(depart: DepartEnclos): EtatLot {
+export function lotInitial(depart: Pick<DepartEnclos, 'unifiee' | 'serenite'>): EtatLot {
   return {
     serenite: depart.serenite,
     // Un lot déjà à −5 000 est unifié par construction (la sérénité est bornée).

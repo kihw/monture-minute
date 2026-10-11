@@ -10,8 +10,8 @@ import { CARACTERISTIQUE_MAX } from '../data/constants';
 import { ContexteCalcul, niveauLot } from '../engine/parcours';
 import { VueEnclos } from '../engine/statut';
 import { couleurs, rayon } from '../theme';
-import { CARACTERISTIQUES, Enclos, EtapeValidee, Etape, EtatLot, INFO_SUIVI } from '../types/domain';
-import Dragodinde from './Dragodinde';
+import { CARACTERISTIQUES, Famille, Enclos, EtapeValidee, Etape, EtatLot, INFO_SUIVI } from '../types/domain';
+import Monture from './Monture';
 import { s } from '../echelle';
 
 /** Minutes restantes très courtes pour une puce d'onglet : « 0:23 », « 2h », « 1j ». */
@@ -89,12 +89,14 @@ export function BarreEnclos({
 
 /** Portrait de la dragodinde de l'enclos, cerclé de l'avancement de son parcours. */
 export function AvatarAnneau({
-  index,
+  famille,
+  robe,
   avancement,
   taille = s(34),
   couleur = couleurs.accent,
 }: {
-  index: number;
+  famille: Famille;
+  robe: number;
   avancement: number;
   taille?: number;
   couleur?: string;
@@ -123,7 +125,7 @@ export function AvatarAnneau({
         )}
       </Svg>
       <View style={{ width: interieur, height: interieur, borderRadius: interieur / 2, overflow: 'hidden' }}>
-        <Dragodinde taille={interieur} index={index} />
+        <Monture famille={famille} robe={robe} taille={interieur} />
       </View>
     </View>
   );
