@@ -102,10 +102,21 @@ export interface EtapeValidee {
   valideeAt: number;
 }
 
+/** Recharge faite en jeu, ou niveau relu en jeu, pendant une étape : ouvre un nouveau tronçon de simulation. */
+export interface Segment {
+  t: number;
+  jauge: JaugeType;
+  niveau: number;
+  source: 'recharge' | 'correction';
+}
+
 export interface EtapeEnCours {
+  /** Plan de l'étape ; `cycles`, `vides` et `dureeSec` tiennent compte des recharges saisies. */
   etape: Etape;
   demarreeAt: number;
   finAt: number;
+  /** Recharges et corrections saisies depuis le démarrage, dans l'ordre. */
+  segments?: Segment[];
   /** Notifications programmées (fin d'étape, changements de palier, jauge vide). */
   notificationIds?: string[];
 }
@@ -137,6 +148,10 @@ export interface Reglages {
   /** Niveau auquel le joueur remplit habituellement ses jauges (proposé à chaque activation). */
   remplissage: number;
   prudent: boolean;
+  /** Gain de temps minimal (min) pour que l'app conseille une recharge. */
+  seuilConseilMin: number;
+  /** Délai (min) d'alerte avant une baisse de palier ou une jauge vide. */
+  anticipationMin: number;
   /** App Windows : fenêtre toujours au premier plan (par-dessus le jeu). */
   premierPlan: boolean;
   notifications: boolean;

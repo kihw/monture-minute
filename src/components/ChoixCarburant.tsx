@@ -1,4 +1,5 @@
-// Popup compacte de saisie du carburant mis dans une jauge au moment de l'activer en jeu.
+// Popup compacte de saisie du carburant d'une jauge : à son activation en jeu, lors d'une recharge
+// en cours d'étape, ou pour recaler la simulation sur la valeur lue en jeu.
 
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
@@ -19,6 +20,8 @@ export default function PopupCarburant({
   type,
   valeur,
   duree,
+  titre,
+  libelle = 'Jauge activée',
   onChange,
   onValider,
   onFermer,
@@ -28,6 +31,10 @@ export default function PopupCarburant({
   valeur: number;
   /** Durée de l'étape avec ce carburant, si elle est connue. */
   duree?: string;
+  /** Titre de la popup (par défaut : carburant mis à l'activation). */
+  titre?: string;
+  /** Libellé du bouton de validation. */
+  libelle?: string;
   onChange: (v: number) => void;
   onValider: () => void;
   onFermer: () => void;
@@ -36,7 +43,7 @@ export default function PopupCarburant({
   return (
     <Popup
       visible={type !== null}
-      titre={info ? `Jauge ${info.nom} · carburant mis` : 'Jauge'}
+      titre={titre ?? (info ? `Jauge ${info.nom} · carburant mis` : 'Jauge')}
       onFermer={onFermer}
       pied={
         <View style={styles.ligne}>
@@ -44,7 +51,7 @@ export default function PopupCarburant({
             <BoutonContour label="Annuler" onPress={onFermer} />
           </View>
           <View style={{ flex: 1.6 }}>
-            <BoutonPrincipal label="Jauge activée" onPress={onValider} />
+            <BoutonPrincipal label={libelle} onPress={onValider} />
           </View>
         </View>
       }

@@ -6,7 +6,7 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Fragment, useEffect, useMemo } from 'react';
-import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Animated, Easing, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { JAUGE_MAX, TIERS_CARBURANT } from '../data/constants';
 import { palierPourNiveau } from '../engine/carburant';
@@ -74,12 +74,7 @@ export default function PanneauJauges({
                   {niveau > 0 ? `×${palierPourNiveau(niveau)}` : '—'}
                 </Text>
                 <View style={[styles.tube, activee && [styles.tubeActif, { shadowColor: info.couleur }]]}>
-                  {ratio > 0 && (
-                    <LinearGradient
-                      colors={[`${info.couleur}`, `${info.couleur}aa`]}
-                      style={[styles.niveau, { height: `${Math.max(ratio * 100, 6)}%` }, !activee && { opacity: 0.55 }]}
-                    />
-                  )}
+                  <NiveauTube ratio={ratio} couleur={info.couleur} attenue={!activee} />
                   {GRADUATIONS.map((gr) => (
                     <View key={gr} style={[styles.graduation, { bottom: `${gr * 100}%` }]} />
                   ))}
@@ -132,6 +127,31 @@ export default function PanneauJauges({
   );
 }
 
+/**
+ * Carburant d'un tube. Il ne s'anime que lorsque la valeur change (cycle de 10 s, recharge,
+ * correction) : glissement vers la nouvelle hauteur, aucune animation permanente.
+ */
+function NiveauTube({ ratio, couleur, attenue }: { ratio: number; couleur: string; attenue: boolean }) {
+  const cible = ratio > 0 ? Math.max(ratio, 0.06) : 0;
+  // Valeur de départ figée au montage : les changements suivants passent par l'animation.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const hauteur = useMemo(() => new Animated.Value(cible), []);
+  useEffect(() => {
+    Animated.timing(hauteur, { toValue: cible, duration: 600, easing: Easing.out(Easing.cubic), useNativeDriver: false }).start();
+  }, [cible, hauteur]);
+  return (
+    <Animated.View
+      style={[
+        styles.niveau,
+        { height: hauteur.interpolate({ inputRange: [0, 1], outputRange: ['0%', '100%'] }) },
+        attenue && { opacity: 0.55 },
+      ]}
+    >
+      <LinearGradient colors={[couleur, `${couleur}aa`]} style={StyleSheet.absoluteFill} />
+    </Animated.View>
+  );
+}
+
 /** Bande de mini-jauges pour les lignes de liste : seules les jauges actives sont montrées. */
 export function MiniJauges({ carburant, actives }: { carburant: Carburant; actives: JaugeType[] }) {
   return (
@@ -180,7 +200,7 @@ const styles = StyleSheet.create({
     shadowRadius: s(8),
     shadowOffset: { width: 0, height: 0 },
   },
-  niveau: { width: '100%', borderRadius: s(8) },
+  niveau: { width: '100%', borderRadius: s(8), overflow: 'hidden' },
   graduation: { position: 'absolute', left: s(3), right: s(3), height: s(1), backgroundColor: 'rgba(255,255,255,0.12)' },
   contourAttente: {
     position: 'absolute',

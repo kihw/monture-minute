@@ -69,3 +69,9 @@ export function consommer(niveau: number, besoin: number, maxCycles = Infinity, 
   }
   return { cycles, donne, niveau: carburant, vide: reste > 0 && carburant <= 0, evenements };
 }
+
+/** Seuil à dépasser pour retrouver le palier juste au-dessus de `palier` (ex. ×10 → plus de 80 000 pour ×20). */
+export function seuilAuDessus(palier: Palier | number): number {
+  const suivant = TIERS_CARBURANT.find((t) => t.palier > palier);
+  return suivant ? suivant.seuil : JAUGE_MAX;
+}

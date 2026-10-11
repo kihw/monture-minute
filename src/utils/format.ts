@@ -57,3 +57,11 @@ export function formatDateHeure(horodatage: number): string {
     minute: '2-digit',
   });
 }
+
+/** Carburant lisible : « 81,8k », « 200k », « 950 ». */
+export function formatCarburantCourt(n: number): string {
+  const v = Math.max(0, Math.round(n));
+  if (v < 1000) return String(v);
+  const k = v / 1000;
+  return `${(Math.round(k * 10) / 10).toLocaleString('fr-FR')}k`;
+}

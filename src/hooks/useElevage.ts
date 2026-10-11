@@ -1,14 +1,33 @@
 import { useEffect, useMemo, useState } from 'react';
+import { AppState } from 'react-native';
 
 import { ReglagesCalcul } from '../engine/parcours';
 import { useEleveurStore } from '../store/useStore';
 
-/** Horloge qui se met à jour toutes les `intervalleMs` (comptes à rebours, anneaux animés). */
+/**
+ * Horloge qui se met à jour toutes les `intervalleMs` (comptes à rebours, réservoirs en direct).
+ * Elle s'arrête quand l'app passe en arrière-plan et se recale dès son retour : les valeurs
+ * affichées sont recalculées à partir de l'heure, rien ne dérive pendant la pause.
+ */
 export function useMaintenant(intervalleMs = 1000): number {
   const [maintenant, setMaintenant] = useState(() => Date.now());
   useEffect(() => {
-    const t = setInterval(() => setMaintenant(Date.now()), intervalleMs);
-    return () => clearInterval(t);
+    let minuterie: ReturnType<typeof setInterval> | null = null;
+    const demarrer = () => {
+      if (minuterie) return;
+      setMaintenant(Date.now());
+      minuterie = setInterval(() => setMaintenant(Date.now()), intervalleMs);
+    };
+    const arreter = () => {
+      if (minuterie) clearInterval(minuterie);
+      minuterie = null;
+    };
+    if (AppState.currentState !== 'background') demarrer();
+    const abonnement = AppState.addEventListener('change', (etat) => (etat === 'active' ? demarrer() : etat === 'background' && arreter()));
+    return () => {
+      arreter();
+      abonnement.remove();
+    };
   }, [intervalleMs]);
   return maintenant;
 }

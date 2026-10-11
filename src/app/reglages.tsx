@@ -20,7 +20,7 @@ export default function Reglages() {
   const modifier = useEleveurStore((s) => s.modifierReglages);
   const reinitialiserTout = useEleveurStore((s) => s.reinitialiserTout);
   const liste = useListeEnclos();
-  const [popup, setPopup] = useState<'reset' | 'remplissage' | 'mode' | null>(null);
+  const [popup, setPopup] = useState<'reset' | 'remplissage' | 'mode' | 'seuil' | 'anticipation' | null>(null);
   const verification = useMiseAJour((s) => s.verification);
   const bureau = pontBureau();
   const fermer = () => setPopup(null);
@@ -115,6 +115,26 @@ export default function Reglages() {
       </Carte>
 
       <Carte style={styles.groupe}>
+        <Titre>Jauges</Titre>
+        <LigneReglage
+          icone="flask-plus-outline"
+          couleur={couleurs.accent}
+          titre="Conseil de recharge"
+          sousTitre="Recharger seulement si l’étape finit au moins autant plus tôt"
+          valeur={`≥ ${reglages.seuilConseilMin ?? 15} min`}
+          onPress={() => setPopup('seuil')}
+        />
+        <LigneReglage
+          icone="bell-ring-outline"
+          couleur={couleurs.accent}
+          titre="Alerte avant palier ou jauge vide"
+          sousTitre="Laisse le temps d’aller recharger en jeu"
+          valeur={(reglages.anticipationMin ?? 5) > 0 ? `${reglages.anticipationMin ?? 5} min avant` : 'Au moment'}
+          onPress={() => setPopup('anticipation')}
+        />
+      </Carte>
+
+      <Carte style={styles.groupe}>
         <Titre>Avancé</Titre>
         <LigneReglage
           icone="flask-outline"
@@ -160,6 +180,30 @@ export default function Reglages() {
           detail: `Rendement de départ : ${palierPourNiveau(r)} pts / 10 s`,
         }))}
         onChoisir={(remplissage) => modifier({ remplissage })}
+        onFermer={fermer}
+      />
+      <PopupChoix
+        visible={popup === 'seuil'}
+        titre="Conseil de recharge"
+        valeur={reglages.seuilConseilMin ?? 15}
+        options={[5, 10, 15, 30, 60].map((m) => ({
+          valeur: m,
+          titre: `Gain d’au moins ${m} min`,
+          detail: m <= 10 ? 'Conseille souvent de recharger' : m >= 30 ? 'Économise le carburant' : 'Équilibré',
+        }))}
+        onChoisir={(seuilConseilMin) => modifier({ seuilConseilMin })}
+        onFermer={fermer}
+      />
+      <PopupChoix
+        visible={popup === 'anticipation'}
+        titre="Alerte avant palier ou jauge vide"
+        valeur={reglages.anticipationMin ?? 5}
+        options={[0, 2, 5, 10, 15].map((m) => ({
+          valeur: m,
+          titre: m === 0 ? 'Au moment même' : `${m} min avant`,
+          detail: m === 0 ? 'Alerte quand la jauge change de palier ou se vide' : 'Le temps d’aller recharger en jeu',
+        }))}
+        onChoisir={(anticipationMin) => modifier({ anticipationMin })}
         onFermer={fermer}
       />
       <PopupChoix

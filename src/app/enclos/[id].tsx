@@ -9,7 +9,10 @@ import { PopupDepart } from '../../components/FormulaireDepart';
 import PanneauJauges from '../../components/PanneauJauges';
 import { Confirmation, MenuActions } from '../../components/Popup';
 import PopupAjustement from '../../components/PopupAjustement';
+import PopupRecharge from '../../components/PopupRecharge';
+import { BandeauConseil, ReservoirsDirect } from '../../components/Reservoirs';
 import { BoutonContour, BoutonPrincipal, Ecran, retour } from '../../components/ui';
+import { conseil as calculerConseil, etatJauge } from '../../engine/descente';
 import { prochaineEtape } from '../../engine/parcours';
 import { carburantPropose, vueEnclos } from '../../engine/statut';
 import { useCalcul, useMaintenant } from '../../hooks/useElevage';
@@ -31,6 +34,7 @@ export default function DetailEnclos() {
   const liste = useListeEnclos();
   const enclos = useEleveurStore((s) => s.enclos[id]);
   const departDefaut = useEleveurStore((s) => s.reglages.depart);
+  const seuilConseilMin = useEleveurStore((s) => s.reglages.seuilConseilMin ?? 15);
   const store = useEleveurStore.getState();
   const calcul = useCalcul();
   const maintenant = useMaintenant();
@@ -38,6 +42,9 @@ export default function DetailEnclos() {
   // Jauges validées comme activées en jeu, avec le carburant qui y a été mis.
   const [cochees, setCochees] = useState<Partial<Record<JaugeType, number>>>({});
   const [selection, setSelection] = useState<{ type: JaugeType; valeur: number } | null>(null);
+  // Feuille « Recharger ? » ouverte sur une jauge, et saisie libre d'une recharge ou d'une correction.
+  const [recharge, setRecharge] = useState<JaugeType | null>(null);
+  const [saisie, setSaisie] = useState<{ mode: 'recharge' | 'correction'; type: JaugeType; valeur: number } | null>(null);
 
   if (!enclos) return <Redirect href="/enclos" />;
   const vues = liste.map((e) => vueEnclos(e, calcul, maintenant));
@@ -56,6 +63,25 @@ export default function DetailEnclos() {
   const trajet = etape !== null && etape.sereniteCible !== etape.sereniteDepart;
   // L'étape s'est arrêtée faute de carburant : il faut recharger avant de continuer.
   const vide = vue.statut === 'a_confirmer' && !!etape && etape.vides.length > 0;
+  const enCours = enclos.enCours;
+  const conseil =
+    enCours && (vue.statut === 'en_cours' || vide)
+      ? calculerConseil(enCours, maintenant, { ...calcul, seuilGainMin: seuilConseilMin })
+      : null;
+
+  function ouvrirSaisie(mode: 'recharge' | 'correction', type: JaugeType) {
+    if (!enCours) return;
+    const actuel = etatJauge(enCours, type, Date.now()).niveau;
+    setRecharge(null);
+    setSaisie({ mode, type, valeur: mode === 'recharge' ? Math.max(actuel, calcul.remplissage) : Math.round(actuel / 2000) * 2000 });
+  }
+
+  function validerSaisie() {
+    if (!saisie) return;
+    if (saisie.mode === 'recharge') store.rechargerJauge(id, saisie.type, saisie.valeur);
+    else store.corrigerJauge(id, saisie.type, saisie.valeur);
+    setSaisie(null);
+  }
 
   function basculer(type: JaugeType) {
     if (vue.statut !== 'attente') return;
@@ -116,13 +142,13 @@ export default function DetailEnclos() {
       ? etape && etape.vides.length
         ? `Carburant insuffisant : ${etape.vides.map((j) => INFO_JAUGE[j].nom).join(', ')} se videra.`
         : 'Active en jeu les jauges qui clignotent, puis touche-les.'
-      : vide
-        ? `${etape!.vides.map((j) => INFO_JAUGE[j].nom).join(', ')} vide : recharge pour continuer.`
-        : null;
+      : null;
 
   const action =
-    vue.statut === 'a_confirmer' ? (
-      <BoutonPrincipal label={vide ? 'Recharger et continuer' : 'Étape suivante'} onPress={() => confirmer()} />
+    vide ? (
+      <BoutonPrincipal label={`Recharger ${INFO_JAUGE[etape!.vides[0]].nom}`} onPress={() => setRecharge(etape!.vides[0])} />
+    ) : vue.statut === 'a_confirmer' ? (
+      <BoutonPrincipal label="Étape suivante" onPress={() => confirmer()} />
     ) : vue.statut === 'termine' ? (
       <BoutonPrincipal label="Voir le bilan" onPress={() => router.replace(`/objectifs/${id}`)} />
     ) : vue.statut === 'en_cours' ? (
@@ -175,7 +201,16 @@ export default function DetailEnclos() {
         onBasculer={vue.statut === 'attente' ? basculer : undefined}
         enMarche={vue.statut === 'en_cours'}
       />
-      {consigne && <Text style={[styles.consigne, vide && { color: couleurs.attention }]}>{consigne}</Text>}
+      {consigne && <Text style={styles.consigne}>{consigne}</Text>}
+      {conseil && <BandeauConseil conseil={conseil} onPress={setRecharge} />}
+      {enCours && (vue.statut === 'en_cours' || vide) && (
+        <ReservoirsDirect
+          enCours={enCours}
+          maintenant={maintenant}
+          onRecharger={setRecharge}
+          onCorriger={(j) => ouvrirSaisie('correction', j)}
+        />
+      )}
 
       <MontureLigne lot={vue.lot} ctx={ctx} />
       <ParcoursPuces validees={enclos.etapesValidees} actuelle={etape} aVenir={vue.aVenir} />
@@ -189,6 +224,32 @@ export default function DetailEnclos() {
         onFermer={() => setSelection(null)}
       />
 
+      <PopupRecharge
+        visible={recharge !== null}
+        enCours={enCours}
+        jauge={recharge}
+        maintenant={maintenant}
+        options={calcul}
+        conseille={conseil && conseil.jauge === recharge ? (conseil.scenario?.type ?? null) : null}
+        onRecharger={(niveau) => {
+          if (recharge) store.rechargerJauge(id, recharge, niveau);
+          setRecharge(null);
+        }}
+        onAutreNiveau={() => recharge && ouvrirSaisie('recharge', recharge)}
+        onCorriger={() => recharge && ouvrirSaisie('correction', recharge)}
+        onFermer={() => setRecharge(null)}
+      />
+
+      <PopupCarburant
+        type={saisie?.type ?? null}
+        valeur={saisie?.valeur ?? 0}
+        titre={saisie ? `${INFO_JAUGE[saisie.type].nom} · ${saisie.mode === 'recharge' ? 'niveau après recharge' : 'niveau lu en jeu'}` : undefined}
+        libelle={saisie?.mode === 'correction' ? 'Corriger' : 'Recharge faite'}
+        onChange={(valeur) => saisie && setSaisie({ ...saisie, valeur })}
+        onValider={validerSaisie}
+        onFermer={() => setSaisie(null)}
+      />
+
       <MenuActions
         visible={popup === 'menu'}
         titre={enclos.nom}
@@ -200,6 +261,16 @@ export default function DetailEnclos() {
             detail: 'Recaler sérénité, caractéristiques et niveau',
             onPress: () => setPopup('ajustement'),
           },
+          ...(vide
+            ? [
+                {
+                  icone: 'skip-next' as const,
+                  titre: 'Valider sans recharger',
+                  detail: 'Garde la progression obtenue et passe à la suite',
+                  onPress: () => confirmer(),
+                },
+              ]
+            : []),
           ...(vue.statut === 'en_cours'
             ? [
                 {

@@ -288,13 +288,3 @@ export function genererParcours(
   }
   return etapes;
 }
-
-/** Lot et carburant projetés à l'instant `maintenant` pendant une étape en cours. */
-export function projeter(
-  lot: EtatLot,
-  enCours: { etape: Etape; demarreeAt: number } | null,
-  maintenant: number
-): { lot: EtatLot; carburant: Partial<Record<JaugeType, number>> } {
-  if (!enCours) return { lot, carburant: {} };
-  return appliquerEtape(lot, enCours.etape, Math.max(0, (maintenant - enCours.demarreeAt) / 1000));
-}

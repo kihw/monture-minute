@@ -7,7 +7,7 @@ import { AvatarAnneau, BarreEnclos } from '../../components/Compact';
 import { PopupDepart } from '../../components/FormulaireDepart';
 import { MiniJauges } from '../../components/PanneauJauges';
 import { BoutonPrincipal, Ecran } from '../../components/ui';
-import { consommer } from '../../engine/carburant';
+import { echeances } from '../../engine/descente';
 import { prochaineEtape } from '../../engine/parcours';
 import { vueEnclos, VueEnclos } from '../../engine/statut';
 import { useCalcul, useMaintenant } from '../../hooks/useElevage';
@@ -25,18 +25,14 @@ function prochainesAlertes(liste: Enclos[], maintenant: number) {
   const alertes: { quand: number; texte: string }[] = [];
   liste.forEach((e, i) => {
     if (!e.enCours) return;
-    const { etape, demarreeAt, finAt } = e.enCours;
+    const { finAt } = e.enCours;
     if (finAt > maintenant) alertes.push({ quand: finAt, texte: `E${i + 1} · fin d’étape` });
-    for (const j of etape.jauges) {
-      const { evenements } = consommer(etape.carburantDepart[j] ?? 0, etape.besoins[j] ?? 0, etape.cycles);
-      for (const ev of evenements) {
-        const quand = demarreeAt + ev.cycle * 10_000;
-        if (quand <= maintenant) continue;
-        alertes.push({
-          quand,
-          texte: ev.type === 'vide' ? `E${i + 1} · ${INFO_JAUGE[j].nom} vide` : `E${i + 1} · ${INFO_JAUGE[j].nom} passe ×${ev.palier}`,
-        });
-      }
+    for (const ev of echeances(e.enCours, maintenant)) {
+      if (!ev.jauge || ev.type === 'couverte' || ev.type === 'fin') continue;
+      alertes.push({
+        quand: ev.quand,
+        texte: ev.type === 'vide' ? `E${i + 1} · ${INFO_JAUGE[ev.jauge].nom} vide` : `E${i + 1} · ${INFO_JAUGE[ev.jauge].nom} passe ×${ev.palier}`,
+      });
     }
   });
   return alertes.sort((a, b) => a.quand - b.quand).slice(0, 3);

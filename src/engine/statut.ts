@@ -1,7 +1,8 @@
 // Vue dérivée d'un enclos pour l'UI : étape affichée, statut, lot et carburant simulés.
 
 import { Carburant, Enclos, Etape, EtatLot, JaugeType } from '../types/domain';
-import { ContexteCalcul, contexteDepuis, genererParcours, projeter, ReglagesCalcul } from './parcours';
+import { appliquerEnCours } from './descente';
+import { ContexteCalcul, contexteDepuis, genererParcours, ReglagesCalcul } from './parcours';
 
 export type Statut = 'attente' | 'en_cours' | 'a_confirmer' | 'termine';
 
@@ -38,9 +39,9 @@ export function vueEnclos(enclos: Enclos, calcul: ReglagesCalcul, maintenant: nu
   if (enclos.enCours) {
     const { etape, finAt } = enclos.enCours;
     const restantSec = Math.max(0, (finAt - maintenant) / 1000);
-    const maintenantSim = projeter(enclos.lot, enclos.enCours, maintenant);
+    const maintenantSim = appliquerEnCours(enclos.lot, enclos.enCours, Math.max(0, (maintenant - enclos.enCours.demarreeAt) / 1000));
     // Les étapes suivantes partent de l'état prévu à la fin de l'étape en cours.
-    const apres = genererParcours(projeter(enclos.lot, enclos.enCours, Infinity).lot, ctx, {});
+    const apres = genererParcours(appliquerEnCours(enclos.lot, enclos.enCours).lot, ctx, {});
     const total = faites + 1 + apres.length;
     return {
       ctx,
