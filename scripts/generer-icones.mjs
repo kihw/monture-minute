@@ -1,5 +1,5 @@
 // Génère toutes les icônes de l'app : fond et anneau doré de assets/icone.svg, avec la dragodinde
-// Dorée officielle (assets/dragodindes/doree.png, rendu DOFUS © Ankama Games) au centre.
+// Dorée officielle (assets/dragodindes/doree.png, rendu DOFUS Touch © Ankama Games) au centre.
 // Usage : npm install --no-save sharp && node scripts/generer-icones.mjs
 // (sharp n'est pas une dépendance du projet : on ne s'en sert que pour régénérer les PNG.)
 
@@ -15,7 +15,7 @@ const anneauBlanc = sansFond
   .replace(/stroke="(?!none")[^"]+"/g, 'stroke="#ffffff"');
 
 const DRAGODINDE = 'assets/dragodindes/doree.png';
-const HAUTEUR = 560; // sur 1024
+const HAUTEUR = 600; // sur 1024
 
 const rendreSvg = (svg) => sharp(Buffer.from(svg), { density: 384 }).resize(1024, 1024).png().toBuffer();
 
@@ -25,7 +25,7 @@ async function dragodinde({ blanche = false } = {}) {
   if (blanche) image = image.ensureAlpha().linear([0, 0, 0, 1], [255, 255, 255, 0]);
   const tampon = await image.png().toBuffer();
   const { width } = await sharp(tampon).metadata();
-  return { input: tampon, left: Math.round(512 - width / 2 + 10), top: Math.round(512 - HAUTEUR / 2 + 20) };
+  return { input: tampon, left: Math.round(512 - width / 2 + 10), top: Math.round(512 - HAUTEUR / 2 + 10) };
 }
 
 /** Icône complète 1024 px (fond + anneau + dragodinde). */

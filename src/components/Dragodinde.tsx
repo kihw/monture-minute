@@ -1,6 +1,6 @@
-// Dragodindes officielles de DOFUS (rendus du jeu, © Ankama Games, utilisés dans ce projet non
-// lucratif) : une robe par enclos, en avatar dans un disque teinté ou en illustration.
-// Images détourées (fond uni retiré) et agrandies ×3 dans assets/dragodindes/.
+// Dragodindes officielles de DOFUS (© Ankama Games, utilisées dans ce projet non lucratif) : une robe
+// par enclos, en avatar dans un disque teinté ou en illustration. Rendus du moteur officiel de
+// l'encyclopédie DOFUS Touch (600 px, fond transparent), rognés dans assets/dragodindes/.
 
 import { Image, ImageSourcePropType, StyleSheet, View } from 'react-native';
 import Svg, { Circle, Defs, RadialGradient, Stop } from 'react-native-svg';
@@ -28,8 +28,12 @@ export function robe(index: number): Robe {
   return ROBES[((index % ROBES.length) + ROBES.length) % ROBES.length];
 }
 
-// Proportions des rendus (≈ 84 × 98).
-const RATIO = 84 / 98;
+// Proportions des rendus rognés (462 × 581).
+const RATIO = 462 / 581;
+// En dessous de cette taille, l'avatar montre la tête (centre relatif de la tête dans le rendu).
+const SEUIL_TETE = s(80);
+const ZOOM_TETE = 2.0;
+const TETE = { x: 0.7, y: 0.2 };
 
 export default function Dragodinde({
   taille = s(64),
@@ -67,7 +71,22 @@ export default function Dragodinde({
         <Circle cx={50} cy={50} r={49.5} fill={`url(#${id})`} stroke="rgba(255,255,255,0.1)" strokeWidth={1} />
       </Svg>
       <View style={[StyleSheet.absoluteFill, styles.centre, { borderRadius: taille / 2 }]}>
-        <Image source={r.image} style={{ width: hauteur * RATIO, height: hauteur, marginTop: taille * 0.04 }} resizeMode="contain" />
+        {taille < SEUIL_TETE ? (
+          // Petit avatar : cadrage sur la tête, seule partie lisible à cette taille.
+          <Image
+            source={r.image}
+            style={{
+              position: 'absolute',
+              width: taille * ZOOM_TETE * RATIO,
+              height: taille * ZOOM_TETE,
+              left: taille / 2 - TETE.x * taille * ZOOM_TETE * RATIO,
+              top: taille / 2 - TETE.y * taille * ZOOM_TETE,
+            }}
+            resizeMode="contain"
+          />
+        ) : (
+          <Image source={r.image} style={{ width: hauteur * RATIO, height: hauteur, marginTop: taille * 0.04 }} resizeMode="contain" />
+        )}
       </View>
     </View>
   );
