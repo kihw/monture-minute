@@ -91,6 +91,13 @@ export default function Reglages() {
       <Carte style={styles.groupe}>
         <Titre>Application</Titre>
         <LigneReglage
+          icone="school-outline"
+          couleur={couleurs.accent}
+          titre="Guide d’utilisation"
+          sousTitre="Enclos, jauges, carburant, alertes : tout en 10 pages"
+          onPress={() => router.push('/guide')}
+        />
+        <LigneReglage
           icone="update"
           couleur={couleurs.accent}
           titre="Rechercher une mise à jour"

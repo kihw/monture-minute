@@ -21,7 +21,8 @@ export default function Configuration() {
   function valider() {
     configurer(depart);
     if (router.canDismiss()) router.dismissAll();
-    router.replace('/enclos');
+    // Première fois : le guide de prise en main, puis la liste des enclos.
+    router.replace(reglages.guideVu ? '/enclos' : '/guide?ensuite=/enclos');
   }
 
   return (
