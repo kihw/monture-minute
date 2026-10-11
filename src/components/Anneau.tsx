@@ -3,6 +3,7 @@ import { Animated, StyleSheet, Text, View } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
 
 import { couleurs } from '../theme';
+import { s } from '../echelle';
 
 const CercleAnime = Animated.createAnimatedComponent(Circle);
 
@@ -13,8 +14,8 @@ const CercleAnime = Animated.createAnimatedComponent(Circle);
 export default function Anneau({
   ratio,
   couleur,
-  taille = 120,
-  epaisseur = 10,
+  taille = s(120),
+  epaisseur = s(10),
   label,
   valeur,
 }: {
@@ -79,7 +80,7 @@ export default function Anneau({
 
 const styles = StyleSheet.create({
   centre: { alignItems: 'center', justifyContent: 'center' },
-  label: { fontSize: 11, color: couleurs.texteAttenue, marginBottom: 3 },
-  valeur: { fontSize: 15, fontWeight: '600', color: couleurs.texte, fontVariant: ['tabular-nums'] },
-  valeurPetite: { fontSize: 10.5, fontWeight: '700', fontVariant: ['tabular-nums'], letterSpacing: -0.3 },
+  label: { fontSize: s(11), color: couleurs.texteAttenue, marginBottom: s(3) },
+  valeur: { fontSize: s(15), fontWeight: '600', color: couleurs.texte, fontVariant: ['tabular-nums'] },
+  valeurPetite: { fontSize: s(10.5), fontWeight: '700', fontVariant: ['tabular-nums'], letterSpacing: s(-0.3) },
 });

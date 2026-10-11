@@ -2,6 +2,7 @@
 // Sert d'avatar d'enclos et d'illustration (accueil, objectifs atteints).
 
 import Svg, { Circle, Defs, Ellipse, G, Path, RadialGradient, Stop } from 'react-native-svg';
+import { s } from '../echelle';
 
 export interface Robe {
   corps: string;
@@ -24,7 +25,7 @@ export function robe(index: number): Robe {
 }
 
 export default function Dragodinde({
-  taille = 64,
+  taille = s(64),
   index = 0,
   fond = true,
 }: {

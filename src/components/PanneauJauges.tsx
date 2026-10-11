@@ -12,6 +12,7 @@ import { JAUGE_MAX, TIERS_CARBURANT } from '../data/constants';
 import { palierPourNiveau } from '../engine/carburant';
 import { couleurs, rayon } from '../theme';
 import { Carburant, INFO_JAUGE, JaugeType } from '../types/domain';
+import { s } from '../echelle';
 
 const GROUPES: JaugeType[][] = [['moins', 'plus'], ['endurance', 'maturite', 'amour'], ['xp']];
 
@@ -96,11 +97,11 @@ export default function PanneauJauges({
                   {info.texte ? (
                     <Text style={[styles.iconeTexte, { color: info.couleur }]}>{info.texte}</Text>
                   ) : (
-                    <MaterialCommunityIcons name={info.icone!} size={11} color={info.couleur} />
+                    <MaterialCommunityIcons name={info.icone!} size={s(11)} color={info.couleur} />
                   )}
                   {activee && (
                     <View style={styles.coche}>
-                      <MaterialCommunityIcons name="check" size={8} color={couleurs.surAccent} />
+                      <MaterialCommunityIcons name="check" size={s(8)} color={couleurs.surAccent} />
                     </View>
                   )}
                 </View>
@@ -151,21 +152,21 @@ const styles = StyleSheet.create({
   panneau: {
     flexDirection: 'row',
     alignItems: 'stretch',
-    paddingVertical: 8,
-    paddingHorizontal: 6,
+    paddingVertical: s(8),
+    paddingHorizontal: s(6),
     borderRadius: rayon.lg,
     backgroundColor: couleurs.carte,
     borderWidth: 1,
     borderColor: couleurs.liseret,
   },
   cellule: { flex: 1, alignItems: 'center' },
-  colonne: { alignItems: 'center', gap: 4 },
-  separateur: { width: 1, marginTop: 16, marginBottom: 32, backgroundColor: couleurs.liseretVif },
-  palier: { color: '#4c4970', fontSize: 9.5, fontWeight: '800', fontVariant: ['tabular-nums'] },
+  colonne: { alignItems: 'center', gap: s(4) },
+  separateur: { width: s(1), marginTop: s(16), marginBottom: s(32), backgroundColor: couleurs.liseretVif },
+  palier: { color: '#4c4970', fontSize: s(9.5), fontWeight: '800', fontVariant: ['tabular-nums'] },
   tube: {
-    width: 16,
-    height: 96,
-    borderRadius: 8,
+    width: s(16),
+    height: s(96),
+    borderRadius: s(8),
     backgroundColor: couleurs.piste,
     borderWidth: 1,
     borderColor: couleurs.liseret,
@@ -176,48 +177,48 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     borderColor: couleurs.accent,
     shadowOpacity: 0.6,
-    shadowRadius: 8,
+    shadowRadius: s(8),
     shadowOffset: { width: 0, height: 0 },
   },
-  niveau: { width: '100%', borderRadius: 8 },
-  graduation: { position: 'absolute', left: 3, right: 3, height: 1, backgroundColor: 'rgba(255,255,255,0.12)' },
+  niveau: { width: '100%', borderRadius: s(8) },
+  graduation: { position: 'absolute', left: s(3), right: s(3), height: s(1), backgroundColor: 'rgba(255,255,255,0.12)' },
   contourAttente: {
     position: 'absolute',
     top: 0,
     left: 0,
     right: 0,
     bottom: 0,
-    borderRadius: 8,
+    borderRadius: s(8),
     borderWidth: 2,
     borderColor: couleurs.accent,
   },
   icone: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
+    width: s(20),
+    height: s(20),
+    borderRadius: s(10),
     borderWidth: 1.2,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: '#100f1c',
   },
-  iconeTexte: { fontSize: 8, fontWeight: '900' },
+  iconeTexte: { fontSize: s(8), fontWeight: '900' },
   coche: {
     position: 'absolute',
-    top: -5,
-    right: -6,
-    width: 12,
-    height: 12,
-    borderRadius: 6,
+    top: s(-5),
+    right: s(-6),
+    width: s(12),
+    height: s(12),
+    borderRadius: s(6),
     backgroundColor: couleurs.accent,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  valeur: { color: '#4c4970', fontSize: 9.5, fontWeight: '800', fontVariant: ['tabular-nums'] },
-  mini: { flexDirection: 'row', gap: 3 },
+  valeur: { color: '#4c4970', fontSize: s(9.5), fontWeight: '800', fontVariant: ['tabular-nums'] },
+  mini: { flexDirection: 'row', gap: s(3) },
   miniTube: {
-    width: 7,
-    height: 18,
-    borderRadius: 4,
+    width: s(7),
+    height: s(18),
+    borderRadius: s(4),
     backgroundColor: couleurs.piste,
     borderWidth: 1.2,
     borderColor: couleurs.accent,

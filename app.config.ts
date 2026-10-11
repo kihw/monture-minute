@@ -6,9 +6,12 @@ import type { ConfigContext, ExpoConfig } from 'expo/config';
 const { version } = require('./package.json') as { version: string };
 const [majeur, mineur, correctif] = version.split('.').map((n) => parseInt(n, 10) || 0);
 
+// APP_VARIANT=test : build de test installable à côté de la version publiée.
+const test = process.env.APP_VARIANT === 'test';
+
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
-  name: 'Monture Minute',
+  name: test ? 'Monture Minute (test)' : 'Monture Minute',
   slug: 'monture-minute',
   scheme: 'monture-minute',
   version,
@@ -19,7 +22,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     supportsTablet: true,
   },
   android: {
-    package: 'com.community.dofusbreedingtool',
+    package: test ? 'com.community.dofusbreedingtool.test' : 'com.community.dofusbreedingtool',
     versionCode: majeur * 10000 + mineur * 100 + correctif,
     adaptiveIcon: {
       backgroundColor: '#0b0a14',

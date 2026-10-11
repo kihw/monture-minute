@@ -14,6 +14,7 @@ import { useEleveurStore, useListeEnclos } from '../../store/useStore';
 import { couleurs, degrades, esp } from '../../theme';
 import { CARACTERISTIQUES, INFO_SUIVI } from '../../types/domain';
 import { formatNombre } from '../../utils/format';
+import { s } from '../../echelle';
 
 // Étincelles autour de l'illustration : position (en % du héros), taille, couleur.
 const ETINCELLES = [
@@ -75,7 +76,7 @@ export default function Objectifs() {
             { transform: [{ scale: apparition.interpolate({ inputRange: [0, 1], outputRange: [0.7, 1] }) }] },
           ]}
         >
-          <Dragodinde taille={150} index={Math.max(0, index)} />
+          <Dragodinde taille={s(150)} index={Math.max(0, index)} />
         </Animated.View>
       </View>
       <Text style={styles.titre}>Objectifs atteints !</Text>
@@ -84,9 +85,9 @@ export default function Objectifs() {
       <Carte style={{ paddingVertical: esp.xs, marginTop: esp.md }}>
         {criteres.map((c, i) => (
           <View key={c.nom} style={[styles.critere, i > 0 && styles.separe]}>
-            <MaterialCommunityIcons name="check" size={20} color={c.ok ? couleurs.accent : couleurs.texteFaible} />
+            <MaterialCommunityIcons name="check" size={s(20)} color={c.ok ? couleurs.accent : couleurs.texteFaible} />
             <Text style={styles.critereNom}>{c.nom}</Text>
-            <MaterialCommunityIcons name={c.ok ? 'check' : 'minus'} size={20} color={c.ok ? couleurs.accent : couleurs.attention} />
+            <MaterialCommunityIcons name={c.ok ? 'check' : 'minus'} size={s(20)} color={c.ok ? couleurs.accent : couleurs.attention} />
           </View>
         ))}
       </Carte>
@@ -119,22 +120,22 @@ export default function Objectifs() {
 }
 
 const styles = StyleSheet.create({
-  hero: { height: 200, alignItems: 'center', justifyContent: 'center', marginTop: esp.lg },
+  hero: { height: s(200), alignItems: 'center', justifyContent: 'center', marginTop: esp.lg },
   halo: {
     shadowColor: couleurs.accent,
     shadowOpacity: 0.45,
-    shadowRadius: 40,
+    shadowRadius: s(40),
     shadowOffset: { width: 0, height: 0 },
-    borderRadius: 75,
+    borderRadius: s(75),
   },
-  titre: { color: couleurs.texte, fontSize: 24, fontWeight: '700', textAlign: 'center' },
-  sousTitre: { color: couleurs.texteAttenue, fontSize: 13, textAlign: 'center' },
-  critere: { flexDirection: 'row', alignItems: 'center', gap: esp.md, paddingVertical: 12, paddingHorizontal: esp.xs },
+  titre: { color: couleurs.texte, fontSize: s(24), fontWeight: '700', textAlign: 'center' },
+  sousTitre: { color: couleurs.texteAttenue, fontSize: s(13), textAlign: 'center' },
+  critere: { flexDirection: 'row', alignItems: 'center', gap: esp.md, paddingVertical: s(12), paddingHorizontal: esp.xs },
   separe: { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: couleurs.liseretVif },
-  critereNom: { flex: 1, color: couleurs.texte, fontSize: 14 },
-  label: { color: couleurs.texteAttenue, fontSize: 12 },
+  critereNom: { flex: 1, color: couleurs.texte, fontSize: s(14) },
+  label: { color: couleurs.texteAttenue, fontSize: s(12) },
   ligne: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between' },
-  niveau: { color: couleurs.texte, fontSize: 20, fontWeight: '600' },
-  piste: { height: 8, borderRadius: 4, backgroundColor: 'rgba(255,255,255,0.08)', overflow: 'hidden' },
+  niveau: { color: couleurs.texte, fontSize: s(20), fontWeight: '600' },
+  piste: { height: s(8), borderRadius: s(4), backgroundColor: 'rgba(255,255,255,0.08)', overflow: 'hidden' },
   remplissage: { height: '100%', width: '100%' },
 });

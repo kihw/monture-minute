@@ -15,6 +15,7 @@ import { useEleveurStore, useListeEnclos } from '../../store/useStore';
 import { couleurs, rayon } from '../../theme';
 import { Enclos, INFO_JAUGE } from '../../types/domain';
 import { formatCompteARebours, formatHeure } from '../../utils/format';
+import { s } from '../../echelle';
 
 // Ordre d'affichage : ce qui demande une action d'abord.
 const PRIORITE = { a_confirmer: 0, en_cours: 1, attente: 2, termine: 3 } as const;
@@ -79,8 +80,8 @@ export default function ListeEnclos() {
             onPress={() => router.push(vue.statut === 'termine' ? `/objectifs/${e.id}` : `/enclos/${e.id}`)}
             style={({ pressed }) => [styles.ligne, aValider && styles.ligneAlerte, pressed && { opacity: 0.8 }]}
           >
-            <AvatarAnneau index={index} avancement={vue.avancement} taille={30} couleur={aValider ? couleurs.attention : couleurs.accent} />
-            <View style={{ flex: 1, minWidth: 0, gap: 4 }}>
+            <AvatarAnneau index={index} avancement={vue.avancement} taille={s(30)} couleur={aValider ? couleurs.attention : couleurs.accent} />
+            <View style={{ flex: 1, minWidth: 0, gap: s(4) }}>
               <Text style={styles.nom} numberOfLines={1}>
                 {e.nom}
                 <Text style={styles.etape}>
@@ -119,7 +120,7 @@ export default function ListeEnclos() {
                 <Text style={styles.timer}>{formatCompteARebours(vue.restantSec)}</Text>
               </View>
             ) : vue.statut === 'termine' ? (
-              <MaterialCommunityIcons name="check-decagram" size={18} color={couleurs.succes} />
+              <MaterialCommunityIcons name="check-decagram" size={s(18)} color={couleurs.succes} />
             ) : (
               <View style={styles.boutonLancer}>
                 <Text style={styles.boutonLancerTexte}>Lancer</Text>
@@ -161,46 +162,46 @@ export default function ListeEnclos() {
 }
 
 const styles = StyleSheet.create({
-  vide: { gap: 10, paddingVertical: 20 },
-  videTexte: { color: couleurs.texteAttenue, fontSize: 12.5, textAlign: 'center' },
+  vide: { gap: s(10), paddingVertical: s(20) },
+  videTexte: { color: couleurs.texteAttenue, fontSize: s(12.5), textAlign: 'center' },
   ligne: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 9,
-    paddingVertical: 8,
-    paddingHorizontal: 10,
+    gap: s(9),
+    paddingVertical: s(8),
+    paddingHorizontal: s(10),
     borderRadius: rayon.md,
     backgroundColor: couleurs.carte,
   },
   ligneAlerte: { backgroundColor: 'rgba(245,161,66,0.1)', borderWidth: 1, borderColor: 'rgba(245,161,66,0.4)' },
-  nom: { color: couleurs.texte, fontSize: 12.5, fontWeight: '800' },
+  nom: { color: couleurs.texte, fontSize: s(12.5), fontWeight: '800' },
   etape: { color: couleurs.texteAttenue, fontWeight: '600' },
-  segments: { flexDirection: 'row', gap: 3 },
-  segment: { width: 16, height: 3, borderRadius: 2, backgroundColor: 'rgba(255,255,255,0.1)', overflow: 'hidden' },
+  segments: { flexDirection: 'row', gap: s(3) },
+  segment: { width: s(16), height: s(3), borderRadius: s(2), backgroundColor: 'rgba(255,255,255,0.1)', overflow: 'hidden' },
   segmentRempli: { height: '100%' },
-  droite: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  timer: { color: couleurs.accent, fontSize: 14, fontWeight: '800', fontVariant: ['tabular-nums'], minWidth: 56, textAlign: 'right' },
+  droite: { flexDirection: 'row', alignItems: 'center', gap: s(8) },
+  timer: { color: couleurs.accent, fontSize: s(14), fontWeight: '800', fontVariant: ['tabular-nums'], minWidth: s(56), textAlign: 'right' },
   boutonValider: {
-    height: 26,
-    paddingHorizontal: 10,
+    height: s(26),
+    paddingHorizontal: s(10),
     borderRadius: rayon.sm,
     justifyContent: 'center',
     backgroundColor: couleurs.attention,
   },
-  boutonValiderTexte: { color: '#2a1603', fontSize: 11.5, fontWeight: '800' },
+  boutonValiderTexte: { color: '#2a1603', fontSize: s(11.5), fontWeight: '800' },
   boutonLancer: {
-    height: 26,
-    paddingHorizontal: 10,
+    height: s(26),
+    paddingHorizontal: s(10),
     borderRadius: rayon.sm,
     justifyContent: 'center',
     borderWidth: 1,
     borderColor: 'rgba(242,201,76,0.4)',
     backgroundColor: couleurs.accentDoux,
   },
-  boutonLancerTexte: { color: couleurs.accent, fontSize: 11.5, fontWeight: '800' },
-  alertes: { marginTop: 4, padding: 10, borderRadius: rayon.md, backgroundColor: couleurs.surface, gap: 5 },
-  alertesTitre: { color: couleurs.texteFaible, fontSize: 9.5, fontWeight: '800', letterSpacing: 1.2 },
-  alerte: { flexDirection: 'row', justifyContent: 'space-between', gap: 8 },
-  alerteTexte: { flex: 1, color: '#c9c6e0', fontSize: 11.5, fontWeight: '700' },
-  alerteHeure: { color: couleurs.texteAttenue, fontSize: 11.5, fontWeight: '700', fontVariant: ['tabular-nums'] },
+  boutonLancerTexte: { color: couleurs.accent, fontSize: s(11.5), fontWeight: '800' },
+  alertes: { marginTop: s(4), padding: s(10), borderRadius: rayon.md, backgroundColor: couleurs.surface, gap: s(5) },
+  alertesTitre: { color: couleurs.texteFaible, fontSize: s(9.5), fontWeight: '800', letterSpacing: s(1.2) },
+  alerte: { flexDirection: 'row', justifyContent: 'space-between', gap: s(8) },
+  alerteTexte: { flex: 1, color: '#c9c6e0', fontSize: s(11.5), fontWeight: '700' },
+  alerteHeure: { color: couleurs.texteAttenue, fontSize: s(11.5), fontWeight: '700', fontVariant: ['tabular-nums'] },
 });

@@ -18,6 +18,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { couleurs, esp, rayon } from '../theme';
 import { Bandeau, BoutonContour, BoutonPrincipal, Icone } from './ui';
+import { s } from '../echelle';
 
 // Jamais centrée : l'app est une fenêtre compacte, la popup reste dans sa colonne.
 const LARGEUR_CENTREE = Infinity;
@@ -71,7 +72,7 @@ export default function Popup({
             titre={titre}
             droite={
               <Pressable onPress={onFermer} hitSlop={10} accessibilityLabel="Fermer" style={styles.fermer}>
-                <MaterialCommunityIcons name="close" size={14} color={couleurs.texteAttenue} />
+                <MaterialCommunityIcons name="close" size={s(14)} color={couleurs.texteAttenue} />
               </Pressable>
             }
           />
@@ -163,11 +164,11 @@ export function PopupChoix<T extends string | number | boolean>({
             }}
             style={({ pressed }) => [styles.option, actif && styles.optionActive, pressed && { opacity: 0.8 }]}
           >
-            <View style={{ flex: 1, gap: 2 }}>
+            <View style={{ flex: 1, gap: s(2) }}>
               <Text style={[styles.optionTitre, actif && { color: couleurs.accent }]}>{o.titre}</Text>
               {o.detail && <Text style={styles.optionDetail}>{o.detail}</Text>}
             </View>
-            {actif && <MaterialCommunityIcons name="check" size={20} color={couleurs.accent} />}
+            {actif && <MaterialCommunityIcons name="check" size={s(20)} color={couleurs.accent} />}
           </Pressable>
         );
       })}
@@ -207,13 +208,13 @@ export function MenuActions({
           style={({ pressed }) => [styles.option, pressed && { opacity: 0.8 }]}
         >
           <View style={[styles.actionIcone, { backgroundColor: `${a.couleur ?? couleurs.accent}22` }]}>
-            <MaterialCommunityIcons name={a.icone} size={18} color={a.couleur ?? couleurs.accent} />
+            <MaterialCommunityIcons name={a.icone} size={s(18)} color={a.couleur ?? couleurs.accent} />
           </View>
-          <View style={{ flex: 1, gap: 2 }}>
+          <View style={{ flex: 1, gap: s(2) }}>
             <Text style={[styles.optionTitre, a.couleur === couleurs.danger && { color: couleurs.danger }]}>{a.titre}</Text>
             {a.detail && <Text style={styles.optionDetail}>{a.detail}</Text>}
           </View>
-          <MaterialCommunityIcons name="chevron-right" size={18} color={couleurs.texteFaible} />
+          <MaterialCommunityIcons name="chevron-right" size={s(18)} color={couleurs.texteFaible} />
         </Pressable>
       ))}
     </Popup>
@@ -222,10 +223,10 @@ export function MenuActions({
 
 const styles = StyleSheet.create({
   racine: { flex: 1 },
-  racineBas: { justifyContent: 'flex-end', paddingHorizontal: 8 },
+  racineBas: { justifyContent: 'flex-end', paddingHorizontal: s(8) },
   racineCentree: { justifyContent: 'center', alignItems: 'center', padding: esp.xl },
   voile: { flex: 1, backgroundColor: 'rgba(6,5,12,0.72)' },
-  poignee: { alignSelf: 'center', width: 32, height: 4, borderRadius: 2, marginTop: 6, backgroundColor: couleurs.liseretVif },
+  poignee: { alignSelf: 'center', width: s(32), height: s(4), borderRadius: s(2), marginTop: s(6), backgroundColor: couleurs.liseretVif },
   feuille: {
     backgroundColor: couleurs.carte,
     borderWidth: 1,
@@ -233,49 +234,49 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     shadowColor: '#000',
     shadowOpacity: 0.5,
-    shadowRadius: 24,
-    shadowOffset: { width: 0, height: 10 },
+    shadowRadius: s(24),
+    shadowOffset: { width: 0, height: s(10) },
     elevation: 12,
   },
   feuilleBas: {
     width: '100%',
-    maxWidth: 424,
+    maxWidth: s(424),
     alignSelf: 'center',
-    marginBottom: 8,
+    marginBottom: s(8),
     borderRadius: rayon.xl,
   },
-  feuilleCentree: { width: '100%', maxWidth: 520, borderRadius: rayon.xl },
-  corps: { padding: 12, gap: 10 },
+  feuilleCentree: { width: '100%', maxWidth: s(520), borderRadius: rayon.xl },
+  corps: { padding: s(12), gap: s(10) },
   pied: {
-    paddingHorizontal: 12,
-    paddingTop: 10,
-    paddingBottom: 12,
+    paddingHorizontal: s(12),
+    paddingTop: s(10),
+    paddingBottom: s(12),
     gap: esp.sm,
     borderTopWidth: 1,
     borderTopColor: couleurs.liseret,
   },
   boutons: { flexDirection: 'row', gap: esp.sm },
   fermer: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
+    width: s(24),
+    height: s(24),
+    borderRadius: s(12),
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: couleurs.surfaceElevee,
   },
-  message: { color: couleurs.texteAttenue, fontSize: 12.5, lineHeight: 18 },
+  message: { color: couleurs.texteAttenue, fontSize: s(12.5), lineHeight: s(18) },
   option: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
-    padding: 10,
+    gap: s(10),
+    padding: s(10),
     borderRadius: rayon.md,
     backgroundColor: couleurs.carteClaire,
     borderWidth: 1,
     borderColor: couleurs.liseret,
   },
   optionActive: { borderColor: couleurs.accent, backgroundColor: couleurs.accentDoux },
-  optionTitre: { color: couleurs.texte, fontSize: 12.5, fontWeight: '700' },
-  optionDetail: { color: couleurs.texteAttenue, fontSize: 11 },
-  actionIcone: { width: 28, height: 28, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
+  optionTitre: { color: couleurs.texte, fontSize: s(12.5), fontWeight: '700' },
+  optionDetail: { color: couleurs.texteAttenue, fontSize: s(11) },
+  actionIcone: { width: s(28), height: s(28), borderRadius: s(8), alignItems: 'center', justifyContent: 'center' },
 });

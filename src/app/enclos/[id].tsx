@@ -17,6 +17,7 @@ import { useEleveurStore, useListeEnclos } from '../../store/useStore';
 import { couleurs, rayon } from '../../theme';
 import { INFO_JAUGE, JaugeType } from '../../types/domain';
 import { formatCompteARebours, formatDuree, formatHeure, formatSerenite } from '../../utils/format';
+import { s } from '../../echelle';
 
 type PopupOuverte = 'menu' | 'ajustement' | 'redemarrage' | 'suppression' | 'terminer' | 'ajout' | null;
 
@@ -140,7 +141,7 @@ export default function DetailEnclos() {
       basDePage={
         <View style={styles.actions}>
           <Pressable onPress={() => setPopup('menu')} style={styles.menu} accessibilityLabel="Actions sur l’enclos">
-            <MaterialCommunityIcons name="dots-horizontal" size={16} color={couleurs.texteAttenue} />
+            <MaterialCommunityIcons name="dots-horizontal" size={s(16)} color={couleurs.texteAttenue} />
           </Pressable>
           <View style={{ flex: 1 }}>{action}</View>
         </View>
@@ -295,18 +296,18 @@ export default function DetailEnclos() {
 }
 
 const styles = StyleSheet.create({
-  ligne: { flexDirection: 'row', alignItems: 'center', gap: 9 },
-  titre: { color: couleurs.texte, fontSize: 13, fontWeight: '800' },
+  ligne: { flexDirection: 'row', alignItems: 'center', gap: s(9) },
+  titre: { color: couleurs.texte, fontSize: s(13), fontWeight: '800' },
   titreEtape: { color: couleurs.texteAttenue, fontWeight: '600' },
-  sousTitre: { color: couleurs.texteFaible, fontSize: 11, fontWeight: '700', marginTop: 1 },
-  temps: { fontSize: 21, fontWeight: '800', letterSpacing: -0.5, fontVariant: ['tabular-nums'] },
-  progres: { height: 3, borderRadius: 2, backgroundColor: couleurs.piste, overflow: 'hidden' },
+  sousTitre: { color: couleurs.texteFaible, fontSize: s(11), fontWeight: '700', marginTop: s(1) },
+  temps: { fontSize: s(21), fontWeight: '800', letterSpacing: s(-0.5), fontVariant: ['tabular-nums'] },
+  progres: { height: s(3), borderRadius: s(2), backgroundColor: couleurs.piste, overflow: 'hidden' },
   progresBarre: { height: '100%', backgroundColor: couleurs.accent },
-  consigne: { color: couleurs.accent, fontSize: 11, fontWeight: '700', textAlign: 'center' },
-  actions: { flexDirection: 'row', gap: 6 },
+  consigne: { color: couleurs.accent, fontSize: s(11), fontWeight: '700', textAlign: 'center' },
+  actions: { flexDirection: 'row', gap: s(6) },
   menu: {
-    width: 36,
-    height: 36,
+    width: s(36),
+    height: s(36),
     borderRadius: rayon.md,
     alignItems: 'center',
     justifyContent: 'center',
@@ -315,11 +316,11 @@ const styles = StyleSheet.create({
     backgroundColor: couleurs.surface,
   },
   attente: {
-    height: 36,
+    height: s(36),
     borderRadius: rayon.md,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: couleurs.surface,
   },
-  attenteTexte: { color: couleurs.texteAttenue, fontSize: 12, fontWeight: '700' },
+  attenteTexte: { color: couleurs.texteAttenue, fontSize: s(12), fontWeight: '700' },
 });

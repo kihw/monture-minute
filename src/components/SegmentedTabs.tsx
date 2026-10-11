@@ -2,6 +2,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { couleurs, rayon } from '../theme';
+import { s } from '../echelle';
 
 export interface SegmentedTabOption {
   value: string;
@@ -31,7 +32,7 @@ export default function SegmentedTabs({
             {opt.icone && (
               <MaterialCommunityIcons
                 name={opt.icone}
-                size={14}
+                size={s(14)}
                 color={actif ? couleurs.surAccent : couleurs.texteAttenue}
               />
             )}
@@ -56,8 +57,8 @@ const styles = StyleSheet.create({
     borderRadius: rayon.pill,
     borderWidth: 1,
     borderColor: couleurs.liseret,
-    padding: 4,
-    gap: 4,
+    padding: s(4),
+    gap: s(4),
   },
   onglet: {
     flex: 1,
@@ -65,13 +66,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 4,
-    paddingVertical: 9,
-    paddingHorizontal: 2,
+    gap: s(4),
+    paddingVertical: s(9),
+    paddingHorizontal: s(2),
     borderRadius: rayon.pill,
     overflow: 'hidden',
   },
   ongletActif: { backgroundColor: couleurs.accent },
-  texte: { fontSize: 11, fontWeight: '700', color: couleurs.texteAttenue, flexShrink: 1 },
+  texte: { fontSize: s(11), fontWeight: '700', color: couleurs.texteAttenue, flexShrink: 1 },
   texteActif: { color: couleurs.surAccent },
 });

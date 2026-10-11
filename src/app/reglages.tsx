@@ -13,6 +13,7 @@ import { demanderPermission } from '../engine/notifications';
 import { useEleveurStore, useListeEnclos } from '../store/useStore';
 import { couleurs, esp } from '../theme';
 import { formatNombre } from '../utils/format';
+import { s } from '../echelle';
 
 export default function Reglages() {
   const reglages = useEleveurStore((s) => s.reglages);
@@ -178,5 +179,5 @@ export default function Reglages() {
 
 const styles = StyleSheet.create({
   groupe: { gap: esp.sm },
-  note: { color: couleurs.texteFaible, fontSize: 11, marginTop: 2 },
+  note: { color: couleurs.texteFaible, fontSize: s(11), marginTop: s(2) },
 });

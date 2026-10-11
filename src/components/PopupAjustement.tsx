@@ -13,6 +13,7 @@ import Curseur from './Curseur';
 import Popup from './Popup';
 import SegmentedTabs from './SegmentedTabs';
 import { BoutonContour, BoutonPrincipal, Carte, Titre } from './ui';
+import { s } from '../echelle';
 
 type ProprietesAjustement = {
   visible: boolean;
@@ -114,10 +115,10 @@ function PopupAjustementOuverte({
 }
 
 const styles = StyleSheet.create({
-  aide: { color: couleurs.texteAttenue, fontSize: 12.5 },
+  aide: { color: couleurs.texteAttenue, fontSize: s(12.5) },
   ligne: { flexDirection: 'row', alignItems: 'center', gap: esp.md },
-  chiffre: { color: couleurs.texte, fontSize: 18, fontWeight: '600', fontVariant: ['tabular-nums'] },
-  libelle: { flex: 1, fontSize: 13, fontWeight: '500' },
-  gris: { color: couleurs.texteAttenue, fontSize: 12 },
+  chiffre: { color: couleurs.texte, fontSize: s(18), fontWeight: '600', fontVariant: ['tabular-nums'] },
+  libelle: { flex: 1, fontSize: s(13), fontWeight: '500' },
+  gris: { color: couleurs.texteAttenue, fontSize: s(12) },
   boutons: { flexDirection: 'row', gap: esp.sm },
 });

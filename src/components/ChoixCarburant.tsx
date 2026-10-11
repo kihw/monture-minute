@@ -10,6 +10,7 @@ import { formatNombre } from '../utils/format';
 import Curseur from './Curseur';
 import Popup from './Popup';
 import { BoutonContour, BoutonPrincipal } from './ui';
+import { s } from '../echelle';
 
 // Raccourcis : le plafond de chaque tier (jusqu'où un Élixir, une Potion, un Philtre, un Extrait remplit).
 const RACCOURCIS = TIERS_CARBURANT.map((t) => t.plafond).reverse();
@@ -89,16 +90,16 @@ export default function PopupCarburant({
 }
 
 const styles = StyleSheet.create({
-  ligne: { flexDirection: 'row', gap: 6 },
+  ligne: { flexDirection: 'row', gap: s(6) },
   entete: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between' },
-  valeur: { color: couleurs.texte, fontSize: 28, fontWeight: '800', letterSpacing: -0.8, fontVariant: ['tabular-nums'] },
-  palier: { color: couleurs.accent, fontSize: 12, fontWeight: '800' },
-  tiers: { flexDirection: 'row', gap: 2, height: 6, borderRadius: 3, overflow: 'hidden', marginBottom: -6 },
+  valeur: { color: couleurs.texte, fontSize: s(28), fontWeight: '800', letterSpacing: s(-0.8), fontVariant: ['tabular-nums'] },
+  palier: { color: couleurs.accent, fontSize: s(12), fontWeight: '800' },
+  tiers: { flexDirection: 'row', gap: s(2), height: s(6), borderRadius: s(3), overflow: 'hidden', marginBottom: s(-6) },
   tier: { height: '100%' },
-  raccourcis: { flexDirection: 'row', gap: 5 },
+  raccourcis: { flexDirection: 'row', gap: s(5) },
   raccourci: {
     flex: 1,
-    height: 38,
+    height: s(38),
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: rayon.md,
@@ -107,7 +108,7 @@ const styles = StyleSheet.create({
     backgroundColor: couleurs.surface,
   },
   raccourciActif: { borderColor: couleurs.accent, backgroundColor: couleurs.accentDoux },
-  raccourciTexte: { color: couleurs.texte, fontSize: 12.5, fontWeight: '800' },
-  raccourciTier: { color: couleurs.texteFaible, fontSize: 9, fontWeight: '700' },
-  duree: { color: couleurs.texteAttenue, fontSize: 11.5, fontWeight: '600' },
+  raccourciTexte: { color: couleurs.texte, fontSize: s(12.5), fontWeight: '800' },
+  raccourciTier: { color: couleurs.texteFaible, fontSize: s(9), fontWeight: '700' },
+  duree: { color: couleurs.texteAttenue, fontSize: s(11.5), fontWeight: '600' },
 });

@@ -6,6 +6,7 @@ import { ChampsDepart, useResumeParcours } from '../components/FormulaireDepart'
 import { BoutonPrincipal, Ecran, EnTete } from '../components/ui';
 import { useEleveurStore } from '../store/useStore';
 import { couleurs } from '../theme';
+import { s } from '../echelle';
 
 /**
  * Configuration initiale : crée le premier enclos. Les enclos suivants s'ajoutent
@@ -43,5 +44,5 @@ export default function Configuration() {
 }
 
 const styles = StyleSheet.create({
-  resume: { color: couleurs.texteAttenue, fontSize: 11, textAlign: 'center' },
+  resume: { color: couleurs.texteAttenue, fontSize: s(11), textAlign: 'center' },
 });

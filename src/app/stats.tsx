@@ -9,6 +9,7 @@ import { useEleveurStore, useListeEnclos } from '../store/useStore';
 import { couleurs, esp, typo } from '../theme';
 import { CARACTERISTIQUES, INFO_SUIVI } from '../types/domain';
 import { formatDateHeure, formatDuree } from '../utils/format';
+import { s } from '../echelle';
 
 export default function Stats() {
   const liste = useListeEnclos();
@@ -28,7 +29,7 @@ export default function Stats() {
       <EnTete avecRetour titre="Stats" sousTitre="Vue d’ensemble de l’élevage" />
 
       <Carte style={styles.hero}>
-        <Anneau ratio={moyenne((v) => v.avancement)} couleur={couleurs.accent} taille={110} label="Global" />
+        <Anneau ratio={moyenne((v) => v.avancement)} couleur={couleurs.accent} taille={s(110)} label="Global" />
         <View style={{ flex: 1, gap: esp.sm }}>
           <Chiffre label="Étapes validées" valeur={String(etapesFaites)} />
           <Chiffre label="Enclos terminés" valeur={`${termines}/${liste.length}`} />
@@ -39,17 +40,17 @@ export default function Stats() {
       <Titre>Moyenne des lots</Titre>
       <Carte style={styles.anneaux}>
         {CARACTERISTIQUES.map((c) => (
-          <View key={c} style={{ alignItems: 'center', gap: 6 }}>
-            <Anneau ratio={moyenne((v) => v.lot[c] / CARACTERISTIQUE_MAX)} couleur={INFO_SUIVI[c].couleur} taille={64} epaisseur={6} />
+          <View key={c} style={{ alignItems: 'center', gap: s(6) }}>
+            <Anneau ratio={moyenne((v) => v.lot[c] / CARACTERISTIQUE_MAX)} couleur={INFO_SUIVI[c].couleur} taille={s(64)} epaisseur={s(6)} />
             <Text style={typo.micro}>{INFO_SUIVI[c].nom}</Text>
           </View>
         ))}
-        <View style={{ alignItems: 'center', gap: 6 }}>
+        <View style={{ alignItems: 'center', gap: s(6) }}>
           <Anneau
             ratio={moyenne((v) => (v.ctx.xpRequise > 0 ? Math.min(1, v.lot.xp / v.ctx.xpRequise) : 1))}
             couleur={couleurs.xp}
-            taille={64}
-            epaisseur={6}
+            taille={s(64)}
+            epaisseur={s(6)}
           />
           <Text style={typo.micro}>XP</Text>
         </View>
@@ -76,7 +77,7 @@ function Chiffre({ label, valeur }: { label: string; valeur: string }) {
   return (
     <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' }}>
       <Text style={typo.petit}>{label}</Text>
-      <Text style={[typo.chiffre, { fontSize: 16 }]}>{valeur}</Text>
+      <Text style={[typo.chiffre, { fontSize: s(16) }]}>{valeur}</Text>
     </View>
   );
 }
@@ -85,5 +86,5 @@ const styles = StyleSheet.create({
   hero: { flexDirection: 'row', alignItems: 'center', gap: esp.lg },
   anneaux: { flexDirection: 'row', justifyContent: 'space-around' },
   journal: { flexDirection: 'row', alignItems: 'center', gap: esp.sm },
-  point: { width: 6, height: 6, borderRadius: 3, backgroundColor: couleurs.accent },
+  point: { width: s(6), height: s(6), borderRadius: s(3), backgroundColor: couleurs.accent },
 });

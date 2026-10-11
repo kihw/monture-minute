@@ -1,3 +1,4 @@
+import { s } from './echelle';
 // Système de design « Nuit d'Amakna » : app ultra compacte, fond indigo très sombre,
 // or chaud de DOFUS pour tout ce qui est actif, couleurs des jauges reprises du jeu.
 
@@ -46,35 +47,35 @@ export const degrades = {
   carte: ['rgba(255,255,255,0.05)', 'rgba(255,255,255,0.02)'] as const,
 };
 
-export const esp = { xs: 4, sm: 6, md: 8, lg: 10, xl: 14, xxl: 20 };
+export const esp = { xs: s(4), sm: s(6), md: s(8), lg: s(10), xl: s(14), xxl: s(20) };
 
-export const rayon = { sm: 7, md: 10, lg: 12, xl: 16, pill: 999 };
+export const rayon = { sm: s(7), md: s(10), lg: s(12), xl: s(16), pill: 999 };
 
 export const typo = {
-  grandTitre: { fontSize: 26, fontWeight: '800' as const, color: couleurs.texte, letterSpacing: -0.4 },
-  titre: { fontSize: 18, fontWeight: '700' as const, color: couleurs.texte },
-  sousTitre: { fontSize: 13, fontWeight: '500' as const, color: couleurs.texteAttenue },
-  section: { fontSize: 13, fontWeight: '700' as const, color: couleurs.texte },
-  corps: { fontSize: 14, color: couleurs.texte },
-  petit: { fontSize: 12, color: couleurs.texteAttenue },
-  micro: { fontSize: 10.5, color: couleurs.texteFaible, fontWeight: '600' as const },
+  grandTitre: { fontSize: s(26), fontWeight: '800' as const, color: couleurs.texte, letterSpacing: s(-0.4) },
+  titre: { fontSize: s(18), fontWeight: '700' as const, color: couleurs.texte },
+  sousTitre: { fontSize: s(13), fontWeight: '500' as const, color: couleurs.texteAttenue },
+  section: { fontSize: s(13), fontWeight: '700' as const, color: couleurs.texte },
+  corps: { fontSize: s(14), color: couleurs.texte },
+  petit: { fontSize: s(12), color: couleurs.texteAttenue },
+  micro: { fontSize: s(10.5), color: couleurs.texteFaible, fontWeight: '600' as const },
   // Étiquette de section : petites capitales espacées, discrètes.
   etiquette: {
-    fontSize: 11,
+    fontSize: s(11),
     fontWeight: '800' as const,
     color: couleurs.texteFaible,
-    letterSpacing: 1.1,
+    letterSpacing: s(1.1),
     textTransform: 'uppercase' as const,
   },
-  chiffre: { fontSize: 20, fontWeight: '700' as const, color: couleurs.texte, fontVariant: ['tabular-nums' as const] },
+  chiffre: { fontSize: s(20), fontWeight: '700' as const, color: couleurs.texte, fontVariant: ['tabular-nums' as const] },
 };
 
 export const ombre = {
   lueurAccent: {
     shadowColor: couleurs.accent,
-    shadowOffset: { width: 0, height: 4 },
+    shadowOffset: { width: 0, height: s(4) },
     shadowOpacity: 0.25,
-    shadowRadius: 12,
+    shadowRadius: s(12),
     elevation: 6,
   },
 };

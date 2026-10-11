@@ -12,6 +12,7 @@ import Svg, { Defs, RadialGradient, Rect, Stop } from 'react-native-svg';
 import { couleurs, degrades, esp, ombre, rayon, typo } from '../theme';
 import { INFO_JAUGE, JaugeType } from '../types/domain';
 import AnimatedPressable from './AnimatedPressable';
+import { s } from '../echelle';
 
 export type Icone = keyof typeof MaterialCommunityIcons.glyphMap;
 
@@ -118,7 +119,7 @@ export function EnTete({
 export function IconeNue({ icone, onPress, couleur }: { icone: Icone; onPress: () => void; couleur?: string }) {
   return (
     <Pressable onPress={onPress} hitSlop={12} style={({ pressed }) => [styles.iconeNue, pressed && { opacity: 0.5 }]}>
-      <MaterialCommunityIcons name={icone} size={22} color={couleur ?? couleurs.texte} />
+      <MaterialCommunityIcons name={icone} size={s(22)} color={couleur ?? couleurs.texte} />
     </Pressable>
   );
 }
@@ -126,7 +127,7 @@ export function IconeNue({ icone, onPress, couleur }: { icone: Icone; onPress: (
 export function BoutonRond({ icone, onPress }: { icone: Icone; onPress: () => void }) {
   return (
     <AnimatedPressable onPress={onPress} echelleAppui={0.88} style={styles.boutonRond}>
-      <MaterialCommunityIcons name={icone} size={18} color={couleurs.texteAttenue} />
+      <MaterialCommunityIcons name={icone} size={s(18)} color={couleurs.texteAttenue} />
     </AnimatedPressable>
   );
 }
@@ -155,7 +156,7 @@ export function BoutonPrincipal({
     <AnimatedPressable onPress={onPress} disabled={desactive} style={[ombre.lueurAccent, desactive && { opacity: 0.4 }]}>
       <LinearGradient colors={degrades.accent} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.boutonPrincipal}>
         <Text style={styles.boutonPrincipalTexte}>{label}</Text>
-        {icone && <MaterialCommunityIcons name={icone} size={18} color={couleurs.surAccent} />}
+        {icone && <MaterialCommunityIcons name={icone} size={s(18)} color={couleurs.surAccent} />}
       </LinearGradient>
     </AnimatedPressable>
   );
@@ -181,14 +182,14 @@ export function BoutonContour({
       onPress={onPress}
       style={[styles.boutonContour, accent && { borderColor: 'rgba(242,201,76,0.5)', backgroundColor: couleurs.accentDoux }]}
     >
-      {icone && <MaterialCommunityIcons name={icone} size={20} color={accent ? couleurs.accent : couleur} />}
+      {icone && <MaterialCommunityIcons name={icone} size={s(20)} color={accent ? couleurs.accent : couleur} />}
       <Text style={[styles.boutonContourTexte, { color: couleur }]}>{label}</Text>
     </AnimatedPressable>
   );
 }
 
 /** Pastille ronde façon icône du jeu : disque sombre, pictogramme coloré, liseré teinté. */
-export function Pastille({ icone, texte, couleur, taille = 34 }: { icone?: Icone; texte?: string; couleur: string; taille?: number }) {
+export function Pastille({ icone, texte, couleur, taille = s(34) }: { icone?: Icone; texte?: string; couleur: string; taille?: number }) {
   return (
     <View
       style={[
@@ -206,7 +207,7 @@ export function Pastille({ icone, texte, couleur, taille = 34 }: { icone?: Icone
 }
 
 /** Icône d'une jauge d'enclos (−, +, éclair, goutte, cœur, XP). */
-export function IconeJauge({ type, taille = 34 }: { type: JaugeType; taille?: number }) {
+export function IconeJauge({ type, taille = s(34) }: { type: JaugeType; taille?: number }) {
   const info = INFO_JAUGE[type];
   return <Pastille icone={info.icone} texte={info.texte} couleur={info.couleur} taille={taille} />;
 }
@@ -228,7 +229,7 @@ export function Bandeau({ titre, droite, gauche }: { titre: string; droite?: Rea
 export function Tuile({ icone, couleur }: { icone: Icone; couleur: string }) {
   return (
     <View style={[styles.tuile, { backgroundColor: `${couleur}1f` }]}>
-      <MaterialCommunityIcons name={icone} size={14} color={couleur} />
+      <MaterialCommunityIcons name={icone} size={s(14)} color={couleur} />
     </View>
   );
 }
@@ -237,7 +238,7 @@ export function PuceJauge({ type }: { type: JaugeType }) {
   const info = INFO_JAUGE[type];
   return (
     <View style={styles.puce}>
-      <IconeJauge type={type} taille={34} />
+      <IconeJauge type={type} taille={s(34)} />
       <Text style={styles.puceNom} numberOfLines={1}>
         {info.nom}
       </Text>
@@ -290,7 +291,7 @@ export function LigneReglage({
   const contenu = (
     <View style={styles.ligne}>
       <Tuile icone={icone} couleur={danger ? couleurs.danger : couleur} />
-      <View style={{ flex: 1, gap: 2 }}>
+      <View style={{ flex: 1, gap: s(2) }}>
         <Text style={styles.ligneTitre}>{titre}</Text>
         {sousTitre && <Text style={styles.ligneSousTitre}>{sousTitre}</Text>}
       </View>
@@ -298,7 +299,7 @@ export function LigneReglage({
       {interrupteur ? (
         <Interrupteur actif={interrupteur.actif} onChange={interrupteur.onChange} />
       ) : (
-        onPress && <MaterialCommunityIcons name="chevron-right" size={18} color={couleurs.texteAttenue} />
+        onPress && <MaterialCommunityIcons name="chevron-right" size={s(18)} color={couleurs.texteAttenue} />
       )}
     </View>
   );
@@ -313,18 +314,18 @@ export function LigneReglage({
 
 const styles = StyleSheet.create({
   ecran: { flex: 1, backgroundColor: couleurs.fond },
-  colonne: { flex: 1, width: '100%', maxWidth: 440, alignSelf: 'center' },
+  colonne: { flex: 1, width: '100%', maxWidth: s(440), alignSelf: 'center' },
   contenu: { paddingHorizontal: esp.lg, gap: esp.md },
   basDePage: { paddingHorizontal: esp.lg, paddingTop: esp.md, gap: esp.md },
-  entete: { gap: 3, marginBottom: esp.sm },
+  entete: { gap: s(3), marginBottom: esp.sm },
   enteteLigne: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: esp.md },
   enteteTitre: { flexDirection: 'row', alignItems: 'center', gap: esp.md },
-  titre: { fontSize: 20, fontWeight: '800', color: couleurs.texte, letterSpacing: -0.4, flexShrink: 1 },
-  sousTitre: { fontSize: 12, color: couleurs.texteAttenue },
-  iconeNue: { padding: 2 },
+  titre: { fontSize: s(20), fontWeight: '800', color: couleurs.texte, letterSpacing: s(-0.4), flexShrink: 1 },
+  sousTitre: { fontSize: s(12), color: couleurs.texteAttenue },
+  iconeNue: { padding: s(2) },
   boutonRond: {
-    width: 28,
-    height: 28,
+    width: s(28),
+    height: s(28),
     borderRadius: rayon.sm,
     alignItems: 'center',
     justifyContent: 'center',
@@ -339,16 +340,16 @@ const styles = StyleSheet.create({
     padding: esp.lg,
   },
   boutonPrincipal: {
-    height: 38,
+    height: s(38),
     borderRadius: rayon.md,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: esp.sm,
   },
-  boutonPrincipalTexte: { color: couleurs.surAccent, fontSize: 13, fontWeight: '800' },
+  boutonPrincipalTexte: { color: couleurs.surAccent, fontSize: s(13), fontWeight: '800' },
   boutonContour: {
-    height: 36,
+    height: s(36),
     borderRadius: rayon.md,
     borderWidth: 1,
     borderColor: couleurs.liseretVif,
@@ -360,11 +361,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: esp.xl,
     alignSelf: 'stretch',
   },
-  boutonContourTexte: { fontSize: 12.5, fontWeight: '700' },
+  boutonContourTexte: { fontSize: s(12.5), fontWeight: '700' },
   pastille: { alignItems: 'center', justifyContent: 'center', borderWidth: 1.5, backgroundColor: '#13121f' },
-  pastilleTexte: { fontWeight: '900', letterSpacing: -0.5 },
+  pastilleTexte: { fontWeight: '900', letterSpacing: s(-0.5) },
   bandeau: {
-    minHeight: 40,
+    minHeight: s(40),
     flexDirection: 'row',
     alignItems: 'center',
     gap: esp.sm,
@@ -373,41 +374,41 @@ const styles = StyleSheet.create({
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: couleurs.liseretVif,
   },
-  bandeauTitre: { flex: 1, color: couleurs.texte, fontSize: 13.5, fontWeight: '800' },
-  tuile: { width: 26, height: 26, borderRadius: rayon.sm, alignItems: 'center', justifyContent: 'center' },
+  bandeauTitre: { flex: 1, color: couleurs.texte, fontSize: s(13.5), fontWeight: '800' },
+  tuile: { width: s(26), height: s(26), borderRadius: rayon.sm, alignItems: 'center', justifyContent: 'center' },
   puce: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     gap: esp.sm,
-    padding: 6,
+    padding: s(6),
     paddingRight: esp.md,
     borderRadius: rayon.md,
     backgroundColor: couleurs.carteClaire,
     borderWidth: 1,
     borderColor: couleurs.liseret,
   },
-  puceNom: { color: couleurs.texte, fontSize: 13 },
+  puceNom: { color: couleurs.texte, fontSize: s(13) },
   badge: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
-    paddingHorizontal: 9,
-    paddingVertical: 4,
+    gap: s(5),
+    paddingHorizontal: s(9),
+    paddingVertical: s(4),
     borderRadius: rayon.pill,
   },
-  badgePoint: { width: 6, height: 6, borderRadius: 3 },
-  badgeTexte: { fontSize: 11, fontWeight: '700' },
+  badgePoint: { width: s(6), height: s(6), borderRadius: s(3) },
+  badgeTexte: { fontSize: s(11), fontWeight: '700' },
   ligne: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: esp.lg,
-    paddingVertical: 8,
+    paddingVertical: s(8),
     paddingHorizontal: esp.md,
     borderRadius: rayon.md,
     backgroundColor: couleurs.surface,
   },
-  ligneTitre: { color: couleurs.texte, fontSize: 12.5, fontWeight: '700' },
-  ligneSousTitre: { color: couleurs.texteAttenue, fontSize: 11 },
-  ligneValeur: { color: couleurs.texteAttenue, fontSize: 12, fontWeight: '600' },
+  ligneTitre: { color: couleurs.texte, fontSize: s(12.5), fontWeight: '700' },
+  ligneSousTitre: { color: couleurs.texteAttenue, fontSize: s(11) },
+  ligneValeur: { color: couleurs.texteAttenue, fontSize: s(12), fontWeight: '600' },
 });

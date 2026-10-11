@@ -12,6 +12,7 @@ import { VueEnclos } from '../engine/statut';
 import { couleurs, rayon } from '../theme';
 import { CARACTERISTIQUES, Enclos, EtapeValidee, Etape, EtatLot, INFO_SUIVI } from '../types/domain';
 import Dragodinde from './Dragodinde';
+import { s } from '../echelle';
 
 /** Minutes restantes très courtes pour une puce d'onglet : « 0:23 », « 2h », « 1j ». */
 function tempsPuce(sec: number): string {
@@ -45,7 +46,7 @@ export function BarreEnclos({
         style={[styles.bouton, !actifId && styles.boutonActif]}
         accessibilityLabel="Vue liste"
       >
-        <MaterialCommunityIcons name="menu" size={16} color={actifId ? couleurs.texteAttenue : couleurs.accent} />
+        <MaterialCommunityIcons name="menu" size={s(16)} color={actifId ? couleurs.texteAttenue : couleurs.accent} />
       </Pressable>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.onglets} style={{ flex: 1 }}>
         {enclos.map((e, i) => {
@@ -68,19 +69,19 @@ export function BarreEnclos({
                 <Text style={[styles.ongletTemps, actif && { color: couleurs.accent }]}>{tempsPuce(vue.restantSec)}</Text>
               )}
               {aValider && <View style={styles.point} />}
-              {vue.statut === 'termine' && <MaterialCommunityIcons name="check" size={11} color={couleurs.succes} />}
+              {vue.statut === 'termine' && <MaterialCommunityIcons name="check" size={s(11)} color={couleurs.succes} />}
             </Pressable>
           );
         })}
         <Pressable onPress={onAjouter} style={styles.ajout} accessibilityLabel="Ajouter un enclos">
-          <MaterialCommunityIcons name="plus" size={13} color={couleurs.texteAttenue} />
+          <MaterialCommunityIcons name="plus" size={s(13)} color={couleurs.texteAttenue} />
         </Pressable>
       </ScrollView>
       <Pressable onPress={() => router.push('/stats')} hitSlop={6} style={styles.bouton} accessibilityLabel="Statistiques">
-        <MaterialCommunityIcons name="chart-bar" size={15} color={couleurs.texteAttenue} />
+        <MaterialCommunityIcons name="chart-bar" size={s(15)} color={couleurs.texteAttenue} />
       </Pressable>
       <Pressable onPress={() => router.push('/reglages')} hitSlop={6} style={styles.bouton} accessibilityLabel="Réglages">
-        <MaterialCommunityIcons name="cog-outline" size={15} color={couleurs.texteAttenue} />
+        <MaterialCommunityIcons name="cog-outline" size={s(15)} color={couleurs.texteAttenue} />
       </Pressable>
     </View>
   );
@@ -90,7 +91,7 @@ export function BarreEnclos({
 export function AvatarAnneau({
   index,
   avancement,
-  taille = 34,
+  taille = s(34),
   couleur = couleurs.accent,
 }: {
   index: number;
@@ -98,7 +99,7 @@ export function AvatarAnneau({
   taille?: number;
   couleur?: string;
 }) {
-  const ep = 2.5;
+  const ep = s(2.5);
   const r = taille / 2 - ep / 2;
   const c = 2 * Math.PI * r;
   const interieur = taille - 10;
@@ -185,7 +186,8 @@ export function ParcoursPuces({
     ...(actuelle ? [{ titre: actuelle.titre, etat: 'actuel' as const }] : []),
     ...aVenir.map((e) => ({ titre: e.titre, etat: 'futur' as const })),
   ];
-  // Au-delà de 5 puces, on ne garde que le voisinage de l'étape actuelle.
+  // Au-delà de 5 puces, on ne garde que le voisinage de l’étape actuelle ; les puces passent à la ligne
+  // plutôt que de tronquer leur titre.
   const debut = Math.max(0, Math.min(validees.length - 1, items.length - 5));
   return (
     <View style={styles.parcours}>
@@ -217,34 +219,34 @@ export function ParcoursPuces({
 
 const styles = StyleSheet.create({
   barre: {
-    height: 40,
+    height: s(40),
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-    paddingHorizontal: 8,
+    gap: s(4),
+    paddingHorizontal: s(8),
     borderBottomWidth: 1,
     borderBottomColor: couleurs.liseret,
   },
-  bouton: { width: 28, height: 28, borderRadius: rayon.sm, alignItems: 'center', justifyContent: 'center' },
+  bouton: { width: s(28), height: s(28), borderRadius: rayon.sm, alignItems: 'center', justifyContent: 'center' },
   boutonActif: { backgroundColor: couleurs.accentDoux },
-  onglets: { gap: 4, alignItems: 'center', paddingHorizontal: 2 },
+  onglets: { gap: s(4), alignItems: 'center', paddingHorizontal: s(2) },
   onglet: {
-    height: 26,
-    paddingHorizontal: 9,
+    height: s(26),
+    paddingHorizontal: s(9),
     borderRadius: rayon.sm,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
+    gap: s(5),
     backgroundColor: couleurs.surface,
   },
   ongletAlerte: { backgroundColor: 'rgba(245,161,66,0.12)' },
   ongletActif: { backgroundColor: couleurs.accentDoux, borderWidth: 1, borderColor: 'rgba(242,201,76,0.5)' },
-  ongletTexte: { color: couleurs.texteAttenue, fontSize: 11.5, fontWeight: '800' },
-  ongletTemps: { color: couleurs.texteAttenue, fontSize: 11, fontWeight: '700', fontVariant: ['tabular-nums'] },
-  point: { width: 6, height: 6, borderRadius: 3, backgroundColor: couleurs.attention },
+  ongletTexte: { color: couleurs.texteAttenue, fontSize: s(11.5), fontWeight: '800' },
+  ongletTemps: { color: couleurs.texteAttenue, fontSize: s(11), fontWeight: '700', fontVariant: ['tabular-nums'] },
+  point: { width: s(6), height: s(6), borderRadius: s(3), backgroundColor: couleurs.attention },
   ajout: {
-    width: 26,
-    height: 26,
+    width: s(26),
+    height: s(26),
     borderRadius: rayon.sm,
     borderWidth: 1,
     borderStyle: 'dashed',
@@ -254,25 +256,25 @@ const styles = StyleSheet.create({
   },
   monture: {
     flexDirection: 'row',
-    gap: 8,
-    paddingVertical: 8,
-    paddingHorizontal: 10,
+    gap: s(8),
+    paddingVertical: s(8),
+    paddingHorizontal: s(10),
     borderRadius: rayon.lg,
     backgroundColor: couleurs.carte,
     borderWidth: 1,
     borderColor: couleurs.liseret,
   },
-  stat: { flex: 1, gap: 3 },
-  statLibelle: { color: couleurs.texteAttenue, fontSize: 10, fontWeight: '700' },
-  statValeur: { color: couleurs.texte, fontSize: 11, fontWeight: '800', fontVariant: ['tabular-nums'] },
+  stat: { flex: 1, gap: s(3) },
+  statLibelle: { color: couleurs.texteAttenue, fontSize: s(10), fontWeight: '700' },
+  statValeur: { color: couleurs.texte, fontSize: s(11), fontWeight: '800', fontVariant: ['tabular-nums'] },
   statMax: { color: couleurs.texteFaible },
-  miniPiste: { height: 4, borderRadius: 2, backgroundColor: couleurs.piste, overflow: 'hidden' },
-  miniRemplissage: { height: '100%', borderRadius: 2 },
-  parcours: { flexDirection: 'row', gap: 4 },
+  miniPiste: { height: s(4), borderRadius: s(2), backgroundColor: couleurs.piste, overflow: 'hidden' },
+  miniRemplissage: { height: '100%', borderRadius: s(2) },
+  parcours: { flexDirection: 'row', flexWrap: 'wrap', gap: s(4) },
   puce: {
-    flex: 1,
-    height: 24,
-    paddingHorizontal: 6,
+    flexGrow: 1,
+    height: s(24),
+    paddingHorizontal: s(6),
     borderRadius: rayon.sm,
     alignItems: 'center',
     justifyContent: 'center',
@@ -280,5 +282,5 @@ const styles = StyleSheet.create({
   },
   puceFaite: { backgroundColor: couleurs.accentDoux },
   puceActuelle: { backgroundColor: 'transparent', borderWidth: 1.2, borderColor: couleurs.accent },
-  puceTexte: { color: couleurs.texteAttenue, fontSize: 10.5, fontWeight: '800' },
+  puceTexte: { color: couleurs.texteAttenue, fontSize: s(10.5), fontWeight: '800' },
 });

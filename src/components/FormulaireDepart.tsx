@@ -16,6 +16,7 @@ import Curseur from './Curseur';
 import Popup from './Popup';
 import SegmentedTabs from './SegmentedTabs';
 import { BoutonContour, BoutonPrincipal, Carte, Titre } from './ui';
+import { s } from '../echelle';
 
 /** Résumé du parcours que donnerait ce départ (« 4 étapes · environ 13h 22m »). */
 export function useResumeParcours(depart: DepartEnclos): string {
@@ -145,10 +146,10 @@ function PopupDepartOuverte({
 
 const styles = StyleSheet.create({
   ligne: { flexDirection: 'row', alignItems: 'center', gap: esp.sm },
-  grandChiffre: { color: couleurs.texte, fontSize: 22, fontWeight: '600', textAlign: 'center', fontVariant: ['tabular-nums'] },
-  note: { color: couleurs.texteAttenue, fontSize: 11 },
-  compteur: { color: couleurs.texte, fontSize: 15, fontWeight: '600', minWidth: 22, textAlign: 'center' },
-  resume: { color: couleurs.texteAttenue, fontSize: 11, textAlign: 'center' },
-  message: { color: couleurs.texteAttenue, fontSize: 13 },
+  grandChiffre: { color: couleurs.texte, fontSize: s(22), fontWeight: '600', textAlign: 'center', fontVariant: ['tabular-nums'] },
+  note: { color: couleurs.texteAttenue, fontSize: s(11) },
+  compteur: { color: couleurs.texte, fontSize: s(15), fontWeight: '600', minWidth: s(22), textAlign: 'center' },
+  resume: { color: couleurs.texteAttenue, fontSize: s(11), textAlign: 'center' },
+  message: { color: couleurs.texteAttenue, fontSize: s(13) },
   boutons: { flexDirection: 'row', gap: esp.sm },
 });

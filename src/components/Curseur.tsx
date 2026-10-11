@@ -3,8 +3,9 @@ import { useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { LayoutChangeEvent, PanResponder, StyleSheet, Text, View } from 'react-native';
 
 import { couleurs, degrades } from '../theme';
+import { s } from '../echelle';
 
-const POUCE = 22;
+const POUCE = s(22);
 
 /** Curseur tactile générique (pas de dépendance native), piste remplie en dégradé menthe. */
 export default function Curseur({
@@ -85,9 +86,9 @@ export default function Curseur({
 }
 
 const styles = StyleSheet.create({
-  zone: { height: 32, justifyContent: 'center' },
-  piste: { height: 6, borderRadius: 3, backgroundColor: couleurs.piste, overflow: 'hidden' },
-  remplissage: { height: '100%', borderRadius: 3 },
+  zone: { height: s(32), justifyContent: 'center' },
+  piste: { height: s(6), borderRadius: s(3), backgroundColor: couleurs.piste, overflow: 'hidden' },
+  remplissage: { height: '100%', borderRadius: s(3) },
   pouce: {
     position: 'absolute',
     width: POUCE,
@@ -98,9 +99,9 @@ const styles = StyleSheet.create({
     borderColor: couleurs.fond,
     shadowColor: couleurs.accent,
     shadowOpacity: 0.6,
-    shadowRadius: 8,
+    shadowRadius: s(8),
     shadowOffset: { width: 0, height: 0 },
   },
   legendes: { flexDirection: 'row', justifyContent: 'space-between' },
-  legende: { fontSize: 10.5, color: couleurs.texteFaible, fontWeight: '600' },
+  legende: { fontSize: s(10.5), color: couleurs.texteFaible, fontWeight: '600' },
 });

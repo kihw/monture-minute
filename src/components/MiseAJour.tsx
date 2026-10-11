@@ -11,6 +11,7 @@ import { Release, VERSION_APP, verifierMiseAJour } from '../engine/miseAJour';
 import { couleurs } from '../theme';
 import Popup from './Popup';
 import { BoutonContour, BoutonPrincipal } from './ui';
+import { s } from '../echelle';
 
 const INTERVALLE_MS = 6 * 60 * 60 * 1000;
 
@@ -116,8 +117,8 @@ export default function MiseAJour() {
 }
 
 const styles = StyleSheet.create({
-  boutons: { flexDirection: 'row', gap: 6 },
-  intro: { color: couleurs.texteAttenue, fontSize: 12, lineHeight: 17 },
-  notes: { maxHeight: 220, padding: 10, borderRadius: 10, backgroundColor: couleurs.piste },
-  notesTexte: { color: couleurs.texte, fontSize: 11.5, lineHeight: 16 },
+  boutons: { flexDirection: 'row', gap: s(6) },
+  intro: { color: couleurs.texteAttenue, fontSize: s(12), lineHeight: s(17) },
+  notes: { maxHeight: s(220), padding: s(10), borderRadius: s(10), backgroundColor: couleurs.piste },
+  notesTexte: { color: couleurs.texte, fontSize: s(11.5), lineHeight: s(16) },
 });
