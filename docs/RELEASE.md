@@ -1,8 +1,27 @@
 # Publier une version
 
-Tout passe par GitHub : un tag `vX.Y.Z` déclenche `.github/workflows/release.yml`, qui vérifie le
-code, compile l'APK Android et l'installateur Windows, puis crée la release GitHub avec les notes
-générées et les fichiers. L'app installée détecte ensuite la nouvelle version.
+L'APK Android est **compilé et signé en local**, avant tout envoi : la compilation sur GitHub était
+trop longue. Une seule commande fait tout, et rien ne part si une étape échoue :
+
+```bash
+npm run publier -- patch    # ou minor / major
+```
+
+1. vérifications (lint, types, tests) ;
+2. nouvelle version : `package.json` et `desktop/package.json`, commit et tag `vX.Y.Z` ;
+3. APK release signé, compilé dans un dossier court (`C:\mm` par défaut, réglable avec
+   `MONTURE_DOSSIER_BUILD`) pour arm64-v8a et armeabi-v7a, copié dans `dist/` ; l'empreinte
+   SHA-256 du certificat s'affiche (elle doit toujours être la même) ;
+4. envoi de `main` et du tag ;
+5. release GitHub créée tout de suite avec l'APK et les notes de `docs/notes/vX.Y.Z.md` (sinon des
+   notes générées). Le tag lance ensuite `.github/workflows/release.yml`, qui compile
+   l'installateur Windows et l'ajoute à la même release.
+
+Si la compilation échoue, la version reste locale ; le script indique comment l'annuler
+(`git tag -d vX.Y.Z` puis `git reset --hard HEAD~1`).
+
+Préalables sur le PC : SDK Android (`ANDROID_HOME`, sinon `%LOCALAPPDATA%\Android\Sdk`), Java 17,
+GitHub CLI connectée (`gh auth login`) et la clé de signature (ci-dessous).
 
 ## Clé de signature Android
 
@@ -11,29 +30,27 @@ l'ancien. La clé est celle de l'ancienne app Monture Minute, déjà dans les se
 remplace jamais. L'identifiant `com.community.dofusbreedingtool` ne change pas et le versionCode
 doit toujours croître, sinon les installations existantes ne pourront plus se mettre à jour.
 
-Secrets utilisés par la release : `ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD`,
-`ANDROID_KEY_ALIAS`, `ANDROID_KEY_PASSWORD`.
+En local, `npm run publier` lit la clé dans des variables d'environnement, à définir une fois
+(par exemple dans les variables d'environnement utilisateur de Windows) : `ANDROID_KEYSTORE_PATH`
+(chemin du fichier `.jks`/`.keystore`, hors du dépôt), `ANDROID_KEYSTORE_PASSWORD`,
+`ANDROID_KEY_ALIAS` et `ANDROID_KEY_PASSWORD`. Rien n'est écrit dans le dépôt.
 
-## À chaque version
+Les mêmes valeurs restent dans les secrets GitHub (`ANDROID_KEYSTORE_BASE64`,
+`ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`, `ANDROID_KEY_PASSWORD`) pour l'APK de contrôle
+du lancement manuel du workflow.
 
-Rédige d'abord les notes dans `docs/notes/vX.Y.Z.md` (facultatif) : elles ouvrent la release et
-s'affichent sur le site, avant les notes générées.
+## Notes de version
 
-```bash
-npm run verifier            # lint, types, tests
-npm version patch           # ou minor / major : met à jour les versions, commit + tag
-git push --follow-tags      # le tag lance la release
-```
+Rédige les notes dans `docs/notes/vX.Y.Z.md` (facultatif) avant de publier : elles ouvrent la
+release et s'affichent sur le site.
 
-`npm version` met à jour `package.json`, recopie la version dans `desktop/package.json`
-(`scripts/sync-version.mjs`) et crée le tag. Le versionCode Android en dérive automatiquement.
-
-Suivi : onglet **Actions** du dépôt. En fin de workflow, la release contient :
+Suivi de l'installateur Windows : onglet **Actions** du dépôt. En fin de publication, la release
+contient :
 
 | Fichier | Rôle |
 |---|---|
-| `MontureMinute-Android.apk` | APK signé, proposé par l'app Android |
-| `MontureMinute-Setup.exe` | Installateur Windows |
+| `MontureMinute-Android.apk` | APK signé, compilé en local, proposé par l'app Android |
+| `MontureMinute-Setup.exe` | Installateur Windows (GitHub Actions) |
 | `latest.yml`, `MontureMinute-Setup.exe.blockmap` | Métadonnées lues par `electron-updater` |
 
 ## Mises à jour côté utilisateurs

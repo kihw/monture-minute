@@ -1,7 +1,8 @@
-# Release multi-plateforme, déclenchée par un tag vX.Y.Z (voir docs/RELEASE.md) :
-# vérifications → APK Android + installateur Windows → release GitHub avec les fichiers.
-# Lancé à la main (workflow_dispatch), il compile seulement, sans rien publier : utile pour
-# valider les builds ; sans clé de signature, l'APK de test est signé avec la clé de débogage.
+# Release, déclenchée par un tag vX.Y.Z (voir docs/RELEASE.md) : vérifications → installateur
+# Windows → ajout à la release GitHub. L'APK Android est compilé et signé en local par
+# `npm run publier`, qui crée la release avec l'APK avant que ce workflow ne tourne.
+# Lancé à la main (workflow_dispatch), il compile seulement (Windows et un APK de contrôle),
+# sans rien publier ; sans clé de signature, l'APK de test est signé avec la clé de débogage.
 name: Release
 
 on:
@@ -36,7 +37,9 @@ jobs:
       - run: npm test -- --ci
 
   android:
-    name: APK Android
+    name: APK Android (contrôle manuel)
+    # Les releases embarquent l'APK compilé en local : sur un tag, rien à compiler ici.
+    if: github.event_name == 'workflow_dispatch'
     needs: verifier
     runs-on: ubuntu-latest
     steps:
@@ -111,27 +114,20 @@ jobs:
   publier:
     name: Release GitHub
     if: startsWith(github.ref, 'refs/tags/')
-    needs: [android, windows]
+    needs: [windows]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      # Notes rédigées de la version (docs/notes/vX.Y.Z.md), complétées par les notes générées.
-      - name: Notes de version
-        run: |
-          f="docs/notes/${GITHUB_REF_NAME}.md"
-          [ -f "$f" ] || : > "$f"
-          cp "$f" notes.md
       - uses: actions/download-artifact@v4
         with:
           path: fichiers
           merge-multiple: true
       - uses: softprops/action-gh-release@v2
         with:
+          # La release existe déjà (créée par `npm run publier` avec l'APK et les notes) : on n'y
+          # ajoute que les fichiers Windows, sans toucher aux notes. Sinon, elle est créée ici.
           name: Monture Minute ${{ github.ref_name }}
-          body_path: notes.md
           generate_release_notes: true
           files: |
-            fichiers/MontureMinute-Android.apk
             fichiers/MontureMinute-Setup.exe
             fichiers/MontureMinute-Setup.exe.blockmap
             fichiers/latest.yml

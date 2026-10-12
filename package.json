@@ -48,7 +48,8 @@
     "verifier": "expo lint && tsc --noEmit && jest",
     "bureau:preparer": "expo export --platform web && node scripts/preparer-bureau.mjs",
     "bureau:demarrer": "npm run bureau:preparer && cd desktop && npm install && npm start",
-    "version": "node scripts/sync-version.mjs && git add desktop/package.json"
+    "version": "node scripts/sync-version.mjs && git add desktop/package.json",
+    "publier": "node scripts/publier.mjs"
   },
   "private": true,
   "description": "Assistant d'élevage de montures pour DOFUS 3.7 — Android et Windows",
