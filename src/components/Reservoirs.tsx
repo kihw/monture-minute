@@ -1,6 +1,7 @@
-// Réservoirs en direct d'une étape en cours : carburant restant, palier, prochaine échéance de
-// chaque jauge active, et bandeau de conseil « recharger ou pas ». Les barres ne s'animent que
-// lorsqu'une valeur bouge : glissement doux à chaque cycle, reflet unique après une recharge.
+// Jauges actives d'une étape en cours (V2) : une carte par jauge, avec le carburant en toutes
+// lettres, la vitesse actuelle, les paliers nommés sous la barre et la prochaine échéance en
+// phrase. Les barres ne s'animent que lorsqu'une valeur bouge : glissement doux à chaque
+// cycle, reflet unique après une recharge.
 
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useEffect, useMemo, useRef } from 'react';
@@ -8,34 +9,37 @@ import { Animated, Easing, Pressable, StyleSheet, Text, View } from 'react-nativ
 
 import { JAUGE_MAX, TIERS_CARBURANT } from '../data/constants';
 import { s } from '../echelle';
-import { Conseil, EnCoursSimulable, EtatJauge, etatJauge, simulerEtape } from '../engine/descente';
-import { couleurs, rayon } from '../theme';
+import { EnCoursSimulable, EtatJauge, etatJauge, simulerEtape } from '../engine/descente';
+import { couleurs, grille, rayon, texte } from '../theme';
 import { INFO_JAUGE, JaugeType } from '../types/domain';
-import { formatCarburantCourt, formatDureeCourte, formatHeure } from '../utils/format';
+import { formatDureeClaire, formatHeure, formatPoints } from '../utils/format';
 
 const GRADUATIONS = TIERS_CARBURANT.filter((t) => t.seuil > 0).map((t) => t.seuil / JAUGE_MAX);
 /** Variation (en part de la jauge) au-delà de laquelle on considère une recharge ou une correction. */
 const SAUT = 0.03;
 
 function dans(quand: number, maintenant: number) {
-  return formatDureeCourte(Math.max(0, (quand - maintenant) / 1000));
+  return formatDureeClaire(Math.max(0, (quand - maintenant) / 1000));
 }
 
-/** Prochaine échéance d'une jauge, en texte, avec sa couleur. */
+/** Prochaine échéance d'une jauge, en phrase, avec sa couleur. */
 export function texteEcheance(etat: EtatJauge, maintenant: number): { texte: string; couleur: string } {
-  if (etat.videe) return { texte: 'Vide · recharge pour continuer', couleur: couleurs.danger };
-  if (etat.couverte) return { texte: 'Terminée · ne consomme plus', couleur: couleurs.succes };
-  if (etat.videA) return { texte: `Vide à ${formatHeure(etat.videA)} (dans ${dans(etat.videA, maintenant)})`, couleur: couleurs.danger };
+  if (etat.videe) return { texte: 'Vide : recharge-la pour continuer l’étape', couleur: couleurs.danger };
+  if (etat.couverte) return { texte: 'A fini son travail, ne consomme plus', couleur: couleurs.succes };
+  if (etat.videA) return { texte: `Sera vide à ${formatHeure(etat.videA)}, dans ${dans(etat.videA, maintenant)}`, couleur: couleurs.danger };
   if (etat.prochainPalier && (!etat.couverteA || etat.prochainPalier.quand < etat.couverteA)) {
-    return { texte: `Passe ×${etat.prochainPalier.palier} dans ${dans(etat.prochainPalier.quand, maintenant)}`, couleur: couleurs.attention };
+    return {
+      texte: `Ralentit à ×${etat.prochainPalier.palier} dans ${dans(etat.prochainPalier.quand, maintenant)}`,
+      couleur: couleurs.attention,
+    };
   }
-  if (etat.arretAvecEtapeA) return { texte: `Jusqu’à la fin d’étape · ${formatHeure(etat.arretAvecEtapeA)}`, couleur: couleurs.texteAttenue };
-  if (etat.couverteA) return { texte: `Objectif dans ${dans(etat.couverteA, maintenant)} · ${formatHeure(etat.couverteA)}`, couleur: couleurs.texteAttenue };
+  if (etat.arretAvecEtapeA) return { texte: `Tourne jusqu’à la fin de l’étape, ${formatHeure(etat.arretAvecEtapeA)}`, couleur: couleurs.texteAttenue };
+  if (etat.couverteA) return { texte: `Objectif atteint dans ${dans(etat.couverteA, maintenant)}, à ${formatHeure(etat.couverteA)}`, couleur: couleurs.texteAttenue };
   return { texte: '—', couleur: couleurs.texteFaible };
 }
 
 /** Barre de carburant : suit la valeur en glissant, et ne fait passer un reflet qu'après un saut. */
-function BarreCarburant({ ratio, couleur }: { ratio: number; couleur: string }) {
+export function BarreCarburant({ ratio, couleur, hauteur = s(8) }: { ratio: number; couleur: string; hauteur?: number }) {
   // Valeur de départ figée au montage : les changements suivants passent par l'animation.
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const largeur = useMemo(() => new Animated.Value(ratio), []);
@@ -60,7 +64,7 @@ function BarreCarburant({ ratio, couleur }: { ratio: number; couleur: string }) 
   }, [ratio, largeur, reflet]);
 
   return (
-    <View style={styles.piste}>
+    <View style={[styles.piste, { height: hauteur }]}>
       <Animated.View
         style={[
           styles.remplissage,
@@ -85,7 +89,32 @@ function BarreCarburant({ ratio, couleur }: { ratio: number; couleur: string }) 
   );
 }
 
-export function ReservoirsDirect({
+/** Noms des 4 paliers de carburant, chacun sous sa portion de barre. */
+export function NomsPaliers({ niveau }: { niveau: number }) {
+  return (
+    <View style={styles.paliers}>
+      {TIERS_CARBURANT.map((t) => {
+        const actif = niveau > t.seuil && niveau <= t.plafond;
+        return (
+          <Text
+            key={t.nom}
+            numberOfLines={1}
+            style={[
+              styles.palier,
+              { width: `${((t.plafond - t.seuil) / JAUGE_MAX) * 100}%` },
+              actif && { color: couleurs.texte },
+              t.palier === 40 && { textAlign: 'right' },
+            ]}
+          >
+            {t.nom}
+          </Text>
+        );
+      })}
+    </View>
+  );
+}
+
+export function JaugesActives({
   enCours,
   maintenant,
   onRecharger,
@@ -109,128 +138,69 @@ export function ReservoirsDirect({
             onPress={() => onRecharger(j)}
             onLongPress={() => onCorriger(j)}
             delayLongPress={350}
-            style={({ pressed }) => [styles.reservoir, pressed && { opacity: 0.75 }]}
+            style={({ pressed }) => [styles.carte, pressed && { opacity: 0.75 }]}
             accessibilityRole="button"
-            accessibilityLabel={`${info.nom} : ${formatCarburantCourt(etat.niveau)} de carburant. ${echeance.texte}. Toucher pour recharger, appui long pour corriger.`}
+            accessibilityLabel={`${info.nom} : ${formatPoints(etat.niveau)} sur ${formatPoints(JAUGE_MAX)}. ${echeance.texte}. Toucher pour recharger, appui long pour corriger.`}
           >
             <View style={styles.entete}>
               <View style={[styles.pastille, { backgroundColor: `${info.couleur}26` }]}>
                 {info.texte ? (
                   <Text style={[styles.pastilleTexte, { color: info.couleur }]}>{info.texte}</Text>
                 ) : (
-                  <MaterialCommunityIcons name={info.icone!} size={s(12)} color={info.couleur} />
+                  <MaterialCommunityIcons name={info.icone!} size={s(13)} color={info.couleur} />
                 )}
               </View>
               <Text style={styles.nom}>{info.nom}</Text>
-              {etat.palier > 0 && (
-                <View style={[styles.badge, { backgroundColor: `${info.couleur}22` }]}>
-                  <Text style={[styles.badgeTexte, { color: info.couleur }]}>×{etat.palier}</Text>
-                </View>
-              )}
-              <Text style={styles.niveau}>{formatCarburantCourt(etat.niveau)}</Text>
+              <View style={[styles.vitesse, { backgroundColor: etat.palier > 0 ? `${info.couleur}22` : couleurs.surface }]}>
+                <Text style={[styles.vitesseTexte, { color: etat.palier > 0 ? info.couleur : couleurs.texteFaible }]}>
+                  {etat.palier > 0 ? `vitesse ×${etat.palier}` : 'à l’arrêt'}
+                </Text>
+              </View>
             </View>
-            <BarreCarburant ratio={Math.max(0, Math.min(1, etat.niveau / JAUGE_MAX))} couleur={info.couleur} />
+            <Text style={styles.niveau}>
+              {formatPoints(etat.niveau)}
+              <Text style={styles.niveauMax}> / {formatPoints(JAUGE_MAX)}</Text>
+            </Text>
+            <View style={{ gap: s(3) }}>
+              <BarreCarburant ratio={Math.max(0, Math.min(1, etat.niveau / JAUGE_MAX))} couleur={info.couleur} />
+              <NomsPaliers niveau={etat.niveau} />
+            </View>
             <View style={styles.pied}>
-              <Text style={[styles.echeance, { color: echeance.couleur }]} numberOfLines={1}>
-                {echeance.texte}
-              </Text>
-              {!etat.couverte && <MaterialCommunityIcons name="chevron-right" size={s(14)} color={couleurs.texteFaible} />}
+              <Text style={[styles.echeance, { color: echeance.couleur }]}>{echeance.texte}</Text>
+              <MaterialCommunityIcons name="chevron-right" size={s(16)} color={couleurs.texteFaible} />
             </View>
           </Pressable>
         );
       })}
+      <Text style={[texte.etiquette, { textAlign: 'center' }]}>Touche une jauge pour la recharger · appui long pour la corriger</Text>
     </View>
   );
 }
 
-/** Bandeau de conseil sous le panneau : jauge qui va se vider, recharge rentable ou inutile. */
-export function BandeauConseil({ conseil, onPress }: { conseil: Conseil; onPress: (j: JaugeType) => void }) {
-  if (conseil.niveau === 'rien' || (conseil.niveau !== 'inutile' && !conseil.jauge)) return null;
-  const nom = conseil.jauge ? INFO_JAUGE[conseil.jauge].nom : '';
-  const sc = conseil.scenario;
-  const niveauRecharge = sc?.recharge ? formatCarburantCourt(sc.recharge.niveau) : null;
-  const contenu =
-    conseil.niveau === 'vide'
-      ? {
-          icone: 'alert' as const,
-          couleur: couleurs.danger,
-          titre: `${nom} vide à ${formatHeure(conseil.videA!)}`,
-          detail:
-            sc && niveauRecharge && sc.finAt
-              ? `Recharge à ${niveauRecharge} pour finir à ${formatHeure(sc.finAt)}`
-              : 'Recharge-la, sinon l’étape s’arrête',
-        }
-      : conseil.niveau === 'recharger'
-        ? {
-            icone: 'flask-outline' as const,
-            couleur: couleurs.accent,
-            titre: `Recharge ${nom} à ${niveauRecharge}`,
-            detail: `Fin ${formatHeure(sc!.finAt!)} au lieu de ${formatHeure(conseil.finSans!)} (−${formatDureeCourte(sc!.gainMs! / 1000)})`,
-          }
-        : {
-            icone: 'check-circle-outline' as const,
-            couleur: couleurs.succes,
-            titre: 'Pas besoin de recharger',
-            detail:
-              conseil.finSans !== null
-                ? `Fin à ${formatHeure(conseil.finSans)}${sc?.gainMs ? ` · recharger ne ferait gagner que ${formatDureeCourte(sc.gainMs / 1000)}` : ''}`
-                : '',
-          };
-  return (
-    <Pressable
-      onPress={() => conseil.jauge && onPress(conseil.jauge)}
-      disabled={!conseil.jauge}
-      style={({ pressed }) => [styles.bandeau, { borderColor: `${contenu.couleur}55`, backgroundColor: `${contenu.couleur}14` }, pressed && { opacity: 0.8 }]}
-      accessibilityRole="button"
-      accessibilityLabel={`${contenu.titre}. ${contenu.detail}`}
-    >
-      <MaterialCommunityIcons name={contenu.icone} size={s(16)} color={contenu.couleur} />
-      <View style={{ flex: 1, minWidth: 0 }}>
-        <Text style={[styles.bandeauTitre, { color: contenu.couleur }]} numberOfLines={1}>
-          {contenu.titre}
-        </Text>
-        {!!contenu.detail && (
-          <Text style={styles.bandeauDetail} numberOfLines={2}>
-            {contenu.detail}
-          </Text>
-        )}
-      </View>
-    </Pressable>
-  );
-}
-
 const styles = StyleSheet.create({
-  liste: { gap: s(6) },
-  reservoir: {
-    padding: s(9),
-    gap: s(6),
+  liste: { gap: grille.x2 },
+  carte: {
+    padding: grille.x3,
+    gap: grille.x2,
     borderRadius: rayon.lg,
     backgroundColor: couleurs.carte,
     borderWidth: 1,
     borderColor: couleurs.liseret,
   },
-  entete: { flexDirection: 'row', alignItems: 'center', gap: s(7) },
-  pastille: { width: s(22), height: s(22), borderRadius: s(7), alignItems: 'center', justifyContent: 'center' },
-  pastilleTexte: { fontSize: s(8), fontWeight: '900' },
-  nom: { color: couleurs.texte, fontSize: s(12.5), fontWeight: '800' },
-  badge: { paddingHorizontal: s(5), paddingVertical: s(1.5), borderRadius: s(4) },
-  badgeTexte: { fontSize: s(10), fontWeight: '800', fontVariant: ['tabular-nums'] },
-  niveau: { marginLeft: 'auto', color: couleurs.texte, fontSize: s(14), fontWeight: '800', fontVariant: ['tabular-nums'] },
-  piste: { height: s(8), borderRadius: s(3), backgroundColor: couleurs.piste, overflow: 'hidden' },
+  entete: { flexDirection: 'row', alignItems: 'center', gap: s(8) },
+  pastille: { width: s(24), height: s(24), borderRadius: s(8), alignItems: 'center', justifyContent: 'center' },
+  pastilleTexte: { fontSize: s(9), fontWeight: '900' },
+  nom: { color: couleurs.texte, fontSize: s(13.5), fontWeight: '700', flex: 1 },
+  vitesse: { paddingHorizontal: s(7), paddingVertical: s(2), borderRadius: rayon.pill },
+  vitesseTexte: { fontSize: s(11), fontWeight: '700', fontVariant: ['tabular-nums'] },
+  niveau: { color: couleurs.texte, fontSize: s(18), fontWeight: '700', fontVariant: ['tabular-nums'] },
+  niveauMax: { color: couleurs.texteFaible, fontSize: s(12), fontWeight: '500' },
+  piste: { borderRadius: s(3), backgroundColor: couleurs.piste, overflow: 'hidden' },
   remplissage: { height: '100%', borderRadius: s(3), overflow: 'hidden' },
   reflet: { position: 'absolute', top: 0, bottom: 0, width: '35%', backgroundColor: 'rgba(255,255,255,0.35)' },
   graduation: { position: 'absolute', top: 0, bottom: 0, width: s(1.5), backgroundColor: 'rgba(8,7,15,0.7)' },
+  paliers: { flexDirection: 'row' },
+  palier: { color: couleurs.texteFaible, fontSize: s(9.5), fontWeight: '600', textAlign: 'center' },
   pied: { flexDirection: 'row', alignItems: 'center', gap: s(4) },
-  echeance: { flex: 1, fontSize: s(11), fontWeight: '700' },
-  bandeau: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: s(8),
-    paddingVertical: s(8),
-    paddingHorizontal: s(10),
-    borderRadius: rayon.lg,
-    borderWidth: 1,
-  },
-  bandeauTitre: { fontSize: s(12.5), fontWeight: '800' },
-  bandeauDetail: { color: couleurs.texteAttenue, fontSize: s(11), fontWeight: '600', marginTop: s(1) },
+  echeance: { flex: 1, fontSize: s(12), fontWeight: '600', lineHeight: s(16) },
 });

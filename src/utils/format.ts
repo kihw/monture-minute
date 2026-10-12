@@ -65,3 +65,25 @@ export function formatCarburantCourt(n: number): string {
   const k = v / 1000;
   return `${(Math.round(k * 10) / 10).toLocaleString('fr-FR')}k`;
 }
+
+/** Carburant ou points en toutes lettres : « 126 000 ». */
+export function formatPoints(n: number): string {
+  return formatNombre(Math.max(0, n));
+}
+
+/** Durée en clair pour la V2 : « 45 s », « 46 min », « 1 h 12 », « 2 j 4 h ». */
+export function formatDureeClaire(secondes: number): string {
+  const t = Math.max(0, Math.ceil(secondes));
+  const j = Math.floor(t / 86400);
+  const h = Math.floor((t % 86400) / 3600);
+  const m = Math.floor((t % 3600) / 60);
+  if (j > 0) return h > 0 ? `${j} j ${h} h` : `${j} j`;
+  if (h > 0) return m > 0 ? `${h} h ${String(m).padStart(2, '0')}` : `${h} h`;
+  if (m > 0) return `${m} min`;
+  return `${t} s`;
+}
+
+/** Titre d'étape lisible : « Endurance & XP » → « Endurance et XP ». */
+export function titreClair(titre: string): string {
+  return titre.replace(/ & /g, ' et ');
+}

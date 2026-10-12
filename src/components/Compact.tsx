@@ -6,11 +6,9 @@ import { router } from 'expo-router';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
 
-import { CARACTERISTIQUE_MAX } from '../data/constants';
-import { ContexteCalcul, niveauLot } from '../engine/parcours';
 import { VueEnclos } from '../engine/statut';
 import { couleurs, rayon } from '../theme';
-import { CARACTERISTIQUES, Famille, Enclos, EtapeValidee, Etape, EtatLot, INFO_SUIVI } from '../types/domain';
+import { Famille, Enclos } from '../types/domain';
 import Monture from './Monture';
 import { s } from '../echelle';
 
@@ -131,94 +129,6 @@ export function AvatarAnneau({
   );
 }
 
-function MiniBarre({ ratio, couleur }: { ratio: number; couleur: string }) {
-  return (
-    <View style={styles.miniPiste}>
-      <View style={[styles.miniRemplissage, { width: `${Math.max(0, Math.min(1, ratio)) * 100}%`, backgroundColor: couleur }]} />
-    </View>
-  );
-}
-
-function abrege(n: number): string {
-  return n >= 1000 ? `${Math.floor(n / 1000)}k` : String(n);
-}
-
-/** Une ligne : niveau + endurance, maturité, amour, chacun avec sa mini-barre. */
-export function MontureLigne({ lot, ctx }: { lot: EtatLot; ctx: ContexteCalcul }) {
-  const ratioXp = ctx.xpRequise > 0 ? Math.min(1, lot.xp / ctx.xpRequise) : 1;
-  return (
-    <View style={styles.monture}>
-      <View style={styles.stat}>
-        <Text style={styles.statLibelle}>Niveau</Text>
-        <MiniBarre ratio={ratioXp} couleur={couleurs.xp} />
-        <Text style={styles.statValeur}>
-          {niveauLot(lot, ctx)}
-          <Text style={styles.statMax}>/{ctx.niveauCible}</Text>
-        </Text>
-      </View>
-      {CARACTERISTIQUES.map((c) => {
-        const plein = lot[c] >= CARACTERISTIQUE_MAX;
-        return (
-          <View key={c} style={styles.stat}>
-            <Text style={styles.statLibelle}>{INFO_SUIVI[c].nom}</Text>
-            <MiniBarre ratio={lot[c] / CARACTERISTIQUE_MAX} couleur={INFO_SUIVI[c].couleur} />
-            <Text style={[styles.statValeur, lot[c] === 0 && { color: couleurs.texteFaible }]}>
-              {abrege(lot[c])}
-              {plein ? ' ✓' : ''}
-            </Text>
-          </View>
-        );
-      })}
-    </View>
-  );
-}
-
-/** Le parcours de l'enclos en puces : étapes faites, en cours, à venir. */
-export function ParcoursPuces({
-  validees,
-  actuelle,
-  aVenir,
-}: {
-  validees: EtapeValidee[];
-  actuelle: Etape | null;
-  aVenir: Etape[];
-}) {
-  const items = [
-    ...validees.map((e) => ({ titre: e.titre, etat: 'fait' as const })),
-    ...(actuelle ? [{ titre: actuelle.titre, etat: 'actuel' as const }] : []),
-    ...aVenir.map((e) => ({ titre: e.titre, etat: 'futur' as const })),
-  ];
-  // Au-delà de 5 puces, on ne garde que le voisinage de l’étape actuelle ; les puces passent à la ligne
-  // plutôt que de tronquer leur titre.
-  const debut = Math.max(0, Math.min(validees.length - 1, items.length - 5));
-  return (
-    <View style={styles.parcours}>
-      {items.slice(debut, debut + 5).map((item, i) => (
-        <View
-          key={debut + i}
-          style={[
-            styles.puce,
-            item.etat === 'fait' && styles.puceFaite,
-            item.etat === 'actuel' && styles.puceActuelle,
-          ]}
-        >
-          <Text
-            style={[
-              styles.puceTexte,
-              item.etat === 'fait' && { color: couleurs.accent },
-              item.etat === 'actuel' && { color: couleurs.texte },
-            ]}
-            numberOfLines={1}
-          >
-            {item.etat === 'fait' ? '✓ ' : `${debut + i + 1} `}
-            {item.titre}
-          </Text>
-        </View>
-      ))}
-    </View>
-  );
-}
-
 const styles = StyleSheet.create({
   barre: {
     height: s(40),
@@ -256,33 +166,4 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  monture: {
-    flexDirection: 'row',
-    gap: s(8),
-    paddingVertical: s(8),
-    paddingHorizontal: s(10),
-    borderRadius: rayon.lg,
-    backgroundColor: couleurs.carte,
-    borderWidth: 1,
-    borderColor: couleurs.liseret,
-  },
-  stat: { flex: 1, gap: s(3) },
-  statLibelle: { color: couleurs.texteAttenue, fontSize: s(10), fontWeight: '700' },
-  statValeur: { color: couleurs.texte, fontSize: s(11), fontWeight: '800', fontVariant: ['tabular-nums'] },
-  statMax: { color: couleurs.texteFaible },
-  miniPiste: { height: s(4), borderRadius: s(2), backgroundColor: couleurs.piste, overflow: 'hidden' },
-  miniRemplissage: { height: '100%', borderRadius: s(2) },
-  parcours: { flexDirection: 'row', flexWrap: 'wrap', gap: s(4) },
-  puce: {
-    flexGrow: 1,
-    height: s(24),
-    paddingHorizontal: s(6),
-    borderRadius: rayon.sm,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: couleurs.surface,
-  },
-  puceFaite: { backgroundColor: couleurs.accentDoux },
-  puceActuelle: { backgroundColor: 'transparent', borderWidth: 1.2, borderColor: couleurs.accent },
-  puceTexte: { color: couleurs.texteAttenue, fontSize: s(10.5), fontWeight: '800' },
 });

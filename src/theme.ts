@@ -79,3 +79,29 @@ export const ombre = {
     elevation: 6,
   },
 };
+
+// ── V2 « Amakna V2 » (docs/PLAN-V2.md) ─────────────────────────────────────────
+// Couleur = sens : or = action à faire, vert = tout va bien, orange = attention, rouge = bloqué.
+export type Ton = 'action' | 'ok' | 'attention' | 'bloque' | 'neutre';
+
+export const tons: Record<Ton, { couleur: string; fond: string; liseret: string }> = {
+  action: { couleur: couleurs.accent, fond: 'rgba(242,201,76,0.10)', liseret: 'rgba(242,201,76,0.45)' },
+  ok: { couleur: couleurs.succes, fond: 'rgba(127,216,90,0.08)', liseret: 'rgba(127,216,90,0.35)' },
+  attention: { couleur: couleurs.attention, fond: 'rgba(245,161,66,0.10)', liseret: 'rgba(245,161,66,0.45)' },
+  bloque: { couleur: couleurs.danger, fond: 'rgba(239,90,90,0.10)', liseret: 'rgba(239,90,90,0.5)' },
+  neutre: { couleur: couleurs.texteAttenue, fond: couleurs.carte, liseret: couleurs.liseret },
+};
+
+/** Échelle typographique V2 : 5 niveaux, le gras réservé aux titres et aux chiffres clés. */
+export const texte = {
+  affiche: { fontSize: s(30), fontWeight: '700' as const, color: couleurs.texte, letterSpacing: s(-0.6), fontVariant: ['tabular-nums' as const] },
+  titre: { fontSize: s(16), fontWeight: '700' as const, color: couleurs.texte, letterSpacing: s(-0.2) },
+  corps: { fontSize: s(13), fontWeight: '500' as const, color: couleurs.texte, lineHeight: s(18) },
+  legende: { fontSize: s(11.5), fontWeight: '500' as const, color: couleurs.texteAttenue, lineHeight: s(16) },
+  etiquette: { fontSize: s(10.5), fontWeight: '600' as const, color: couleurs.texteFaible, letterSpacing: s(0.3) },
+};
+
+/** Grille de 8 (à l'échelle de l'écran). */
+export const grille = { x1: s(4), x2: s(8), x3: s(12), x4: s(16), x6: s(24) };
+
+export const duree = { rapide: 120, base: 220, lente: 360 };

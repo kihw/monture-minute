@@ -1,33 +1,42 @@
-import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { Redirect, router, useLocalSearchParams } from 'expo-router';
-import { useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { router, Redirect, useLocalSearchParams } from 'expo-router';
+import { ReactNode, useState } from 'react';
+import { StyleSheet, Text, View } from 'react-native';
 
 import PopupCarburant from '../../components/ChoixCarburant';
-import { AvatarAnneau, BarreEnclos, MontureLigne, ParcoursPuces } from '../../components/Compact';
 import { PopupDepart } from '../../components/FormulaireDepart';
 import PanneauJauges from '../../components/PanneauJauges';
 import { Confirmation, MenuActions } from '../../components/Popup';
 import PopupAjustement from '../../components/PopupAjustement';
 import PopupRecharge from '../../components/PopupRecharge';
-import { BandeauConseil, ReservoirsDirect } from '../../components/Reservoirs';
-import { BoutonContour, BoutonPrincipal, Ecran, retour } from '../../components/ui';
+import { JaugesActives } from '../../components/Reservoirs';
+import { Ecran, retour } from '../../components/ui';
+import { ActionsHeros, Avancement, Heros, NomJauge, Section } from '../../components/v2/base';
+import {
+  AIDE_JAUGES,
+  AIDE_PARCOURS,
+  AIDE_SERENITE,
+  BarreHaut,
+  CarteMontures,
+  FriseEtapes,
+  IdentiteEnclos,
+  SelecteurEnclos,
+} from '../../components/v2/enclos';
 import { conseil as calculerConseil, etatJauge } from '../../engine/descente';
-import { prochaineEtape } from '../../engine/parcours';
+import { niveauLot, prochaineEtape } from '../../engine/parcours';
 import { carburantPropose, vueEnclos } from '../../engine/statut';
 import { useCalcul, useMaintenant } from '../../hooks/useElevage';
 import { useEleveurStore, useListeEnclos } from '../../store/useStore';
-import { couleurs, rayon } from '../../theme';
-import { INFO_JAUGE, JaugeType } from '../../types/domain';
-import { formatCompteARebours, formatDuree, formatHeure, formatSerenite } from '../../utils/format';
+import { couleurs, texte } from '../../theme';
+import { CARACTERISTIQUES, INFO_JAUGE, INFO_SUIVI, JaugeType } from '../../types/domain';
+import { formatDureeClaire, formatHeure, formatPoints, formatSerenite, titreClair } from '../../utils/format';
 import { s } from '../../echelle';
 
 type PopupOuverte = 'menu' | 'ajustement' | 'redemarrage' | 'suppression' | 'terminer' | 'ajout' | null;
 
 /**
- * Écran compact d'un enclos : tout tient sans défiler. Le panneau de jauges simule
- * l'enclos ; on active les jauges en jeu puis on les touche ici, et le timer démarre
- * quand toutes sont validées. Toute modification passe par une popup.
+ * Écran d'un enclos (V2) : une carte héros dit où en est l'enclos et la seule chose à faire,
+ * puis viennent les jauges utiles, le lot de montures et le parcours. Le panneau des 6 jauges
+ * n'apparaît qu'au lancement d'une étape ; toute modification passe par une popup.
  */
 export default function DetailEnclos() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -60,7 +69,6 @@ export default function DetailEnclos() {
       ? { ...vue.carburant, ...cochees, ...(selection ? { [selection.type]: selection.valeur } : {}) }
       : vue.carburant;
   const fermer = () => setPopup(null);
-  const trajet = etape !== null && etape.sereniteCible !== etape.sereniteDepart;
   // L'étape s'est arrêtée faute de carburant : il faut recharger avant de continuer.
   const vide = vue.statut === 'a_confirmer' && !!etape && etape.vides.length > 0;
   const enCours = enclos.enCours;
@@ -122,103 +130,156 @@ export default function DetailEnclos() {
         })
       : null;
 
-  const temps =
-    vue.statut === 'en_cours'
-      ? { texte: formatCompteARebours(vue.restantSec), couleur: couleurs.accent }
-      : vue.statut === 'a_confirmer'
-        ? { texte: vide ? 'Vide' : 'Prête', couleur: couleurs.attention }
-        : vue.statut === 'termine'
-          ? { texte: 'Féconde', couleur: couleurs.succes }
-          : { texte: etape ? formatDuree(etape.dureeSec) : '—', couleur: couleurs.texteAttenue };
-  const ratioEtape =
-    vue.statut === 'en_cours' && etape
-      ? 1 - vue.restantSec / Math.max(1, etape.dureeSec)
-      : vue.statut === 'a_confirmer' || vue.statut === 'termine'
-        ? 1
-        : 0;
+  const nomJ = (j: JaugeType) => INFO_JAUGE[j].nom;
+  const nomMin = (j: JaugeType) => (j === 'xp' ? 'l’XP' : `la jauge ${INFO_JAUGE[j].nom}`);
+  const ratioEtape = vue.statut === 'en_cours' && etape ? 1 - vue.restantSec / Math.max(1, etape.dureeSec) : 1;
+  const prochaineASaisir = aActiver.find((j) => cochees[j] === undefined);
+  const suivante = vue.aVenir[0];
 
-  const consigne =
-    vue.statut === 'attente'
-      ? etape && etape.vides.length
-        ? `Carburant insuffisant : ${etape.vides.map((j) => INFO_JAUGE[j].nom).join(', ')} se videra.`
-        : 'Active en jeu les jauges qui clignotent, puis touche-les.'
-      : null;
-
-  const action =
-    vide ? (
-      <BoutonPrincipal label={`Recharger ${INFO_JAUGE[etape!.vides[0]].nom}`} onPress={() => setRecharge(etape!.vides[0])} />
-    ) : vue.statut === 'a_confirmer' ? (
-      <BoutonPrincipal label="Étape suivante" onPress={() => confirmer()} />
-    ) : vue.statut === 'termine' ? (
-      <BoutonPrincipal label="Voir le bilan" onPress={() => router.replace(`/objectifs/${id}`)} />
-    ) : vue.statut === 'en_cours' ? (
-      <BoutonContour label="Terminer maintenant" onPress={() => setPopup('terminer')} />
-    ) : (
-      <View style={styles.attente}>
-        <Text style={styles.attenteTexte}>
-          {activees.length}/{aActiver.length} jauges activées
-        </Text>
-      </View>
+  // La carte héros : l'état de l'enclos en une phrase, et la seule chose à faire.
+  let heros: ReactNode;
+  if (vue.statut === 'termine') {
+    heros = (
+      <Heros cle="termine" ton="ok" icone="party-popper" surtitre="Parcours terminé" titre="Tes montures sont fécondables" detail="Endurance, maturité et amour sont au maximum, et le niveau visé est atteint.">
+        <ActionsHeros label="Voir le bilan" onPress={() => router.replace(`/objectifs/${id}`)} />
+      </Heros>
     );
+  } else if (vide && etape) {
+    const j = etape.vides[0];
+    heros = (
+      <Heros cle="vide" ton="bloque" icone="alert-octagon-outline" surtitre="Étape en pause" titre={`${nomJ(j)} est vide`} detail="Recharge-la en jeu pour reprendre l’étape là où elle s’est arrêtée. Tu peux aussi garder ce qui a été gagné et passer à la suite depuis Options.">
+        <ActionsHeros label={`Recharger ${nomJ(j)}`} onPress={() => setRecharge(j)} />
+      </Heros>
+    );
+  } else if (vue.statut === 'a_confirmer' && etape) {
+    const avant = enclos.lot;
+    const gains = [
+      ...CARACTERISTIQUES.filter((c) => vue.lot[c] > avant[c]).map((c) => `${INFO_SUIVI[c].nom} +${formatPoints(vue.lot[c] - avant[c])}`),
+      ...(niveauLot(vue.lot, ctx) > niveauLot(avant, ctx) ? [`niveau ${niveauLot(avant, ctx)} → ${niveauLot(vue.lot, ctx)}`] : []),
+      ...(vue.lot.serenite !== avant.serenite ? [`sérénité ${formatSerenite(vue.lot.serenite)}`] : []),
+    ];
+    heros = (
+      <Heros cle="fini" ton="ok" icone="check-circle-outline" surtitre={`Étape ${vue.numeroEtape} terminée`} titre={gains.length ? gains.join(' · ') : 'Objectif de l’étape atteint'}>
+        {suivante ? (
+          <Text style={texte.legende}>
+            Ensuite : {titreClair(suivante.titre)}, avec {suivante.jauges.map(nomJ).join(' et ')}, environ {formatDureeClaire(suivante.dureeSec)}.
+          </Text>
+        ) : (
+          <Text style={texte.legende}>C’était la dernière étape.</Text>
+        )}
+        <ActionsHeros label={suivante ? `Passer à l’étape ${vue.numeroEtape + 1}` : 'Valider et voir le bilan'} onPress={() => confirmer()} />
+      </Heros>
+    );
+  } else if (vue.statut === 'en_cours' && etape && enCours) {
+    const fin = formatHeure(enCours.finAt);
+    const sc = conseil?.scenario;
+    if (conseil && conseil.jauge && sc?.recharge && (conseil.niveau === 'recharger' || conseil.niveau === 'vide')) {
+      const j = conseil.jauge;
+      const faire = { label: 'C’est rechargé', onPress: () => store.rechargerJauge(id, j, sc.recharge!.niveau) };
+      const autres = { label: 'Autres options', onPress: () => setRecharge(j) };
+      heros =
+        conseil.niveau === 'vide' ? (
+          <Heros
+            cle={`vide-${j}`}
+            ton="attention"
+            icone="alert-outline"
+            surtitre={`${nomJ(j)} sera vide à ${formatHeure(conseil.videA!)}`}
+            titre={`Remplis ${nomMin(j)} à ${formatPoints(sc.recharge.niveau)}`}
+            detail={`${sc.finAt ? `Sans recharge, l’étape s’arrêtera. Avec, elle finit à ${formatHeure(sc.finAt)}.` : 'Sans recharge, l’étape s’arrêtera.'} Fais-le en jeu, puis confirme ici.`}
+          >
+            <ActionsHeros label={faire.label} onPress={faire.onPress} secondaire={autres} />
+          </Heros>
+        ) : (
+          <Heros
+            cle={`recharger-${j}`}
+            ton="action"
+            icone="flask-outline"
+            surtitre="Recharge conseillée"
+            titre={`Remplis ${nomMin(j)} à ${formatPoints(sc.recharge.niveau)}`}
+            detail={`Tu finis à ${formatHeure(sc.finAt!)} au lieu de ${fin}. Fais-le en jeu, puis confirme ici.`}
+          >
+            <Text style={styles.gain}>{formatDureeClaire(sc.gainMs! / 1000)} gagnées</Text>
+            <ActionsHeros label={faire.label} onPress={faire.onPress} secondaire={autres} />
+          </Heros>
+        );
+    } else {
+      heros = (
+        <Heros cle="roule" ton="ok" icone="check-circle-outline" surtitre="Tout roule, rien à faire">
+          <Text style={texte.affiche}>{formatDureeClaire(vue.restantSec)}</Text>
+          <Text style={texte.legende}>
+            Fin de l’étape à {fin}
+            {sc?.gainMs ? ` · recharger ne ferait gagner que ${formatDureeClaire(sc.gainMs / 1000)}` : ''}
+          </Text>
+          <Avancement ratio={ratioEtape} couleur={couleurs.succes} />
+        </Heros>
+      );
+    }
+  } else if (etape) {
+    const saisies = aActiver.filter((j) => cochees[j] !== undefined).length;
+    heros = (
+      <Heros cle="attente" ton="action" icone="gesture-tap" surtitre={`À faire · ${saisies} sur ${aActiver.length} jauges prêtes`} titre="Active ces jauges en jeu">
+        <View style={styles.pilules}>
+          {aActiver.map((j) => (
+            <NomJauge key={j} nom={nomJ(j)} couleur={INFO_JAUGE[j].couleur} />
+          ))}
+        </View>
+        <Text style={texte.legende}>
+          Puis indique le carburant mis dans chacune : le minuteur démarre quand tout est saisi. Durée prévue : {formatDureeClaire(etape.dureeSec)}.
+        </Text>
+        {etape.vides.length > 0 && (
+          <Text style={[texte.legende, { color: couleurs.attention }]}>
+            Pas assez de carburant : {etape.vides.map(nomJ).join(', ')} se videra avant la fin. Mets-en davantage.
+          </Text>
+        )}
+        {prochaineASaisir && <ActionsHeros label={`Saisir le carburant · ${nomJ(prochaineASaisir)}`} onPress={() => basculer(prochaineASaisir)} />}
+      </Heros>
+    );
+  }
+
+  const cible = etape && etape.sereniteCible !== etape.sereniteDepart ? etape.sereniteCible : undefined;
 
   return (
-    <Ecran
-      entete={<BarreEnclos enclos={liste} vues={vues} actifId={id} onAjouter={() => setPopup('ajout')} />}
-      basDePage={
-        <View style={styles.actions}>
-          <Pressable onPress={() => setPopup('menu')} style={styles.menu} accessibilityLabel="Actions sur l’enclos">
-            <MaterialCommunityIcons name="dots-horizontal" size={s(16)} color={couleurs.texteAttenue} />
-          </Pressable>
-          <View style={{ flex: 1 }}>{action}</View>
-        </View>
-      }
-    >
-      <View style={styles.ligne}>
-        <AvatarAnneau famille={enclos.depart.famille ?? 'dragodinde'} robe={enclos.depart.robe ?? index} avancement={vue.avancement} />
-        <View style={{ flex: 1, minWidth: 0 }}>
-          <Text style={styles.titre} numberOfLines={1}>
-            {enclos.nom}
-            <Text style={styles.titreEtape}>
-              {etape ? `  ·  ${vue.numeroEtape}/${vue.totalEtapes} ${etape.titre}` : '  ·  objectifs atteints'}
-            </Text>
-          </Text>
-          <Text style={styles.sousTitre} numberOfLines={1}>
-            Sérénité {formatSerenite(vue.lot.serenite)}
-            {trajet ? ` → ${formatSerenite(etape!.sereniteCible)}` : ''}
-            {vue.statut === 'en_cours' && enclos.enCours ? ` · fin ${formatHeure(enclos.enCours.finAt)}` : ''}
-          </Text>
-        </View>
-        <Text style={[styles.temps, { color: temps.couleur }]}>{temps.texte}</Text>
-      </View>
-      <View style={styles.progres}>
-        <View style={[styles.progresBarre, { width: `${Math.round(ratioEtape * 100)}%` }]} />
-      </View>
+    <Ecran entete={<BarreHaut onOptions={() => setPopup('menu')} />}>
+      <IdentiteEnclos enclos={enclos} vue={vue} index={index} />
+      {liste.length > 1 && <SelecteurEnclos enclos={liste} vues={vues} actifId={id} onAjouter={() => setPopup('ajout')} />}
 
-      <PanneauJauges
-        carburant={carburantAffiche}
-        aActiver={aActiver}
-        activees={activees}
-        onBasculer={vue.statut === 'attente' ? basculer : undefined}
-        enMarche={vue.statut === 'en_cours'}
-      />
-      {consigne && <Text style={styles.consigne}>{consigne}</Text>}
-      {conseil && <BandeauConseil conseil={conseil} onPress={setRecharge} />}
-      {enCours && (vue.statut === 'en_cours' || vide) && (
-        <ReservoirsDirect
-          enCours={enCours}
-          maintenant={maintenant}
-          onRecharger={setRecharge}
-          onCorriger={(j) => ouvrirSaisie('correction', j)}
-        />
+      {heros}
+
+      {vue.statut === 'attente' && (
+        <Section titre="Les jauges de l’enclos" aide={AIDE_JAUGES}>
+          <PanneauJauges carburant={carburantAffiche} aActiver={aActiver} activees={activees} onBasculer={basculer} />
+          <Text style={[texte.etiquette, { textAlign: 'center' }]}>Les jauges qui clignotent sont à activer · touche-les une fois activées en jeu</Text>
+        </Section>
       )}
 
-      <MontureLigne lot={vue.lot} ctx={ctx} />
-      <ParcoursPuces validees={enclos.etapesValidees} actuelle={etape} aVenir={vue.aVenir} />
+      {enCours && (vue.statut === 'en_cours' || vide) && (
+        <Section titre="Jauges actives" aide={AIDE_JAUGES}>
+          <JaugesActives enCours={enCours} maintenant={maintenant} onRecharger={setRecharge} onCorriger={(j) => ouvrirSaisie('correction', j)} />
+        </Section>
+      )}
+
+      <Section titre="Tes montures" aide={AIDE_SERENITE}>
+        <CarteMontures lot={vue.lot} ctx={ctx} cible={cible} />
+      </Section>
+
+      <Section
+        titre="Parcours"
+        aide={AIDE_PARCOURS}
+        droite={vue.dureeTotaleSec > 0 ? <Text style={texte.legende}>encore ≈ {formatDureeClaire(vue.dureeTotaleSec)}</Text> : undefined}
+      >
+        <FriseEtapes
+          validees={enclos.etapesValidees}
+          actuelle={etape}
+          aVenir={vue.aVenir}
+          statut={vue.statut}
+          restantSec={vue.restantSec}
+        />
+      </Section>
 
       <PopupCarburant
         type={selection?.type ?? null}
         valeur={selection?.valeur ?? 0}
-        duree={dureeSelection ? formatDuree(dureeSelection.dureeSec) : undefined}
+        duree={dureeSelection ? formatDureeClaire(dureeSelection.dureeSec) : undefined}
         onChange={(valeur) => selection && setSelection({ ...selection, valeur })}
         onValider={validerSelection}
         onFermer={() => setSelection(null)}
@@ -273,6 +334,12 @@ export default function DetailEnclos() {
             : []),
           ...(vue.statut === 'en_cours'
             ? [
+                {
+                  icone: 'flag-checkered' as const,
+                  titre: 'Terminer l’étape maintenant',
+                  detail: 'Compte seulement ce qui a déjà été gagné',
+                  onPress: () => setPopup('terminer'),
+                },
                 {
                   icone: 'close' as const,
                   titre: 'Annuler l’étape en cours',
@@ -367,31 +434,6 @@ export default function DetailEnclos() {
 }
 
 const styles = StyleSheet.create({
-  ligne: { flexDirection: 'row', alignItems: 'center', gap: s(9) },
-  titre: { color: couleurs.texte, fontSize: s(13), fontWeight: '800' },
-  titreEtape: { color: couleurs.texteAttenue, fontWeight: '600' },
-  sousTitre: { color: couleurs.texteFaible, fontSize: s(11), fontWeight: '700', marginTop: s(1) },
-  temps: { fontSize: s(21), fontWeight: '800', letterSpacing: s(-0.5), fontVariant: ['tabular-nums'] },
-  progres: { height: s(3), borderRadius: s(2), backgroundColor: couleurs.piste, overflow: 'hidden' },
-  progresBarre: { height: '100%', backgroundColor: couleurs.accent },
-  consigne: { color: couleurs.accent, fontSize: s(11), fontWeight: '700', textAlign: 'center' },
-  actions: { flexDirection: 'row', gap: s(6) },
-  menu: {
-    width: s(36),
-    height: s(36),
-    borderRadius: rayon.md,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: couleurs.liseretVif,
-    backgroundColor: couleurs.surface,
-  },
-  attente: {
-    height: s(36),
-    borderRadius: rayon.md,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: couleurs.surface,
-  },
-  attenteTexte: { color: couleurs.texteAttenue, fontSize: s(12), fontWeight: '700' },
+  pilules: { flexDirection: 'row', flexWrap: 'wrap', gap: s(6) },
+  gain: { color: couleurs.succes, fontSize: s(14), fontWeight: '700' },
 });
