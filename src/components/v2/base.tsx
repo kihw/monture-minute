@@ -67,15 +67,25 @@ export function ActionsHeros({
   label,
   onPress,
   secondaire,
+  liens,
 }: {
   label: string;
   onPress: () => void;
   secondaire?: { label: string; onPress: () => void };
+  /** Liens secondaires côte à côte sous le bouton. */
+  liens?: { label: string; onPress: () => void }[];
 }) {
+  const tous = [...(secondaire ? [secondaire] : []), ...(liens ?? [])];
   return (
     <View style={styles.actions}>
       <BoutonPrincipal label={label} onPress={onPress} />
-      {secondaire && <Lien label={secondaire.label} onPress={secondaire.onPress} />}
+      {tous.length > 0 && (
+        <View style={styles.liens}>
+          {tous.map((l) => (
+            <Lien key={l.label} label={l.label} onPress={l.onPress} />
+          ))}
+        </View>
+      )}
     </View>
   );
 }
@@ -108,6 +118,45 @@ export function Section({
         </Text>
         {aide && <Aide titre={aide.titre}>{aide.contenu}</Aide>}
         {droite && <View style={{ marginLeft: 'auto' }}>{droite}</View>}
+      </View>
+      {children}
+    </View>
+  );
+}
+
+/** Panneau à onglets : plusieurs blocs d'information au même endroit, un seul affiché à la fois. */
+export function Onglets<T extends string>({
+  onglets,
+  actif,
+  onChange,
+  droite,
+  children,
+}: {
+  onglets: { id: T; nom: string }[];
+  actif: T;
+  onChange: (id: T) => void;
+  /** Éléments à droite des onglets (aide, action propre à l'onglet affiché). */
+  droite?: ReactNode;
+  children: ReactNode;
+}) {
+  return (
+    <View style={styles.section}>
+      <View style={styles.sectionTete}>
+        <View style={styles.onglets} accessibilityRole="tablist">
+          {onglets.map((o) => (
+            <Pressable
+              key={o.id}
+              onPress={() => onChange(o.id)}
+              hitSlop={6}
+              style={[styles.onglet, o.id === actif && styles.ongletActif]}
+              accessibilityRole="tab"
+              accessibilityState={{ selected: o.id === actif }}
+            >
+              <Text style={[styles.ongletTexte, o.id === actif && { color: couleurs.texte }]}>{o.nom}</Text>
+            </Pressable>
+          ))}
+        </View>
+        {droite && <View style={styles.ongletsDroite}>{droite}</View>}
       </View>
       {children}
     </View>
@@ -160,16 +209,22 @@ export function Avancement({ ratio, couleur = couleurs.accent }: { ratio: number
 }
 
 const styles = StyleSheet.create({
-  heros: { borderRadius: rayon.xl, borderWidth: 1, padding: grille.x4, gap: grille.x2 },
+  heros: { borderRadius: rayon.xl, borderWidth: 1, padding: grille.x3, gap: s(6) },
+  liens: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', columnGap: grille.x4 },
   herosEtat: { flexDirection: 'row', alignItems: 'center', gap: s(6) },
   herosSurtitre: { fontSize: s(12), fontWeight: '700' },
   herosTitre: { ...texte.titre, fontSize: s(17), lineHeight: s(22) },
   actions: { gap: grille.x2, marginTop: grille.x1 },
   lien: { alignSelf: 'center', paddingVertical: s(4) },
   lienTexte: { fontSize: s(12), fontWeight: '600', textDecorationLine: 'underline' },
-  section: { gap: grille.x2, marginTop: grille.x2 },
+  section: { gap: s(6), marginTop: grille.x1 },
   sectionTete: { flexDirection: 'row', alignItems: 'center', gap: s(6) },
   sectionTitre: { color: couleurs.texte, fontSize: s(13), fontWeight: '700' },
+  onglets: { flexDirection: 'row', gap: s(4), padding: s(3), borderRadius: rayon.pill, backgroundColor: couleurs.surface },
+  onglet: { paddingHorizontal: s(12), paddingVertical: s(5), borderRadius: rayon.pill },
+  ongletActif: { backgroundColor: couleurs.carteClaire },
+  ongletTexte: { color: couleurs.texteAttenue, fontSize: s(12.5), fontWeight: '700' },
+  ongletsDroite: { marginLeft: 'auto', flexDirection: 'row', alignItems: 'center', gap: s(10) },
   aide: {
     width: s(18),
     height: s(18),

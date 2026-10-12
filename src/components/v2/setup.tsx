@@ -92,11 +92,14 @@ export function SetupEtape({
                   <MaterialCommunityIcons name={info.icone!} size={s(13)} color={info.couleur} />
                 )}
               </View>
-              <Text style={styles.nom}>{info.nom}</Text>
-              <Text style={styles.valeur}>
-                {formatPoints(v)}
-                <Text style={styles.tier}>{`  ${nomTier(v)} ×${TIERS_CARBURANT.find((t) => v > t.seuil && v <= t.plafond)?.palier ?? 0}`}</Text>
-              </Text>
+              <View style={{ flex: 1, minWidth: 0 }}>
+                <Text style={styles.nom} numberOfLines={1}>
+                  {info.nom}
+                </Text>
+                <Text style={styles.tier} numberOfLines={1}>
+                  {nomTier(v)} ×{TIERS_CARBURANT.find((t) => v > t.seuil && v <= t.plafond)?.palier ?? 0}
+                </Text>
+              </View>
             </View>
             <View style={styles.choixLigne}>
               {r > 0 && r < plein && (
@@ -129,24 +132,26 @@ const styles = StyleSheet.create({
   consigne: { flexDirection: 'row', alignItems: 'center', gap: s(6) },
   consigneTexte: { flex: 1, color: couleurs.texteAttenue, fontSize: s(11.5), fontWeight: '500', lineHeight: s(16) },
   ligne: {
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: grille.x2,
-    padding: grille.x3,
+    paddingVertical: s(6),
+    paddingHorizontal: grille.x2,
     borderRadius: rayon.lg,
     backgroundColor: 'rgba(8,7,15,0.45)',
     borderWidth: 1,
     borderColor: couleurs.liseret,
   },
-  tete: { flexDirection: 'row', alignItems: 'center', gap: s(8) },
+  tete: { width: s(92), flexDirection: 'row', alignItems: 'center', gap: s(6) },
   pastille: { width: s(24), height: s(24), borderRadius: s(8), alignItems: 'center', justifyContent: 'center' },
   pastilleTexte: { fontSize: s(10), fontWeight: '900' },
-  nom: { flex: 1, color: couleurs.texte, fontSize: s(13.5), fontWeight: '700' },
-  valeur: { color: couleurs.texte, fontSize: s(14), fontWeight: '700', fontVariant: ['tabular-nums'] },
+  nom: { color: couleurs.texte, fontSize: s(12.5), fontWeight: '700' },
   tier: { color: couleurs.texteFaible, fontSize: s(11), fontWeight: '600' },
-  choixLigne: { flexDirection: 'row', gap: s(6) },
+  choixLigne: { flex: 1, flexDirection: 'row', gap: s(4) },
   choix: {
     flex: 1,
-    minHeight: s(40),
-    paddingHorizontal: s(6),
+    minHeight: s(36),
+    paddingHorizontal: s(3),
     paddingVertical: s(4),
     borderRadius: rayon.md,
     borderWidth: 1,
@@ -155,6 +160,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  choixLibelle: { color: couleurs.texteAttenue, fontSize: s(11), fontWeight: '600' },
-  choixValeur: { color: couleurs.texteAttenue, fontSize: s(12), fontWeight: '700', fontVariant: ['tabular-nums'] },
+  choixLibelle: { color: couleurs.texteAttenue, fontSize: s(10.5), fontWeight: '600' },
+  choixValeur: { color: couleurs.texteAttenue, fontSize: s(11.5), fontWeight: '700', fontVariant: ['tabular-nums'] },
 });

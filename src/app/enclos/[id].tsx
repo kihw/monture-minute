@@ -8,7 +8,7 @@ import PopupAjustement from '../../components/PopupAjustement';
 import PopupRecharge from '../../components/PopupRecharge';
 import { JaugesActives } from '../../components/Reservoirs';
 import { Ecran, retour } from '../../components/ui';
-import { ActionsHeros, Avancement, Heros, Section } from '../../components/v2/base';
+import { ActionsHeros, Aide, Avancement, Heros, Lien, Onglets, Section } from '../../components/v2/base';
 import {
   AIDE_JAUGES,
   AIDE_PARCOURS,
@@ -16,7 +16,6 @@ import {
   BarreHaut,
   CarteMontures,
   FriseEtapes,
-  IdentiteEnclos,
   SelecteurEnclos,
 } from '../../components/v2/enclos';
 import { ConsigneSetup, SetupEtape } from '../../components/v2/setup';
@@ -61,6 +60,7 @@ export default function DetailEnclos() {
   const refJauges = useRef<View>(null);
   const refMontures = useRef<View>(null);
   const refBarre = useRef<View>(null);
+  const [ongletInfo, setOngletInfo] = useState<'montures' | 'parcours'>('montures');
   const [saisie, setSaisie] = useState<{ mode: 'recharge' | 'correction'; type: JaugeType; valeur: number } | null>(null);
 
   if (!enclos) return <Redirect href="/enclos" />;
@@ -149,8 +149,15 @@ export default function DetailEnclos() {
   let heros: ReactNode;
   if (vue.statut === 'termine') {
     heros = (
-      <Heros cle="termine" ton="ok" icone="party-popper" surtitre="Parcours terminé" titre="Tes montures sont fécondables" detail="Endurance, maturité et amour sont au maximum, et le niveau visé est atteint.">
-        <ActionsHeros label="Voir le bilan" onPress={() => router.replace(`/objectifs/${id}`)} />
+      <Heros cle="termine" ton="ok" icone="party-popper" surtitre="Parcours terminé" titre="Tes montures sont fécondables" detail="Place de nouvelles montures dans l’enclos et relance un cycle : l’enclos garde sa monture, sa robe et ses réglages.">
+        <ActionsHeros
+          label="Nouveau cycle, mêmes réglages"
+          onPress={() => store.redemarrerEnclos(id, enclos.depart)}
+          liens={[
+            { label: 'Changer les réglages', onPress: () => router.push(`/depart?mode=cycle&id=${id}`) },
+            { label: 'Voir le bilan', onPress: () => router.push(`/objectifs/${id}`) },
+          ]}
+        />
       </Heros>
     );
   } else if (vide && etape) {
@@ -180,7 +187,10 @@ export default function DetailEnclos() {
             <ActionsHeros
               label={`Jauges activées · lancer l’étape ${vue.numeroEtape + 1}`}
               onPress={lancer}
-              secondaire={{ label: 'Valider sans lancer', onPress: () => confirmer() }}
+              liens={[
+                { label: 'Valider sans lancer', onPress: () => confirmer() },
+                { label: 'Ajuster selon le jeu', onPress: () => setPopup('ajustement') },
+              ]}
             />
           </>
         ) : (
@@ -226,11 +236,11 @@ export default function DetailEnclos() {
     } else {
       heros = (
         <Heros cle="roule" ton="ok" icone="check-circle-outline" surtitre="Tout roule, rien à faire">
-          <Text style={texte.affiche}>{formatDureeClaire(vue.restantSec)}</Text>
-          <Text style={texte.legende}>
-            Fin de l’étape à {fin}
-            {sc?.gainMs ? ` · recharger ne ferait gagner que ${formatDureeClaire(sc.gainMs / 1000)}` : ''}
-          </Text>
+          <View style={styles.ligneTemps}>
+            <Text style={texte.affiche}>{formatDureeClaire(vue.restantSec)}</Text>
+            <Text style={[texte.legende, { textAlign: 'right' }]}>fin à {fin}</Text>
+          </View>
+          {!!sc?.gainMs && <Text style={texte.legende}>Recharger ne ferait gagner que {formatDureeClaire(sc.gainMs / 1000)}.</Text>}
           <Avancement ratio={ratioEtape} couleur={couleurs.succes} />
         </Heros>
       );
@@ -264,13 +274,13 @@ export default function DetailEnclos() {
       : []),
     {
       cible: refMontures,
-      titre: 'Tes montures',
-      texte: 'La règle montre la sérénité du lot et ce qui progresse à cet endroit. Les « ? » à côté des titres expliquent chaque notion en deux phrases.',
+      titre: 'Tes montures et le parcours',
+      texte: 'Deux onglets : la sérénité du lot (ce qui progresse à cet endroit), caractéristiques et niveau, avec « Ajuster » si le jeu diffère ; puis les étapes du parcours. Les « ? » expliquent chaque notion.',
     },
     {
       cible: refBarre,
       titre: 'Tout le reste',
-      texte: '« Mes enclos » résume tous tes enclos, avec l’onglet Alertes pour ce qui arrive. « Options » sert à ajuster selon le jeu, redémarrer ou terminer une étape.',
+      texte: 'La flèche ‹ ramène à « Mes enclos », qui résume tous tes enclos, avec l’onglet Alertes pour ce qui arrive. « Options » sert à redémarrer, terminer une étape ou supprimer l’enclos.',
     },
   ];
 
@@ -280,7 +290,7 @@ export default function DetailEnclos() {
     <Ecran
       entete={
         <View ref={refBarre} collapsable={false}>
-          <BarreHaut onOptions={() => setPopup('menu')} />
+          <BarreHaut onOptions={() => setPopup('menu')} enclos={enclos} vue={vue} index={index} />
         </View>
       }
       scrollRef={defilement}
@@ -288,7 +298,6 @@ export default function DetailEnclos() {
         decalage.current = e.nativeEvent.contentOffset.y;
       }}
     >
-      <IdentiteEnclos enclos={enclos} vue={vue} index={index} />
       {liste.length > 1 && <SelecteurEnclos enclos={liste} vues={vues} actifId={id} onAjouter={() => router.push('/depart?mode=ajout')} />}
 
       <View ref={refHeros} collapsable={false}>
@@ -304,24 +313,34 @@ export default function DetailEnclos() {
       )}
 
       <View ref={refMontures} collapsable={false}>
-        <Section titre="Tes montures" aide={AIDE_SERENITE}>
-          <CarteMontures lot={vue.lot} ctx={ctx} cible={cible} />
-        </Section>
+        <Onglets
+          onglets={[
+            { id: 'montures', nom: 'Tes montures' },
+            { id: 'parcours', nom: 'Parcours' },
+          ]}
+          actif={ongletInfo}
+          onChange={setOngletInfo}
+          droite={
+            ongletInfo === 'montures' ? (
+              <>
+                <Lien label="Ajuster" couleur={couleurs.accent} onPress={() => setPopup('ajustement')} />
+                <Aide titre={AIDE_SERENITE.titre}>{AIDE_SERENITE.contenu}</Aide>
+              </>
+            ) : (
+              <>
+                {vue.dureeTotaleSec > 0 && <Text style={texte.legende}>≈ {formatDureeClaire(vue.dureeTotaleSec)}</Text>}
+                <Aide titre={AIDE_PARCOURS.titre}>{AIDE_PARCOURS.contenu}</Aide>
+              </>
+            )
+          }
+        >
+          {ongletInfo === 'montures' ? (
+            <CarteMontures lot={vue.lot} ctx={ctx} cible={cible} />
+          ) : (
+            <FriseEtapes validees={enclos.etapesValidees} actuelle={etape} aVenir={vue.aVenir} statut={vue.statut} restantSec={vue.restantSec} />
+          )}
+        </Onglets>
       </View>
-
-      <Section
-        titre="Parcours"
-        aide={AIDE_PARCOURS}
-        droite={vue.dureeTotaleSec > 0 ? <Text style={texte.legende}>encore ≈ {formatDureeClaire(vue.dureeTotaleSec)}</Text> : undefined}
-      >
-        <FriseEtapes
-          validees={enclos.etapesValidees}
-          actuelle={etape}
-          aVenir={vue.aVenir}
-          statut={vue.statut}
-          restantSec={vue.restantSec}
-        />
-      </Section>
 
       <PopupCarburant
         type={selection?.type ?? null}
@@ -469,5 +488,6 @@ export default function DetailEnclos() {
 const styles = StyleSheet.create({
   gain: { color: couleurs.succes, fontSize: s(14), fontWeight: '700' },
   separateur: { height: 1, backgroundColor: couleurs.liseret, marginVertical: s(4) },
+  ligneTemps: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', gap: s(8) },
   prepare: { color: couleurs.texte, fontSize: s(14), fontWeight: '700' },
 });

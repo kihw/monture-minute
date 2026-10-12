@@ -3,6 +3,7 @@
 
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
+import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { CARACTERISTIQUE_MAX, SERENITE_MAX, SERENITE_MIN } from '../../data/constants';
@@ -13,7 +14,7 @@ import { couleurs, grille, rayon, texte } from '../../theme';
 import { Caracteristique, CARACTERISTIQUES, Enclos, Etape, EtapeValidee, EtatLot, INFO_SUIVI, ZONE_CARACTERISTIQUE } from '../../types/domain';
 import { formatDureeClaire, formatPoints, formatSerenite, titreClair } from '../../utils/format';
 import { AvatarAnneau } from '../Compact';
-import { P } from './base';
+import { Lien, P } from './base';
 
 const ETENDUE = SERENITE_MAX - SERENITE_MIN;
 const position = (v: number) => `${((Math.max(SERENITE_MIN, Math.min(SERENITE_MAX, v)) - SERENITE_MIN) / ETENDUE) * 100}%` as const;
@@ -45,7 +46,8 @@ const SEULE: Record<Caracteristique, string> = {
 
 // ── Barre du haut ──────────────────────────────────────────────────────────────
 
-export function BarreHaut({ onOptions }: { onOptions: () => void }) {
+/** Barre du haut : retour à « Mes enclos », identité de l'enclos (monture, nom, étape), Options. */
+export function BarreHaut({ onOptions, enclos, vue, index }: { onOptions: () => void; enclos: Enclos; vue: VueEnclos; index: number }) {
   return (
     <View style={styles.barre}>
       <Pressable
@@ -55,9 +57,19 @@ export function BarreHaut({ onOptions }: { onOptions: () => void }) {
         accessibilityRole="button"
         accessibilityLabel="Retour à mes enclos"
       >
-        <MaterialCommunityIcons name="chevron-left" size={s(20)} color={couleurs.texteAttenue} />
-        <Text style={styles.barreTexte}>Mes enclos</Text>
+        <MaterialCommunityIcons name="chevron-left" size={s(22)} color={couleurs.texteAttenue} />
       </Pressable>
+      <View style={styles.barreIdentite}>
+        <AvatarAnneau famille={enclos.depart.famille ?? 'dragodinde'} robe={enclos.depart.robe ?? index} avancement={vue.avancement} taille={s(34)} />
+        <View style={{ flex: 1, minWidth: 0 }}>
+          <Text style={styles.barreNom} numberOfLines={1} accessibilityRole="header">
+            {enclos.nom}
+          </Text>
+          <Text style={styles.barreEtape} numberOfLines={1}>
+            {vue.etape ? `Étape ${vue.numeroEtape}/${vue.totalEtapes} · ${titreClair(vue.etape.titre)}` : 'Parcours terminé'}
+          </Text>
+        </View>
+      </View>
       <Pressable
         onPress={onOptions}
         hitSlop={8}
@@ -85,27 +97,6 @@ function etatCourt(vue: VueEnclos): { texte: string; couleur: string } {
     default:
       return { texte: 'à lancer', couleur: couleurs.accent };
   }
-}
-
-export function IdentiteEnclos({ enclos, vue, index }: { enclos: Enclos; vue: VueEnclos; index: number }) {
-  return (
-    <View style={styles.identite}>
-      <AvatarAnneau
-        famille={enclos.depart.famille ?? 'dragodinde'}
-        robe={enclos.depart.robe ?? index}
-        avancement={vue.avancement}
-        taille={s(48)}
-      />
-      <View style={{ flex: 1, minWidth: 0, gap: s(2) }}>
-        <Text style={texte.titre} numberOfLines={1}>
-          {enclos.nom}
-        </Text>
-        <Text style={texte.legende}>
-          {vue.etape ? `Étape ${vue.numeroEtape} sur ${vue.totalEtapes} · ${titreClair(vue.etape.titre)}` : 'Parcours terminé'}
-        </Text>
-      </View>
-    </View>
-  );
 }
 
 export function SelecteurEnclos({
@@ -149,23 +140,25 @@ export function SelecteurEnclos({
 // ── Tes montures : sérénité, caractéristiques, niveau ─────────────────────────
 
 /** Règle −5 000 → +5 000 : une ligne par caractéristique sur sa zone, un repère à la sérénité du lot. */
-export function RegleSerenite({ serenite, cible }: { serenite: number; cible?: number }) {
+export function RegleSerenite({ serenite, cible, compact }: { serenite: number; cible?: number; compact?: boolean }) {
   const actives = progressentA(serenite);
   return (
-    <View style={{ gap: s(4) }}>
+    <View style={{ gap: s(compact ? 2 : 4) }}>
       <View style={styles.regle}>
-        <View style={styles.regleNoms}>
-          {CARACTERISTIQUES.map((c) => (
-            <Text key={c} style={[styles.regleNom, actives.includes(c) && { color: INFO_SUIVI[c].couleur }]}>
-              {INFO_SUIVI[c].nom}
-            </Text>
-          ))}
-        </View>
+        {!compact && (
+          <View style={styles.regleNoms}>
+            {CARACTERISTIQUES.map((c) => (
+              <Text key={c} style={[styles.regleNom, actives.includes(c) && { color: INFO_SUIVI[c].couleur }]}>
+                {INFO_SUIVI[c].nom}
+              </Text>
+            ))}
+          </View>
+        )}
         <View style={styles.reglePiste}>
           {CARACTERISTIQUES.map((c) => {
             const z = ZONE_CARACTERISTIQUE[c];
             return (
-              <View key={c} style={styles.regleLigne}>
+              <View key={c} style={[styles.regleLigne, compact && styles.regleLigneCompacte]}>
                 <View style={styles.regleFond} />
                 <View
                   style={[
@@ -185,7 +178,7 @@ export function RegleSerenite({ serenite, cible }: { serenite: number; cible?: n
           <View style={[styles.repere, { left: position(serenite) }]} />
         </View>
       </View>
-      <View style={styles.regleEchelle}>
+      <View style={[styles.regleEchelle, compact && { marginLeft: 0 }]}>
         <Text style={styles.regleGraduation}>−5 000</Text>
         <Text style={styles.regleGraduation}>0</Text>
         <Text style={styles.regleGraduation}>+5 000</Text>
@@ -194,18 +187,21 @@ export function RegleSerenite({ serenite, cible }: { serenite: number; cible?: n
   );
 }
 
-function LigneStat({ nom, couleur, valeur, max, suffixe }: { nom: string; couleur: string; valeur: number; max: number; suffixe?: string }) {
+/** Tuile compacte : nom et valeur sur une ligne, barre dessous (grille 2 × 2). */
+function TuileStat({ nom, couleur, valeur, max, suffixe }: { nom: string; couleur: string; valeur: number; max: number; suffixe?: string }) {
   const plein = valeur >= max;
   return (
-    <View style={styles.stat}>
-      <Text style={styles.statNom}>{nom}</Text>
+    <View style={styles.tuile}>
+      <View style={styles.tuileTete}>
+        <Text style={styles.statNom}>{nom}</Text>
+        <Text style={[styles.tuileValeur, valeur === 0 && { color: couleurs.texteFaible }]}>
+          {suffixe ?? formatPoints(valeur)}
+          {plein ? ' ✓' : ''}
+        </Text>
+      </View>
       <View style={styles.statPiste}>
         <View style={[styles.statBarre, { width: `${Math.max(0, Math.min(1, valeur / Math.max(1, max))) * 100}%`, backgroundColor: couleur }]} />
       </View>
-      <Text style={[styles.statValeur, valeur === 0 && { color: couleurs.texteFaible }]}>
-        {suffixe ?? `${formatPoints(valeur)} / ${formatPoints(max)}`}
-        {plein ? ' ✓' : ''}
-      </Text>
     </View>
   );
 }
@@ -221,13 +217,15 @@ export function CarteMontures({ lot, ctx, cible }: { lot: EtatLot; ctx: Contexte
           {cible !== undefined && cible !== lot.serenite ? <Text style={styles.sereniteCible}>{`  → ${formatSerenite(cible)}`}</Text> : null}
         </Text>
       </View>
-      <RegleSerenite serenite={lot.serenite} cible={cible} />
+      <RegleSerenite serenite={lot.serenite} cible={cible} compact />
       <Text style={[texte.legende, { color: couleurs.texte }]}>{phraseSerenite(lot.serenite)}</Text>
       <View style={styles.separateur} />
-      <LigneStat nom="Niveau" couleur={couleurs.xp} valeur={niveau} max={ctx.niveauCible} suffixe={`${niveau} / ${ctx.niveauCible}`} />
-      {CARACTERISTIQUES.map((c) => (
-        <LigneStat key={c} nom={INFO_SUIVI[c].nom} couleur={INFO_SUIVI[c].couleur} valeur={lot[c]} max={CARACTERISTIQUE_MAX} />
-      ))}
+      <View style={styles.grilleStats}>
+        <TuileStat nom="Niveau" couleur={couleurs.xp} valeur={niveau} max={ctx.niveauCible} suffixe={`${niveau} / ${ctx.niveauCible}`} />
+        {CARACTERISTIQUES.map((c) => (
+          <TuileStat key={c} nom={INFO_SUIVI[c].nom} couleur={INFO_SUIVI[c].couleur} valeur={lot[c]} max={CARACTERISTIQUE_MAX} />
+        ))}
+      </View>
     </View>
   );
 }
@@ -250,6 +248,7 @@ export const AIDE_JAUGES = {
       <P>Une jauge contient jusqu’à 200 000 points de carburant. Toutes les 10 secondes, elle en donne autant que sa vitesse à tes montures.</P>
       <P>La vitesse dépend du carburant restant : ×40 au-dessus de 180 000 (Élixir), ×30 au-dessus de 140 000 (Potion), ×20 au-dessus de 80 000 (Philtre), ×10 en dessous (Extrait).</P>
       <P>Une jauge ralentit donc en se vidant. L’app te dit quand une recharge fait vraiment gagner du temps.</P>
+      <P>Touche une jauge active pour voir les recharges possibles ; appui long pour la recaler sur la valeur lue en jeu.</P>
     </>
   ),
 };
@@ -288,10 +287,22 @@ export function FriseEtapes({
       : []),
     ...aVenir.map((e) => ({ titre: e.titre, etat: 'futur' as const, detail: formatDureeClaire(e.dureeSec) })),
   ];
+  // Replié : l'étape actuelle et la suivante seulement (les étapes faites sont résumées).
+  const [ouvert, setOuvert] = useState(false);
+  const indexActuel = Math.max(0, items.findIndex((it) => it.etat === 'actuel'));
+  const debut = ouvert ? 0 : indexActuel;
+  const visibles = ouvert ? items : items.slice(indexActuel, indexActuel + 2);
+  const cachees = items.length - visibles.length;
   return (
     <View style={styles.carte}>
-      {items.map((item, i) => {
-        const dernier = i === items.length - 1;
+      {!ouvert && validees.length > 0 && (
+        <Text style={styles.etapeDetail}>
+          ✓ {validees.length} {validees.length > 1 ? 'étapes faites' : 'étape faite'}
+        </Text>
+      )}
+      {visibles.map((item, k) => {
+        const i = debut + k;
+        const dernier = k === visibles.length - 1;
         return (
           <View key={i} style={styles.etape}>
             <View style={styles.etapeRail}>
@@ -321,6 +332,9 @@ export function FriseEtapes({
           </View>
         );
       })}
+      {(cachees > 0 || ouvert) && (
+        <Lien label={ouvert ? 'Réduire' : `Voir tout le parcours (${items.length} étapes)`} onPress={() => setOuvert(!ouvert)} />
+      )}
     </View>
   );
 }
@@ -329,11 +343,16 @@ const styles = StyleSheet.create({
   barre: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: grille.x3,
-    paddingVertical: grille.x2,
+    gap: s(6),
+    paddingHorizontal: grille.x2,
+    paddingVertical: s(6),
+    borderBottomWidth: 1,
+    borderBottomColor: couleurs.liseret,
   },
   barreBouton: { flexDirection: 'row', alignItems: 'center', gap: s(2), minHeight: s(32) },
+  barreIdentite: { flex: 1, minWidth: 0, flexDirection: 'row', alignItems: 'center', gap: s(8) },
+  barreNom: { color: couleurs.texte, fontSize: s(14), fontWeight: '700' },
+  barreEtape: { color: couleurs.texteAttenue, fontSize: s(11), fontWeight: '500' },
   barreTexte: { color: couleurs.texteAttenue, fontSize: s(13), fontWeight: '600' },
   options: {
     gap: s(6),
@@ -376,6 +395,7 @@ const styles = StyleSheet.create({
   regleNom: { color: couleurs.texteFaible, fontSize: s(10.5), fontWeight: '600', height: s(14), lineHeight: s(14) },
   reglePiste: { flex: 1, justifyContent: 'space-between' },
   regleLigne: { height: s(14), justifyContent: 'center' },
+  regleLigneCompacte: { height: s(8) },
   regleFond: { position: 'absolute', left: 0, right: 0, height: s(2), borderRadius: s(1), backgroundColor: couleurs.piste },
   regleZone: { position: 'absolute', height: s(6), borderRadius: s(3) },
   repere: { position: 'absolute', top: -s(3), bottom: -s(3), width: s(3), marginLeft: -s(1.5), borderRadius: s(2), backgroundColor: '#ffffff' },
@@ -384,6 +404,10 @@ const styles = StyleSheet.create({
   regleGraduation: { color: couleurs.texteFaible, fontSize: s(10.5), fontWeight: '600' },
   separateur: { height: 1, backgroundColor: couleurs.liseret, marginVertical: s(2) },
   stat: { flexDirection: 'row', alignItems: 'center', gap: grille.x2 },
+  grilleStats: { flexDirection: 'row', flexWrap: 'wrap', columnGap: grille.x3, rowGap: s(6) },
+  tuile: { flexBasis: '46%', flexGrow: 1, gap: s(3) },
+  tuileTete: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline', gap: s(4) },
+  tuileValeur: { color: couleurs.texte, fontSize: s(11.5), fontWeight: '700', fontVariant: ['tabular-nums'] },
   statNom: { width: s(62), color: couleurs.texteAttenue, fontSize: s(11.5), fontWeight: '600' },
   statPiste: { flex: 1, height: s(5), borderRadius: s(3), backgroundColor: couleurs.piste, overflow: 'hidden' },
   statBarre: { height: '100%', borderRadius: s(3) },

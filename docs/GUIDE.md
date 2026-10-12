@@ -132,10 +132,13 @@ l’option **Toujours au premier plan** la garde par-dessus le jeu.
 - Si une jauge s’est vidée : **Recharger** pour continuer la même étape, ou *Valider sans recharger*
   depuis le menu **⋯**.
 - **Terminer maintenant** compte seulement le temps déjà passé.
-- **Ajuster selon le jeu** (menu ⋯) recale sérénité, caractéristiques et niveau si le jeu diffère.
+- **Ajuster selon le jeu** (bouton « Ajuster » de l’onglet *Tes montures*, ou sous la carte d’une
+  étape finie) recale sérénité, caractéristiques et niveau si le jeu diffère.
 
-Quand les trois caractéristiques sont à 20 000 et le niveau cible atteint, l’app affiche le bilan :
-les montures sont **fécondables**.
+Quand les trois caractéristiques sont à 20 000 et le niveau cible atteint, les montures sont
+**fécondables**. La carte propose alors **Nouveau cycle, mêmes réglages** : place de nouvelles
+montures dans l’enclos et relance-le d’un geste, sans le recréer (*Changer les réglages* repasse par
+l’assistant ; *Voir le bilan* montre le récapitulatif).
 
 ## 10. Réglages utiles
 

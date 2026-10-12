@@ -10,7 +10,7 @@ import { Animated, Easing, Pressable, StyleSheet, Text, View } from 'react-nativ
 import { JAUGE_MAX, TIERS_CARBURANT } from '../data/constants';
 import { s } from '../echelle';
 import { EnCoursSimulable, EtatJauge, etatJauge, simulerEtape } from '../engine/descente';
-import { couleurs, grille, rayon, texte } from '../theme';
+import { couleurs, grille, rayon } from '../theme';
 import { INFO_JAUGE, JaugeType } from '../types/domain';
 import { formatDureeClaire, formatHeure, formatPoints } from '../utils/format';
 
@@ -150,21 +150,20 @@ export function JaugesActives({
                   <MaterialCommunityIcons name={info.icone!} size={s(13)} color={info.couleur} />
                 )}
               </View>
-              <Text style={styles.nom}>{info.nom}</Text>
+              <Text style={styles.nom} numberOfLines={1}>
+                {info.nom}
+              </Text>
+              <Text style={styles.niveau}>
+                {formatPoints(etat.niveau)}
+                <Text style={styles.niveauMax}> / 200k</Text>
+              </Text>
               <View style={[styles.vitesse, { backgroundColor: etat.palier > 0 ? `${info.couleur}22` : couleurs.surface }]}>
                 <Text style={[styles.vitesseTexte, { color: etat.palier > 0 ? info.couleur : couleurs.texteFaible }]}>
-                  {etat.palier > 0 ? `vitesse ×${etat.palier}` : 'à l’arrêt'}
+                  {etat.palier > 0 ? `×${etat.palier}` : 'arrêt'}
                 </Text>
               </View>
             </View>
-            <Text style={styles.niveau}>
-              {formatPoints(etat.niveau)}
-              <Text style={styles.niveauMax}> / {formatPoints(JAUGE_MAX)}</Text>
-            </Text>
-            <View style={{ gap: s(3) }}>
-              <BarreCarburant ratio={Math.max(0, Math.min(1, etat.niveau / JAUGE_MAX))} couleur={info.couleur} />
-              <NomsPaliers niveau={etat.niveau} />
-            </View>
+            <BarreCarburant ratio={Math.max(0, Math.min(1, etat.niveau / JAUGE_MAX))} couleur={info.couleur} hauteur={s(6)} />
             <View style={styles.pied}>
               <Text style={[styles.echeance, { color: echeance.couleur }]}>{echeance.texte}</Text>
               <MaterialCommunityIcons name="chevron-right" size={s(16)} color={couleurs.texteFaible} />
@@ -172,7 +171,6 @@ export function JaugesActives({
           </Pressable>
         );
       })}
-      <Text style={[texte.etiquette, { textAlign: 'center' }]}>Touche une jauge pour la recharger · appui long pour la corriger</Text>
     </View>
   );
 }
@@ -180,8 +178,9 @@ export function JaugesActives({
 const styles = StyleSheet.create({
   liste: { gap: grille.x2 },
   carte: {
-    padding: grille.x3,
-    gap: grille.x2,
+    paddingVertical: s(8),
+    paddingHorizontal: grille.x3,
+    gap: s(6),
     borderRadius: rayon.lg,
     backgroundColor: couleurs.carte,
     borderWidth: 1,
@@ -193,8 +192,8 @@ const styles = StyleSheet.create({
   nom: { color: couleurs.texte, fontSize: s(13.5), fontWeight: '700', flex: 1 },
   vitesse: { paddingHorizontal: s(7), paddingVertical: s(2), borderRadius: rayon.pill },
   vitesseTexte: { fontSize: s(11), fontWeight: '700', fontVariant: ['tabular-nums'] },
-  niveau: { color: couleurs.texte, fontSize: s(18), fontWeight: '700', fontVariant: ['tabular-nums'] },
-  niveauMax: { color: couleurs.texteFaible, fontSize: s(12), fontWeight: '500' },
+  niveau: { color: couleurs.texte, fontSize: s(14), fontWeight: '700', fontVariant: ['tabular-nums'] },
+  niveauMax: { color: couleurs.texteFaible, fontSize: s(11), fontWeight: '500' },
   piste: { borderRadius: s(3), backgroundColor: couleurs.piste, overflow: 'hidden' },
   remplissage: { height: '100%', borderRadius: s(3), overflow: 'hidden' },
   reflet: { position: 'absolute', top: 0, bottom: 0, width: '35%', backgroundColor: 'rgba(255,255,255,0.35)' },
@@ -202,5 +201,5 @@ const styles = StyleSheet.create({
   paliers: { flexDirection: 'row' },
   palier: { color: couleurs.texteFaible, fontSize: s(10.5), fontWeight: '600', textAlign: 'center' },
   pied: { flexDirection: 'row', alignItems: 'center', gap: s(4) },
-  echeance: { flex: 1, fontSize: s(12), fontWeight: '600', lineHeight: s(16) },
+  echeance: { flex: 1, fontSize: s(11.5), fontWeight: '600', lineHeight: s(15) },
 });

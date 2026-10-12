@@ -95,7 +95,7 @@ export const tons: Record<Ton, { couleur: string; fond: string; liseret: string 
 
 /** Échelle typographique V2 : 5 niveaux, le gras réservé aux titres et aux chiffres clés. */
 export const texte = {
-  affiche: { fontSize: s(30), fontWeight: '700' as const, color: couleurs.texte, letterSpacing: s(-0.6), fontVariant: ['tabular-nums' as const] },
+  affiche: { fontSize: s(26), fontWeight: '700' as const, color: couleurs.texte, letterSpacing: s(-0.6), fontVariant: ['tabular-nums' as const] },
   titre: { fontSize: s(16), fontWeight: '700' as const, color: couleurs.texte, letterSpacing: s(-0.2) },
   corps: { fontSize: s(13), fontWeight: '500' as const, color: couleurs.texte, lineHeight: s(18) },
   legende: { fontSize: s(11.5), fontWeight: '500' as const, color: couleurs.texteAttenue, lineHeight: s(16) },

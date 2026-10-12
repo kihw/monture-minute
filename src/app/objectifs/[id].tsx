@@ -53,7 +53,7 @@ export default function Objectifs() {
         <>
           <BoutonPrincipal
             label="Nouveau cycle"
-            onPress={() => router.push(`/depart?mode=redemarrage&id=${id}`)}
+            onPress={() => router.push(`/depart?mode=cycle&id=${id}`)}
           />
           <BoutonContour label="Retour au menu" onPress={() => router.replace('/enclos')} />
         </>
