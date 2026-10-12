@@ -20,6 +20,10 @@ npm run publier -- patch    # ou minor / major
 Si la compilation échoue, la version reste locale ; le script indique comment l'annuler
 (`git tag -d vX.Y.Z` puis `git reset --hard HEAD~1`).
 
+**Repli sans la clé en local** : `npm version patch` puis `git push <distant> main --follow-tags`.
+La release ne contient alors pas d'APK, et le workflow le compile sur GitHub (environ 30 min)
+avant de créer la release avec les notes de `docs/notes/vX.Y.Z.md`.
+
 Préalables sur le PC : SDK Android (`ANDROID_HOME`, sinon `%LOCALAPPDATA%\Android\Sdk`), Java 17,
 GitHub CLI connectée (`gh auth login`) et la clé de signature (ci-dessous).
 

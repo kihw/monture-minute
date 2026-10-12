@@ -1,6 +1,7 @@
 # Release, déclenchée par un tag vX.Y.Z (voir docs/RELEASE.md) : vérifications → installateur
-# Windows → ajout à la release GitHub. L'APK Android est compilé et signé en local par
-# `npm run publier`, qui crée la release avec l'APK avant que ce workflow ne tourne.
+# Windows → ajout à la release GitHub. L'APK Android est normalement compilé et signé en local
+# par `npm run publier`, qui crée la release avec l'APK : il n'est alors pas recompilé ici. Si la
+# release n'a pas d'APK (tag poussé à la main), il est compilé ici en repli (~30 min).
 # Lancé à la main (workflow_dispatch), il compile seulement (Windows et un APK de contrôle),
 # sans rien publier ; sans clé de signature, l'APK de test est signé avec la clé de débogage.
 name: Release
@@ -36,11 +37,35 @@ jobs:
       - run: npx tsc --noEmit
       - run: npm test -- --ci
 
+  apk-local:
+    name: APK déjà publié ?
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    outputs:
+      present: ${{ steps.verif.outputs.present }}
+    steps:
+      # `npm run publier` crée la release juste après avoir poussé le tag : on lui laisse une minute.
+      - id: verif
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          for i in 1 2 3 4 5 6; do
+            if gh release view "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --json assets \
+                --jq '.assets[].name' 2>/dev/null | grep -qx 'MontureMinute-Android.apk'; then
+              echo "APK compilé en local déjà dans la release : pas de compilation ici."
+              echo "present=true" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "Pas d'APK dans la release : compilation de repli sur GitHub."
+          echo "present=false" >> "$GITHUB_OUTPUT"
+
   android:
-    name: APK Android (contrôle manuel)
-    # Les releases embarquent l'APK compilé en local : sur un tag, rien à compiler ici.
-    if: github.event_name == 'workflow_dispatch'
-    needs: verifier
+    name: APK Android
+    # Lancement manuel (contrôle), ou tag sans APK compilé en local (repli).
+    needs: [verifier, apk-local]
+    if: ${{ always() && needs.verifier.result == 'success' && (github.event_name == 'workflow_dispatch' || needs.apk-local.outputs.present == 'false') }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -113,10 +138,16 @@ jobs:
 
   publier:
     name: Release GitHub
-    if: startsWith(github.ref, 'refs/tags/')
-    needs: [windows]
+    needs: [apk-local, windows, android]
+    if: ${{ always() && startsWith(github.ref, 'refs/tags/') && needs.windows.result == 'success' && contains(fromJSON('["success","skipped"]'), needs.android.result) }}
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
+      # Release créée ici (repli) : ses notes viennent de docs/notes/vX.Y.Z.md s'il existe.
+      - name: Notes de version
+        run: |
+          f="docs/notes/${GITHUB_REF_NAME}.md"
+          if [ -f "$f" ]; then cp "$f" notes.md; else : > notes.md; fi
       - uses: actions/download-artifact@v4
         with:
           path: fichiers
@@ -126,8 +157,13 @@ jobs:
           # La release existe déjà (créée par `npm run publier` avec l'APK et les notes) : on n'y
           # ajoute que les fichiers Windows, sans toucher aux notes. Sinon, elle est créée ici.
           name: Monture Minute ${{ github.ref_name }}
+          # Notes reprises seulement si la release est créée ici, pour ne pas écraser celles de `npm run publier`.
+          body_path: ${{ needs.apk-local.outputs.present != 'true' && 'notes.md' || '' }}
           generate_release_notes: true
+          # L'APK n'est là qu'en cas de compilation de repli.
+          fail_on_unmatched_files: false
           files: |
+            fichiers/MontureMinute-Android.apk
             fichiers/MontureMinute-Setup.exe
             fichiers/MontureMinute-Setup.exe.blockmap
             fichiers/latest.yml
