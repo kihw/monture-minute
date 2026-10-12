@@ -122,6 +122,17 @@ export default function Reglages() {
       <Carte style={styles.groupe}>
         <Titre>Aide</Titre>
         <LigneReglage
+          icone="cursor-default-click-outline"
+          couleur={couleurs.accent}
+          titre="Revoir la visite guidée"
+          sousTitre="Quatre bulles sur l’écran d’un enclos : l’essentiel en une minute"
+          onPress={() => {
+            modifier({ visiteVue: false });
+            const premier = useEleveurStore.getState().ordre[0];
+            if (premier) router.push(`/enclos/${premier}`);
+          }}
+        />
+        <LigneReglage
           icone="school-outline"
           couleur={couleurs.accent}
           titre="Guide d’utilisation"

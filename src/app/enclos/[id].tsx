@@ -1,6 +1,6 @@
 import { router, Redirect, useLocalSearchParams } from 'expo-router';
-import { ReactNode, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { ReactNode, useRef, useState } from 'react';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import PopupCarburant from '../../components/ChoixCarburant';
 import { Confirmation, MenuActions } from '../../components/Popup';
@@ -19,7 +19,8 @@ import {
   IdentiteEnclos,
   SelecteurEnclos,
 } from '../../components/v2/enclos';
-import { SetupEtape } from '../../components/v2/setup';
+import { ConsigneSetup, SetupEtape } from '../../components/v2/setup';
+import VisiteGuidee, { EtapeVisite } from '../../components/v2/visite';
 import { conseil as calculerConseil, etatJauge } from '../../engine/descente';
 import { niveauLot, prochaineEtape, remplissageHabituel } from '../../engine/parcours';
 import { carburantPropose, vueEnclos } from '../../engine/statut';
@@ -52,6 +53,14 @@ export default function DetailEnclos() {
   const [selection, setSelection] = useState<{ type: JaugeType; valeur: number } | null>(null);
   // Feuille « Recharger ? » ouverte sur une jauge, et saisie libre d'une recharge ou d'une correction.
   const [recharge, setRecharge] = useState<JaugeType | null>(null);
+  // Visite guidée de la V2, proposée une fois sur l'écran d'enclos.
+  const visiteVue = useEleveurStore((s) => s.reglages.visiteVue ?? false);
+  const defilement = useRef<ScrollView>(null);
+  const decalage = useRef(0);
+  const refHeros = useRef<View>(null);
+  const refJauges = useRef<View>(null);
+  const refMontures = useRef<View>(null);
+  const refBarre = useRef<View>(null);
   const [saisie, setSaisie] = useState<{ mode: 'recharge' | 'correction'; type: JaugeType; valeur: number } | null>(null);
 
   if (!enclos) return <Redirect href="/enclos" />;
@@ -112,7 +121,7 @@ export default function DetailEnclos() {
 
   const blocSetup =
     preparation && prevue ? (
-      <>
+      <View ref={refJauges} collapsable={false} style={{ gap: s(8) }}>
         <SetupEtape
           jauges={preparation.etape.jauges}
           reste={preparation.reste}
@@ -129,7 +138,7 @@ export default function DetailEnclos() {
             Pas assez de carburant : {prevue.vides.map((j) => INFO_JAUGE[j].nom).join(', ')} se videra avant la fin. Mets-en davantage.
           </Text>
         )}
-      </>
+      </View>
     ) : null;
 
   const nomJ = (j: JaugeType) => INFO_JAUGE[j].nom;
@@ -166,7 +175,7 @@ export default function DetailEnclos() {
             <Text style={styles.prepare}>
               Prépare l’étape {vue.numeroEtape + 1} · {titreClair(suivante.titre)}
             </Text>
-            <Text style={texte.legende}>Active en jeu ces jauges avec ce carburant :</Text>
+            <ConsigneSetup texte="Active en jeu ces jauges avec ce carburant :" />
             {blocSetup}
             <ActionsHeros
               label={`Jauges activées · lancer l’étape ${vue.numeroEtape + 1}`}
@@ -229,31 +238,76 @@ export default function DetailEnclos() {
   } else if (etape) {
     heros = (
       <Heros cle="attente" ton="action" icone="gesture-tap" surtitre={`À faire · étape ${vue.numeroEtape}`} titre="Active ces jauges en jeu">
-        <Text style={texte.legende}>Avec ce carburant (tes habitudes, touche pour changer) :</Text>
+        <ConsigneSetup texte="Avec ce carburant (tes habitudes, touche pour changer) :" />
         {blocSetup}
         <ActionsHeros label="Jauges activées · lancer" onPress={lancer} />
       </Heros>
     );
   }
 
+  const etapesVisite: EtapeVisite[] = [
+    {
+      cible: refHeros,
+      titre: 'Tout commence ici',
+      texte: 'Cette carte te dit où en est l’enclos et la seule chose à faire maintenant : lancer une étape, recharger une jauge, passer à la suite. Sa couleur aussi : or, il y a une action ; vert, tout roule ; rouge, c’est bloqué.',
+    },
+    ...(preparation || (enCours && (vue.statut === 'en_cours' || vide))
+      ? [
+          {
+            cible: refJauges,
+            titre: preparation ? 'Le carburant, prérempli' : 'Tes jauges en direct',
+            texte: preparation
+              ? 'Pour chaque jauge, l’app propose le carburant d’après tes habitudes : telle quelle, remplie, ou un autre niveau. Active-les en jeu, puis « Jauges activées » lance le minuteur.'
+              : 'Chaque jauge descend en direct, avec sa vitesse et sa prochaine échéance. Touche-la pour voir les recharges utiles, appui long pour la recaler sur le jeu.',
+          },
+        ]
+      : []),
+    {
+      cible: refMontures,
+      titre: 'Tes montures',
+      texte: 'La règle montre la sérénité du lot et ce qui progresse à cet endroit. Les « ? » à côté des titres expliquent chaque notion en deux phrases.',
+    },
+    {
+      cible: refBarre,
+      titre: 'Tout le reste',
+      texte: '« Mes enclos » résume tous tes enclos, avec l’onglet Alertes pour ce qui arrive. « Options » sert à ajuster selon le jeu, redémarrer ou terminer une étape.',
+    },
+  ];
+
   const cible = etape && etape.sereniteCible !== etape.sereniteDepart ? etape.sereniteCible : undefined;
 
   return (
-    <Ecran entete={<BarreHaut onOptions={() => setPopup('menu')} />}>
+    <Ecran
+      entete={
+        <View ref={refBarre} collapsable={false}>
+          <BarreHaut onOptions={() => setPopup('menu')} />
+        </View>
+      }
+      scrollRef={defilement}
+      onScroll={(e) => {
+        decalage.current = e.nativeEvent.contentOffset.y;
+      }}
+    >
       <IdentiteEnclos enclos={enclos} vue={vue} index={index} />
       {liste.length > 1 && <SelecteurEnclos enclos={liste} vues={vues} actifId={id} onAjouter={() => router.push('/depart?mode=ajout')} />}
 
-      {heros}
+      <View ref={refHeros} collapsable={false}>
+        {heros}
+      </View>
 
       {enCours && (vue.statut === 'en_cours' || vide) && (
-        <Section titre="Jauges actives" aide={AIDE_JAUGES}>
-          <JaugesActives enCours={enCours} maintenant={maintenant} onRecharger={setRecharge} onCorriger={(j) => ouvrirSaisie('correction', j)} />
-        </Section>
+        <View ref={refJauges} collapsable={false}>
+          <Section titre="Jauges actives" aide={AIDE_JAUGES}>
+            <JaugesActives enCours={enCours} maintenant={maintenant} onRecharger={setRecharge} onCorriger={(j) => ouvrirSaisie('correction', j)} />
+          </Section>
+        </View>
       )}
 
-      <Section titre="Tes montures" aide={AIDE_SERENITE}>
-        <CarteMontures lot={vue.lot} ctx={ctx} cible={cible} />
-      </Section>
+      <View ref={refMontures} collapsable={false}>
+        <Section titre="Tes montures" aide={AIDE_SERENITE}>
+          <CarteMontures lot={vue.lot} ctx={ctx} cible={cible} />
+        </Section>
+      </View>
 
       <Section
         titre="Parcours"
@@ -374,6 +428,14 @@ export default function DetailEnclos() {
       />
 
 
+
+      <VisiteGuidee
+        visible={!visiteVue && popup === null && recharge === null && saisie === null && selection === null}
+        etapes={etapesVisite}
+        scrollRef={defilement}
+        decalage={decalage}
+        onFin={() => store.modifierReglages({ visiteVue: true })}
+      />
 
       <Confirmation
         visible={popup === 'suppression'}

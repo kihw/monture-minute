@@ -18,8 +18,9 @@ export default function Configuration() {
       onValider={(depart) => {
         configurer(depart);
         if (router.canDismiss()) router.dismissAll();
-        // Première fois : le guide de prise en main, puis la liste des enclos.
-        router.replace(reglages.guideVu ? '/enclos' : '/guide?ensuite=/enclos');
+        // Première fois : directement l'enclos, où la visite guidée montre l'essentiel sur l'écran réel.
+        const premier = useEleveurStore.getState().ordre[0];
+        router.replace(premier ? `/enclos/${premier}` : '/enclos');
       }}
     />
   );

@@ -10,6 +10,7 @@ import { s } from '../../echelle';
 import { couleurs, grille, rayon } from '../../theme';
 import { Carburant, INFO_JAUGE, JaugeType } from '../../types/domain';
 import { formatPoints } from '../../utils/format';
+import { Aide, P } from './base';
 
 function nomTier(niveau: number): string {
   return TIERS_CARBURANT.find((t) => niveau > t.seuil && niveau <= t.plafond)?.nom ?? 'Vide';
@@ -37,6 +38,21 @@ function Choix({ libelle, valeur, actif, couleur, onPress }: { libelle: string; 
         </Text>
       )}
     </Pressable>
+  );
+}
+
+/** Consigne de la préparation, avec son aide « ? ». */
+export function ConsigneSetup({ texte: consigne }: { texte: string }) {
+  return (
+    <View style={styles.consigne}>
+      <Text style={styles.consigneTexte}>{consigne}</Text>
+      <Aide titre="Le carburant de l’étape">
+        <P>« Telle quelle » : la jauge garde ce qui restait de l’étape précédente, tu n’y touches pas en jeu.</P>
+        <P>« Remplie à » : tu la remplis jusqu’à ton niveau habituel pour cette jauge.</P>
+        <P>« Autre » : un objet (Élixir, Potion, Philtre, Extrait) ou un niveau précis lu en jeu.</P>
+        <P>L’app retient ce que tu choisis pour chaque jauge et te le repropose la fois suivante. Plus il y a de carburant, plus la jauge va vite.</P>
+      </Aide>
+    </View>
   );
 }
 
@@ -110,6 +126,8 @@ export function SetupEtape({
 
 const styles = StyleSheet.create({
   liste: { gap: grille.x2 },
+  consigne: { flexDirection: 'row', alignItems: 'center', gap: s(6) },
+  consigneTexte: { flex: 1, color: couleurs.texteAttenue, fontSize: s(11.5), fontWeight: '500', lineHeight: s(16) },
   ligne: {
     gap: grille.x2,
     padding: grille.x3,

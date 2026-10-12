@@ -172,6 +172,8 @@ export interface Reglages {
   anticipationMin: number;
   /** Le guide de prise en main a été parcouru (il n'est plus proposé d'office). */
   guideVu: boolean;
+  /** La visite guidée de l'écran d'enclos a été faite (V2). */
+  visiteVue?: boolean;
   /** App Windows : fenêtre toujours au premier plan (par-dessus le jeu). */
   premierPlan: boolean;
   notifications: boolean;

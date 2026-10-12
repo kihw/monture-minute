@@ -4,8 +4,8 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
-import { ReactNode } from 'react';
-import { Pressable, ScrollView, StyleProp, StyleSheet, Switch, Text, View, ViewStyle } from 'react-native';
+import { ReactNode, RefObject } from 'react';
+import { NativeScrollEvent, NativeSyntheticEvent, Pressable, ScrollView, StyleProp, StyleSheet, Switch, Text, View, ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Defs, RadialGradient, Rect, Stop } from 'react-native-svg';
 
@@ -47,11 +47,16 @@ export function Ecran({
   children,
   basDePage,
   entete,
+  scrollRef,
+  onScroll,
 }: {
   children: ReactNode;
   basDePage?: ReactNode;
   /** Barre d'en-tête fixe, hors du défilement. */
   entete?: ReactNode;
+  /** Accès au défilement (visite guidée : amener un élément à l'écran). */
+  scrollRef?: RefObject<ScrollView | null>;
+  onScroll?: (e: NativeSyntheticEvent<NativeScrollEvent>) => void;
 }) {
   const insets = useSafeAreaInsets();
   const padBas = basDePage ? 0 : Math.max(insets.bottom, esp.lg);
@@ -61,6 +66,9 @@ export function Ecran({
       <View style={[styles.colonne, { paddingTop: entete ? insets.top : 0 }]}>
         {entete}
         <ScrollView
+          ref={scrollRef}
+          onScroll={onScroll}
+          scrollEventThrottle={32}
           contentContainerStyle={[
             styles.contenu,
             { paddingTop: (entete ? 0 : insets.top) + esp.lg, paddingBottom: padBas + esp.lg },

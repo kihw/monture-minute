@@ -1,0 +1,176 @@
+// Visite guidée (V2, docs/PLAN-V2.md §4.6) : quelques étapes superposées à l'écran réel. Chaque
+// étape amène son élément à l'écran, assombrit tout le reste, l'entoure d'or et l'explique dans
+// une bulle. Remplace la lecture d'un long guide avant de commencer.
+
+import { RefObject, useCallback, useEffect, useMemo, useState } from 'react';
+import { Animated, Easing, Modal, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+
+import { s } from '../../echelle';
+import { couleurs, duree, grille, rayon, texte } from '../../theme';
+import { BoutonPrincipal } from '../ui';
+import { Lien } from './base';
+
+export interface EtapeVisite {
+  cible: RefObject<View | null>;
+  titre: string;
+  texte: string;
+}
+
+interface Cadre {
+  x: number;
+  y: number;
+  l: number;
+  h: number;
+}
+
+const MARGE = s(6);
+const VOILE = 'rgba(5,4,10,0.8)';
+
+function mesurer(v: View | null): Promise<Cadre | null> {
+  return new Promise((ok) => {
+    if (!v) return ok(null);
+    v.measureInWindow((x, y, l, h) => ok(l > 0 && h > 0 ? { x, y, l, h } : null));
+  });
+}
+
+const attendre = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+export default function VisiteGuidee({
+  visible,
+  etapes,
+  scrollRef,
+  decalage,
+  onFin,
+}: {
+  visible: boolean;
+  etapes: EtapeVisite[];
+  scrollRef: RefObject<ScrollView | null>;
+  /** Défilement actuel de l'écran (pour amener un élément hors champ à l'écran). */
+  decalage: RefObject<number>;
+  onFin: () => void;
+}) {
+  const { width, height } = useWindowDimensions();
+  const [index, setIndex] = useState(0);
+  const [cadre, setCadre] = useState<Cadre | null>(null);
+  const apparition = useMemo(() => new Animated.Value(0), []);
+  const etape = etapes[index];
+
+  const placer = useCallback(async () => {
+    if (!etape) return;
+    let c = await mesurer(etape.cible.current);
+    // Hors champ (ou trop bas pour laisser la place à la bulle) : on fait défiler jusqu'à lui.
+    const horsChamp = (k: Cadre) => k.y < s(60) || k.y + Math.min(k.h, height * 0.45) > height - s(170);
+    if (c && horsChamp(c)) {
+      const vise = Math.max(0, (decalage.current ?? 0) + c.y - s(110));
+      scrollRef.current?.scrollTo({ y: vise, animated: true });
+      await attendre(420);
+      c = await mesurer(etape.cible.current);
+      // Défilement doux interrompu ou trop lent : on y va directement.
+      if (c && horsChamp(c)) {
+        scrollRef.current?.scrollTo({ y: vise, animated: false });
+        await attendre(60);
+        c = await mesurer(etape.cible.current);
+      }
+    }
+    setCadre(c);
+    apparition.setValue(0);
+    Animated.timing(apparition, { toValue: 1, duration: duree.base, easing: Easing.out(Easing.cubic), useNativeDriver: true }).start();
+  }, [etape, height, scrollRef, decalage, apparition]);
+
+  useEffect(() => {
+    if (!visible) return;
+    // Laisse l'écran se poser (premier rendu, fin du défilement) avant de mesurer.
+    const minuterie = setTimeout(placer, 250);
+    return () => clearTimeout(minuterie);
+  }, [visible, placer]);
+
+  if (!visible || !etape) return null;
+  const derniere = index === etapes.length - 1;
+  // Cadre autour de l'élément, gardé dans l'écran ; un élément très haut n'est entouré que sur sa partie visible.
+  const trou = cadre && (() => {
+    const x = Math.max(2, cadre.x - MARGE);
+    const y = Math.max(2, cadre.y - MARGE);
+    return {
+      x,
+      y,
+      l: Math.min(width - 2, cadre.x + cadre.l + MARGE) - x,
+      h: Math.min(cadre.y + cadre.h + MARGE, y + height * 0.5) - y,
+    };
+  })();
+  const bulleEnBas = !trou || trou.y + trou.h + s(190) < height;
+
+  return (
+    <Modal visible transparent animationType="none" statusBarTranslucent onRequestClose={onFin}>
+      <View style={StyleSheet.absoluteFill}>
+        {trou ? (
+          <>
+            <View style={[styles.voile, { top: 0, left: 0, right: 0, height: Math.max(0, trou.y) }]} />
+            <View style={[styles.voile, { top: trou.y + trou.h, left: 0, right: 0, bottom: 0 }]} />
+            <View style={[styles.voile, { top: trou.y, left: 0, width: Math.max(0, trou.x), height: trou.h }]} />
+            <View style={[styles.voile, { top: trou.y, left: trou.x + trou.l, right: 0, height: trou.h }]} />
+            <Animated.View pointerEvents="none" style={[styles.cadre, { top: trou.y, left: trou.x, width: trou.l, height: trou.h, opacity: apparition }]} />
+          </>
+        ) : (
+          <View style={[styles.voile, StyleSheet.absoluteFill]} />
+        )}
+
+        <Animated.View
+          style={[
+            styles.bulle,
+            bulleEnBas ? { top: trou ? trou.y + trou.h + s(12) : height * 0.35 } : { bottom: height - (trou?.y ?? 0) + s(12) },
+            {
+              opacity: apparition,
+              transform: [{ translateY: apparition.interpolate({ inputRange: [0, 1], outputRange: [bulleEnBas ? s(8) : -s(8), 0] }) }],
+            },
+          ]}
+        >
+          <View style={styles.bulleTete}>
+            <Text style={styles.compteur}>
+              {index + 1} / {etapes.length}
+            </Text>
+            {!derniere && <Lien label="Passer la visite" onPress={onFin} />}
+          </View>
+          <Text style={texte.titre}>{etape.titre}</Text>
+          <Text style={texte.corps}>{etape.texte}</Text>
+          <View style={styles.points}>
+            {etapes.map((_, i) => (
+              <View key={i} style={[styles.point, i === index && styles.pointActif]} />
+            ))}
+          </View>
+          <BoutonPrincipal
+            label={derniere ? 'C’est compris' : 'Suivant'}
+            icone={derniere ? 'check' : 'arrow-right'}
+            onPress={() => {
+              if (derniere) return onFin();
+              setCadre(null);
+              setIndex(index + 1);
+            }}
+          />
+        </Animated.View>
+      </View>
+    </Modal>
+  );
+}
+
+const styles = StyleSheet.create({
+  voile: { position: 'absolute', backgroundColor: VOILE },
+  cadre: { position: 'absolute', borderRadius: rayon.lg, borderWidth: 2, borderColor: couleurs.accent },
+  bulle: {
+    position: 'absolute',
+    left: grille.x4,
+    right: grille.x4,
+    maxWidth: s(420),
+    alignSelf: 'center',
+    gap: grille.x2,
+    padding: grille.x4,
+    borderRadius: rayon.xl,
+    backgroundColor: couleurs.carteClaire,
+    borderWidth: 1,
+    borderColor: 'rgba(242,201,76,0.45)',
+  },
+  bulleTete: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  compteur: { color: couleurs.accent, fontSize: s(11.5), fontWeight: '700' },
+  points: { flexDirection: 'row', gap: s(5), alignSelf: 'center' },
+  point: { width: s(6), height: s(6), borderRadius: s(3), backgroundColor: couleurs.liseretVif },
+  pointActif: { width: s(16), backgroundColor: couleurs.accent },
+});

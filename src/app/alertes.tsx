@@ -2,7 +2,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { Ecran } from '../components/ui';
-import { Lien, Section } from '../components/v2/base';
+import { Aide, Lien, P, Section } from '../components/v2/base';
 import { BarreOnglets, EnTeteOnglet, LigneAlerte } from '../components/v2/onglets';
 import { useTableau } from '../hooks/useTableau';
 import { useEleveurStore } from '../store/useStore';
@@ -21,6 +21,13 @@ export default function Alertes() {
     <Ecran basDePage={<BarreOnglets actif="alertes" pastilles={{ alertes: nbAFaire }} />}>
       <EnTeteOnglet
         titre="Alertes"
+        droite={
+          <Aide titre="Les alertes">
+            <P>« À faire maintenant » : une étape à lancer ou à valider, une jauge vide, une recharge qui fait gagner du temps.</P>
+            <P>« À venir » : quand une jauge ralentira, se videra, et quand chaque étape finira, pour tous tes enclos.</P>
+            <P>Les notifications te préviennent un peu avant (réglable dans Réglages › Alertes), même app fermée sur Android.</P>
+          </Aide>
+        }
         resume={
           <Text style={texte.legende}>
             {aFaire.length > 0
