@@ -31,9 +31,10 @@
       <p class="sur-titre">DOFUS 3.7 · Android &amp; Windows · gratuit</p>
       <h1>Tes enclos tournent.<br>L’app s’occupe du reste.</h1>
       <p class="accroche">
-        Monture Minute guide chaque enclos étape par étape : quelles jauges activer, combien de carburant
-        mettre, quand revenir. Tu reçois une notification à chaque palier et à chaque fin d’étape,
-        jusqu’à des montures fécondes au niveau voulu.
+        Dragodindes, muldos ou volkornes : Monture Minute guide chaque enclos étape par étape. Une
+        seule phrase te dit quoi faire maintenant (lancer, recharger, passer à la suite), le carburant
+        est prérempli d’après tes habitudes, et une notification arrive au bon moment, jusqu’à des
+        montures fécondables au niveau voulu.
       </p>
       <div class="actions">
         <a class="bouton bouton-or" href="https://github.com/kihw/monture-minute/releases/latest/download/MontureMinute-Setup.exe">
@@ -49,33 +50,32 @@
     </div>
 
     <div class="fenetre" aria-label="Aperçu de l'app">
-      <div class="fenetre-barre">
-        <span class="onglet actif">E1 <b>0:23</b></span>
-        <span class="onglet alerte">E2 <i></i></span>
-        <span class="onglet">E3</span>
+      <div class="fenetre-barre v2">
+        <span class="lien">‹ Mes enclos</span>
+        <span class="options">⋯ Options</span>
       </div>
       <div class="fenetre-corps">
-        <div class="ligne-etape">
+        <div class="identite">
           <span class="avatar"><img src="icon.png" alt=""></span>
-          <span class="etape"><b>Enclos 1</b> · 2/4 Cap +500<small>Sérénité −3 120 → +500 · fin 18:45</small></span>
-          <span class="minuteur">0:23:41</span>
+          <span><b>Enclos 1</b><small>Étape 2 sur 4 · Maturité et Amour</small></span>
         </div>
-        <div class="progres"><span style="width: 22%"></span></div>
-        <div class="jauges">
-          <div class="jauge"><small>—</small><span class="tube"></span><i style="--c:#c35be0">−</i></div>
-          <div class="jauge active"><small>×30</small><span class="tube"><span style="height:84%; --c:#da70f0"></span></span><i style="--c:#da70f0">+</i></div>
-          <div class="sep"></div>
-          <div class="jauge"><small>×10</small><span class="tube"><span style="height:25%; --c:#f4c331; opacity:.55"></span></span><i style="--c:#f4c331">⚡</i></div>
-          <div class="jauge"><small>—</small><span class="tube"></span><i style="--c:#3ec4e8">●</i></div>
-          <div class="jauge"><small>—</small><span class="tube"></span><i style="--c:#f27474">♥</i></div>
-          <div class="sep"></div>
-          <div class="jauge active"><small>×20</small><span class="tube"><span style="height:60%; --c:#c9e83d"></span></span><i style="--c:#c9e83d">XP</i></div>
+        <div class="heros">
+          <p class="etat">✓ Tout roule, rien à faire</p>
+          <p class="grand">1 h 12</p>
+          <p class="petit">Fin de l’étape à 18:45</p>
+          <div class="progres"><span style="width: 38%"></span></div>
         </div>
-        <div class="stats">
-          <span><small>Niveau</small><b>48/100</b></span>
-          <span><small>Endurance</small><b>20k ✓</b></span>
-          <span><small>Maturité</small><b>0</b></span>
-          <span><small>Amour</small><b>0</b></span>
+        <div class="carte-jauge">
+          <p><b style="--c:#3ec4e8">Maturité</b><em style="--c:#3ec4e8">vitesse ×30</em></p>
+          <p class="niveau">164 200 <small>/ 200 000</small></p>
+          <div class="barre"><span style="width:82%; --c:#3ec4e8"></span></div>
+          <p class="petit">Ralentit à ×20 dans 54 min</p>
+        </div>
+        <div class="carte-jauge">
+          <p><b style="--c:#f27474">Amour</b><em style="--c:#f27474">vitesse ×40</em></p>
+          <p class="niveau">191 500 <small>/ 200 000</small></p>
+          <div class="barre"><span style="width:96%; --c:#f27474"></span></div>
+          <p class="petit">Objectif atteint dans 1 h 12, à 18:45</p>
         </div>
       </div>
     </div>
@@ -85,20 +85,28 @@
     <h2>Pensé pour jouer, pas pour remplir des tableaux</h2>
     <div class="grille">
       <article>
+        <h3>Toujours su quoi faire</h3>
+        <p>Chaque enclos a une carte qui dit son état en clair : « Tout roule », « Recharge conseillée, 23 min gagnées », « Étape finie, lance la suivante ». Un seul bouton, la bonne action.</p>
+      </article>
+      <article>
         <h3>Un parcours par enclos</h3>
-        <p>Indique la sérénité de départ et le niveau visé : l’app calcule l’ordre optimal des étapes (unification, endurance, maturité, amour, XP) et les jauges à poser à chaque fois.</p>
+        <p>Un assistant en trois écrans (monture, sérénité, niveaux) calcule l’ordre optimal des étapes et leur durée avant même de commencer.</p>
       </article>
       <article>
         <h3>Le carburant simulé comme en jeu</h3>
-        <p>Jauges de 200 000, paliers à 80k, 140k et 180k : la durée de chaque étape tient compte du rendement qui baisse quand la jauge se vide.</p>
+        <p>Jauges de 200 000, vitesse ×40 à ×10 selon l’Élixir, la Potion, le Philtre ou l’Extrait : chaque jauge descend en direct, et l’app ne conseille une recharge que si elle fait vraiment gagner du temps.</p>
+      </article>
+      <article>
+        <h3>Entre deux étapes, un geste</h3>
+        <p>L’app retient ce que tu fais de chaque jauge (laissée telle quelle ou remplie) et prépare l’étape suivante : « Jauges activées » valide et relance d’un coup.</p>
       </article>
       <article>
         <h3>Notifications au bon moment</h3>
         <p>Changement de palier, jauge vide, étape terminée : tu es prévenu, même l’app fermée sur Android et en arrière-plan sur Windows.</p>
       </article>
       <article>
-        <h3>Ultra compact</h3>
-        <p>Une fenêtre de 400 px qui tient à côté du jeu, avec l’option « toujours au premier plan » sur Windows. Tout se modifie dans des popups, sans quitter l’écran.</p>
+        <h3>Compact et clair</h3>
+        <p>Une fenêtre de 400 px qui tient à côté du jeu (« toujours au premier plan » sur Windows), des onglets Enclos, Alertes et Réglages, une visite guidée et des « ? » pour chaque notion.</p>
       </article>
       <article>
         <h3>Mises à jour automatiques</h3>
@@ -142,7 +150,7 @@
 </main>
 
 <footer>
-  <p>Monture Minute est un projet de fan, non affilié à Ankama. DOFUS et les images de dragodindes sont la propriété d’Ankama Games.</p>
+  <p>Monture Minute est un projet de fan, non affilié à Ankama. DOFUS et les images de montures sont la propriété d’Ankama Games.</p>
   <p><a href="https://github.com/kihw/monture-minute">Code source sur GitHub</a> · licence MIT</p>
 </footer>
 

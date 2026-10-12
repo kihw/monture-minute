@@ -138,7 +138,7 @@ const styles = StyleSheet.create({
   },
   tete: { flexDirection: 'row', alignItems: 'center', gap: s(8) },
   pastille: { width: s(24), height: s(24), borderRadius: s(8), alignItems: 'center', justifyContent: 'center' },
-  pastilleTexte: { fontSize: s(9), fontWeight: '900' },
+  pastilleTexte: { fontSize: s(10), fontWeight: '900' },
   nom: { flex: 1, color: couleurs.texte, fontSize: s(13.5), fontWeight: '700' },
   valeur: { color: couleurs.texte, fontSize: s(14), fontWeight: '700', fontVariant: ['tabular-nums'] },
   tier: { color: couleurs.texteFaible, fontSize: s(11), fontWeight: '600' },

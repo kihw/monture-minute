@@ -18,7 +18,8 @@ export const couleurs = {
 
   texte: '#f3f1fb',
   texteAttenue: '#9d99bd',
-  texteFaible: '#6c6890',
+  // Éclairci pour un contraste ≥ 4,5:1 sur le fond (WCAG AA).
+  texteFaible: '#8a86ad',
 
   // Or de DOFUS : contour des jauges activées, actions principales.
   accent: '#f2c94c',

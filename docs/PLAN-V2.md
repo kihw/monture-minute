@@ -118,7 +118,7 @@ Sous le héros, dans l’ordre :
 | **3. Assistant de création** ✅ | 3 écrans + récapitulatif du parcours | création / redémarrage testés |
 | **4. Recharges & carburant** ✅ | feuille recharge en cartes, saisie par objets | tests du moteur inchangés |
 | **5. Aide** ✅ | visite guidée, bulles « ? », onglet Alertes | parcours de premier lancement |
-| **6. Finitions** | réglages, mouvements, accessibilité, site vitrine, guide mis à jour | build Android + Windows, release v3.0.0 |
+| **6. Finitions** (code fait, publication à faire) | réglages, mouvements, accessibilité, site vitrine, guide mis à jour | build Android + Windows, release v3.0.0 |
 
 Le moteur (`src/engine/`), le store et les données ne changent pas : la refonte est purement visuelle,
 et les 34 tests garantissent que les calculs ne bougent pas.

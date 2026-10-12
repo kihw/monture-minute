@@ -260,5 +260,5 @@ const styles = StyleSheet.create({
   chiffreValeur: { color: couleurs.texte, fontSize: s(14), fontWeight: '700', fontVariant: ['tabular-nums'] },
   courbe: { gap: s(3) },
   axe: { flexDirection: 'row', justifyContent: 'space-between' },
-  axeTexte: { color: couleurs.texteFaible, fontSize: s(9.5), fontWeight: '700' },
+  axeTexte: { color: couleurs.texteFaible, fontSize: s(10.5), fontWeight: '700' },
 });

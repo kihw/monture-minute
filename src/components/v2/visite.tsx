@@ -6,6 +6,7 @@ import { RefObject, useCallback, useEffect, useMemo, useState } from 'react';
 import { Animated, Easing, Modal, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 
 import { s } from '../../echelle';
+import { useMouvementReduit } from '../../hooks/useMouvementReduit';
 import { couleurs, duree, grille, rayon, texte } from '../../theme';
 import { BoutonPrincipal } from '../ui';
 import { Lien } from './base';
@@ -53,6 +54,7 @@ export default function VisiteGuidee({
   const [index, setIndex] = useState(0);
   const [cadre, setCadre] = useState<Cadre | null>(null);
   const apparition = useMemo(() => new Animated.Value(0), []);
+  const reduit = useMouvementReduit();
   const etape = etapes[index];
 
   const placer = useCallback(async () => {
@@ -62,8 +64,8 @@ export default function VisiteGuidee({
     const horsChamp = (k: Cadre) => k.y < s(60) || k.y + Math.min(k.h, height * 0.45) > height - s(170);
     if (c && horsChamp(c)) {
       const vise = Math.max(0, (decalage.current ?? 0) + c.y - s(110));
-      scrollRef.current?.scrollTo({ y: vise, animated: true });
-      await attendre(420);
+      scrollRef.current?.scrollTo({ y: vise, animated: !reduit });
+      await attendre(reduit ? 60 : 420);
       c = await mesurer(etape.cible.current);
       // Défilement doux interrompu ou trop lent : on y va directement.
       if (c && horsChamp(c)) {
@@ -73,9 +75,10 @@ export default function VisiteGuidee({
       }
     }
     setCadre(c);
+    if (reduit) return apparition.setValue(1);
     apparition.setValue(0);
     Animated.timing(apparition, { toValue: 1, duration: duree.base, easing: Easing.out(Easing.cubic), useNativeDriver: true }).start();
-  }, [etape, height, scrollRef, decalage, apparition]);
+  }, [etape, height, scrollRef, decalage, apparition, reduit]);
 
   useEffect(() => {
     if (!visible) return;

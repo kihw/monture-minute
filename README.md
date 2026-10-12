@@ -11,11 +11,17 @@ niveau voulu. Ultra compacte, elle tient à côté du jeu.
 
 ## Fonctionnement
 
-1. Tu crées un enclos avec la sérénité de départ du lot, son niveau actuel et le niveau visé.
-2. L'app calcule le parcours optimal (unification, endurance, maturité, amour, XP).
-3. À chaque étape, active en jeu les jauges qui clignotent, indique le carburant mis, et le timer
-   démarre. Le carburant est simulé comme en jeu (jauges de 200 000, paliers 80k / 140k / 180k).
-4. Une notification arrive à chaque changement de palier, jauge vide et fin d'étape.
+1. Un assistant en trois écrans crée l'enclos : la monture, la sérénité du lot, les niveaux, avec
+   le parcours prévu (unification, endurance, maturité, amour, XP) et sa durée.
+2. Sur l'écran de l'enclos, une carte dit l'état en clair et la seule chose à faire maintenant.
+3. Pour lancer une étape, le carburant de chaque jauge est prérempli d'après tes habitudes :
+   active les jauges en jeu, puis « Jauges activées ». Le carburant est simulé comme en jeu
+   (jauges de 200 000, vitesse ×40 à ×10) et descend en direct ; l'app conseille une recharge
+   seulement quand elle fait gagner du temps.
+4. Une notification arrive à chaque baisse de vitesse, jauge vide et fin d'étape ; l'onglet
+   Alertes liste tout ce qui arrive. En fin d'étape, un geste valide et lance la suivante.
+
+Au premier lancement, une visite guidée de quatre bulles montre l'essentiel sur l'écran réel.
 
 ## Développement
 
@@ -26,7 +32,8 @@ npm run verifier       # lint + types + tests
 npm run bureau:demarrer  # lance la version Windows (Electron) en local
 ```
 
-Structure, choix techniques et feuille de route : [docs/PLAN.md](docs/PLAN.md).
+Structure, choix techniques et feuille de route : [docs/PLAN.md](docs/PLAN.md) ; refonte V2 :
+[docs/PLAN-V2.md](docs/PLAN-V2.md).
 Publier une version : [docs/RELEASE.md](docs/RELEASE.md).
 
 ## Licence

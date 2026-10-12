@@ -381,7 +381,7 @@ const styles = StyleSheet.create({
   repere: { position: 'absolute', top: -s(3), bottom: -s(3), width: s(3), marginLeft: -s(1.5), borderRadius: s(2), backgroundColor: '#ffffff' },
   repereCible: { width: s(2), marginLeft: -s(1), backgroundColor: couleurs.accent, opacity: 0.8 },
   regleEchelle: { flexDirection: 'row', justifyContent: 'space-between', marginLeft: s(62) + grille.x2 },
-  regleGraduation: { color: couleurs.texteFaible, fontSize: s(9.5), fontWeight: '600' },
+  regleGraduation: { color: couleurs.texteFaible, fontSize: s(10.5), fontWeight: '600' },
   separateur: { height: 1, backgroundColor: couleurs.liseret, marginVertical: s(2) },
   stat: { flexDirection: 'row', alignItems: 'center', gap: grille.x2 },
   statNom: { width: s(62), color: couleurs.texteAttenue, fontSize: s(11.5), fontWeight: '600' },

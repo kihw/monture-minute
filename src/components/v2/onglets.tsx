@@ -61,7 +61,9 @@ export function EnTeteOnglet({ titre, resume, droite }: { titre: string; resume?
   return (
     <View style={styles.entete}>
       <View style={styles.enteteLigne}>
-        <Text style={styles.enteteTitre}>{titre}</Text>
+        <Text style={styles.enteteTitre} accessibilityRole="header">
+          {titre}
+        </Text>
         {droite}
       </View>
       {resume}
@@ -247,7 +249,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  pastilleTexte: { color: '#2a1603', fontSize: s(10), fontWeight: '800' },
+  pastilleTexte: { color: '#2a1603', fontSize: s(10.5), fontWeight: '800' },
   entete: { gap: s(4), marginBottom: grille.x1 },
   enteteLigne: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   enteteTitre: { color: couleurs.texte, fontSize: s(24), fontWeight: '700', letterSpacing: s(-0.5) },

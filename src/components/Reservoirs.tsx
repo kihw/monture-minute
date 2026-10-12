@@ -189,7 +189,7 @@ const styles = StyleSheet.create({
   },
   entete: { flexDirection: 'row', alignItems: 'center', gap: s(8) },
   pastille: { width: s(24), height: s(24), borderRadius: s(8), alignItems: 'center', justifyContent: 'center' },
-  pastilleTexte: { fontSize: s(9), fontWeight: '900' },
+  pastilleTexte: { fontSize: s(10), fontWeight: '900' },
   nom: { color: couleurs.texte, fontSize: s(13.5), fontWeight: '700', flex: 1 },
   vitesse: { paddingHorizontal: s(7), paddingVertical: s(2), borderRadius: rayon.pill },
   vitesseTexte: { fontSize: s(11), fontWeight: '700', fontVariant: ['tabular-nums'] },
@@ -200,7 +200,7 @@ const styles = StyleSheet.create({
   reflet: { position: 'absolute', top: 0, bottom: 0, width: '35%', backgroundColor: 'rgba(255,255,255,0.35)' },
   graduation: { position: 'absolute', top: 0, bottom: 0, width: s(1.5), backgroundColor: 'rgba(8,7,15,0.7)' },
   paliers: { flexDirection: 'row' },
-  palier: { color: couleurs.texteFaible, fontSize: s(9.5), fontWeight: '600', textAlign: 'center' },
+  palier: { color: couleurs.texteFaible, fontSize: s(10.5), fontWeight: '600', textAlign: 'center' },
   pied: { flexDirection: 'row', alignItems: 'center', gap: s(4) },
   echeance: { flex: 1, fontSize: s(12), fontWeight: '600', lineHeight: s(16) },
 });

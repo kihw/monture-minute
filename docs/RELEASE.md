@@ -16,6 +16,9 @@ Secrets utilisés par la release : `ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_
 
 ## À chaque version
 
+Rédige d'abord les notes dans `docs/notes/vX.Y.Z.md` (facultatif) : elles ouvrent la release et
+s'affichent sur le site, avant les notes générées.
+
 ```bash
 npm run verifier            # lint, types, tests
 npm version patch           # ou minor / major : met à jour les versions, commit + tag

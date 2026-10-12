@@ -114,6 +114,13 @@ jobs:
     needs: [android, windows]
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
+      # Notes rédigées de la version (docs/notes/vX.Y.Z.md), complétées par les notes générées.
+      - name: Notes de version
+        run: |
+          f="docs/notes/${GITHUB_REF_NAME}.md"
+          [ -f "$f" ] || : > "$f"
+          cp "$f" notes.md
       - uses: actions/download-artifact@v4
         with:
           path: fichiers
@@ -121,6 +128,7 @@ jobs:
       - uses: softprops/action-gh-release@v2
         with:
           name: Monture Minute ${{ github.ref_name }}
+          body_path: notes.md
           generate_release_notes: true
           files: |
             fichiers/MontureMinute-Android.apk

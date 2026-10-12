@@ -6,6 +6,7 @@ import { ReactNode, useEffect, useMemo, useState } from 'react';
 import { Animated, Easing, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { s } from '../../echelle';
+import { useMouvementReduit } from '../../hooks/useMouvementReduit';
 import { couleurs, duree, grille, rayon, texte, Ton, tons } from '../../theme';
 import Popup from '../Popup';
 import { BoutonPrincipal, Icone } from '../ui';
@@ -31,11 +32,13 @@ export function Heros({
   cle?: string;
 }) {
   const t = tons[ton];
+  const reduit = useMouvementReduit();
   const apparition = useMemo(() => new Animated.Value(1), []);
   useEffect(() => {
+    if (reduit) return apparition.setValue(1);
     apparition.setValue(0);
     Animated.timing(apparition, { toValue: 1, duration: duree.lente, easing: Easing.out(Easing.cubic), useNativeDriver: true }).start();
-  }, [cle, apparition]);
+  }, [cle, apparition, reduit]);
   return (
     <Animated.View
       style={[
@@ -48,7 +51,11 @@ export function Heros({
         <MaterialCommunityIcons name={icone} size={s(15)} color={t.couleur} />
         <Text style={[styles.herosSurtitre, { color: t.couleur }]}>{surtitre}</Text>
       </View>
-      {titre && <Text style={styles.herosTitre}>{titre}</Text>}
+      {titre && (
+        <Text style={styles.herosTitre} accessibilityRole="header">
+          {titre}
+        </Text>
+      )}
       {detail && <Text style={texte.legende}>{detail}</Text>}
       {children}
     </Animated.View>
@@ -96,7 +103,9 @@ export function Section({
   return (
     <View style={styles.section}>
       <View style={styles.sectionTete}>
-        <Text style={styles.sectionTitre}>{titre}</Text>
+        <Text style={styles.sectionTitre} accessibilityRole="header">
+          {titre}
+        </Text>
         {aide && <Aide titre={aide.titre}>{aide.contenu}</Aide>}
         {droite && <View style={{ marginLeft: 'auto' }}>{droite}</View>}
       </View>

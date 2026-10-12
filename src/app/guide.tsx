@@ -109,11 +109,11 @@ function creerPages(): Page[] {
     {
       titre: "Un enclos, un lot",
       texte:
-        "Tu ne suis pas chaque monture : un enclos décrit le lot qu’il contient. À sa création, choisis la famille et la robe, la sérénité de départ et les niveaux.",
+        "Tu ne suis pas chaque monture : un enclos décrit le lot qu’il contient. Un assistant en trois écrans le crée : la monture, la sérénité, puis les niveaux, avec le parcours prévu.",
       points: [
-        "Sérénité « unifiée » : toutes au même niveau",
-        "Sérénité « variable » : indique la plus haute, on unifie d’abord",
-        "Niveau actuel et niveau cible du lot",
+        "Toutes à la même sérénité, ou différentes : l’app unifie d’abord",
+        "Niveau actuel et niveau visé du lot",
+        "« Nouvel enclos » sur l’accueil pour en ajouter",
       ],
       illustration: (
         <View style={styles.lot}>
@@ -302,9 +302,9 @@ function creerPages(): Page[] {
     {
       titre: "Suivre en temps réel",
       texte:
-        "Pendant l’étape, chaque jauge descend en direct. L’app compare « recharger » et « laisser filer » et te dit si une recharge fait vraiment gagner du temps.",
+        "Pendant l’étape, la carte du haut dit si tout roule ou s’il vaut la peine de recharger, et combien de temps tu gagnes. Chaque jauge descend en direct.",
       points: [
-        "Touche une jauge : options de recharge chiffrées",
+        "Touche une jauge : les recharges utiles en cartes",
         "Appui long : recaler sur la valeur lue en jeu",
         "Une jauge vide bloque l’étape : l’app te prévient avant",
       ],
@@ -317,9 +317,9 @@ function creerPages(): Page[] {
               color={couleurs.accent}
             />
             <View style={{ flex: 1 }}>
-              <Text style={styles.conseilTitre}>Recharge Amour à 85,2k</Text>
+              <Text style={styles.conseilTitre}>Remplis la jauge Amour à 180 000</Text>
               <Text style={styles.conseilDetail}>
-                Fin 16:58 au lieu de 17:26 (−28 min)
+                Tu finis à 16:58 au lieu de 17:26 · 28 min gagnées
               </Text>
             </View>
           </View>
@@ -327,12 +327,12 @@ function creerPages(): Page[] {
             <View style={styles.reservoirTete}>
               <IconeJauge type="amour" taille={s(22)} />
               <Text style={styles.reservoirNom}>Amour</Text>
-              <Text style={styles.reservoirNiveau}>81,8k</Text>
+              <Text style={styles.reservoirNiveau}>81 800</Text>
             </View>
             <View style={styles.reservoirPiste}>
               <View style={[styles.reservoirRemplissage, { width: "41%" }]} />
             </View>
-            <Text style={styles.reservoirEcheance}>Passe ×10 dans 15m</Text>
+            <Text style={styles.reservoirEcheance}>Ralentit à ×10 dans 15 min</Text>
           </View>
         </View>
       ),
@@ -340,8 +340,9 @@ function creerPages(): Page[] {
     {
       titre: "Les alertes au bon moment",
       texte:
-        "Une notification arrive avant chaque baisse de palier ou jauge vide, et à la fin de l’étape. Règle le délai d’avance dans les réglages.",
+        "Une notification arrive avant chaque baisse de vitesse ou jauge vide, et à la fin de l’étape. L’onglet Alertes liste tout ce qui arrive, pour tous tes enclos.",
       points: [
+        "Délai d’avance réglable dans Réglages › Alertes",
         "« Plus tard » repousse le rappel de 30 min",
         "Sur Windows, l’app peut rester au premier plan sur le jeu",
       ],
@@ -353,9 +354,9 @@ function creerPages(): Page[] {
             color={couleurs.accent}
           />
           <View style={{ flex: 1 }}>
-            <Text style={styles.notifTitre}>Amour passe ×10 dans 5 min</Text>
+            <Text style={styles.notifTitre}>Amour ralentit à ×10 dans 5 min</Text>
             <Text style={styles.notifTexte}>
-              Enclos 1 : recharge Amour au-dessus de 80k pour garder un palier
+              Enclos 1 : remplis-la au-dessus de 80 000 pour garder une vitesse
               plus rapide.
             </Text>
           </View>
@@ -365,9 +366,9 @@ function creerPages(): Page[] {
     {
       titre: "Valider et continuer",
       texte:
-        "Quand l’étape est finie, valide-la : l’app applique la progression et propose la suivante. Si le jeu ne correspond pas, ajuste le lot depuis le menu de l’enclos.",
+        "Quand l’étape est finie, la carte montre ce qui a été gagné et prépare déjà la suivante : « Jauges activées » valide et relance en un geste. Si le jeu diffère, ajuste le lot depuis Options.",
       points: [
-        "« Terminer maintenant » compte le temps déjà passé",
+        "Options › Terminer l’étape compte le temps déjà passé",
         "À la fin : tes montures sont fécondables",
       ],
       illustration: (

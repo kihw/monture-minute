@@ -5,7 +5,7 @@
   --piste: #07060d;
   --texte: #f3f1fb;
   --attenue: #9d99bd;
-  --faible: #6c6890;
+  --faible: #8a86ad;
   --or: #f2c94c;
   --or-doux: rgba(242, 201, 76, 0.14);
   --orange: #f5a142;
@@ -154,3 +154,26 @@ footer p { margin: 4px 0; }
   .hero { grid-template-columns: 1fr; padding-top: 40px; }
   .grille, .grille.deux { grid-template-columns: 1fr; }
 }
+
+/* Aperçu V2 de l'écran d'enclos */
+.fenetre-barre.v2 { justify-content: space-between; align-items: center; }
+.fenetre-barre.v2 .lien { color: var(--attenue); font-size: 12px; font-weight: 600; }
+.fenetre-barre.v2 .options { font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 999px; border: 1px solid rgba(255,255,255,.14); }
+.identite { display: flex; align-items: center; gap: 10px; }
+.identite b { display: block; font-size: 14px; }
+.identite small { color: var(--attenue); font-size: 11px; }
+.heros { padding: 12px; border-radius: 14px; background: rgba(127,216,90,.08); border: 1px solid rgba(127,216,90,.35); }
+.heros p { margin: 0; }
+.heros .etat { color: #7fd85a; font-size: 12px; font-weight: 700; }
+.heros .grand { font-family: Outfit, sans-serif; font-size: 30px; font-weight: 700; margin: 4px 0 2px; }
+.heros .progres { margin-top: 8px; }
+.heros .progres span { background: #7fd85a; }
+.petit { color: var(--attenue); font-size: 11px; margin: 0; }
+.carte-jauge { padding: 10px; border-radius: 12px; background: var(--carte); border: 1px solid var(--liseret); display: flex; flex-direction: column; gap: 5px; }
+.carte-jauge p { margin: 0; display: flex; justify-content: space-between; align-items: baseline; }
+.carte-jauge b { font-size: 13px; }
+.carte-jauge em { font-style: normal; font-size: 10.5px; font-weight: 700; color: var(--c); padding: 1px 7px; border-radius: 999px; background: color-mix(in srgb, var(--c) 18%, transparent); }
+.carte-jauge .niveau { font-family: Outfit, sans-serif; font-size: 17px; font-weight: 700; justify-content: flex-start; gap: 4px; }
+.carte-jauge .niveau small { color: var(--faible); font-size: 11px; font-weight: 500; }
+.carte-jauge .barre { height: 7px; border-radius: 4px; background: var(--piste); overflow: hidden; }
+.carte-jauge .barre span { display: block; height: 100%; background: var(--c); }

@@ -26,7 +26,7 @@ export default function Stats() {
 
   return (
     <Ecran>
-      <EnTete avecRetour titre="Stats" sousTitre="Vue d’ensemble de l’élevage" />
+      <EnTete avecRetour titre="Historique" sousTitre="Vue d’ensemble de l’élevage" />
 
       <Carte style={styles.hero}>
         <Anneau ratio={moyenne((v) => v.avancement)} couleur={couleurs.accent} taille={s(110)} label="Global" />

@@ -11,6 +11,7 @@ import { NIVEAU_MAX_MONTURE } from '../../data/xpTable';
 import { s } from '../../echelle';
 import { contexteDepuis, genererParcours } from '../../engine/parcours';
 import { useCalcul } from '../../hooks/useElevage';
+import { useMouvementReduit } from '../../hooks/useMouvementReduit';
 import { couleurs, duree, grille, rayon, texte } from '../../theme';
 import { DepartEnclos, FAMILLE_LISTE, FAMILLES, lotInitial } from '../../types/domain';
 import { formatDureeClaire, formatSerenite, titreClair } from '../../utils/format';
@@ -91,7 +92,7 @@ function EcranMonture({ valeur, maj, avertissement }: { valeur: DepartEnclos; ma
   const robe = valeur.robe ?? 0;
   return (
     <>
-      <Text style={styles.question}>Quelles montures élèves-tu dans cet enclos ?</Text>
+      <Text style={styles.question} accessibilityRole="header">Quelles montures élèves-tu dans cet enclos ?</Text>
       {avertissement && <Text style={[texte.legende, { color: couleurs.attention }]}>{avertissement}</Text>}
       <View style={styles.apercu}>
         <Monture famille={famille} robe={robe} taille={s(140)} fond={false} />
@@ -131,7 +132,7 @@ function EcranSerenite({ valeur, maj }: { valeur: DepartEnclos; maj: (p: Partial
   const { unifiee, serenite } = valeur;
   return (
     <>
-      <Text style={styles.question}>Tes montures ont-elles toutes la même sérénité ?</Text>
+      <Text style={styles.question} accessibilityRole="header">Tes montures ont-elles toutes la même sérénité ?</Text>
       <View style={styles.ligneTuiles}>
         <Tuile actif={unifiee} onPress={() => maj({ unifiee: true })} libelle="Oui, toutes pareilles">
           <MaterialCommunityIcons name="equal" size={s(22)} color={unifiee ? couleurs.accent : couleurs.texteAttenue} />
@@ -165,7 +166,7 @@ function EcranNiveaux({ valeur, maj }: { valeur: DepartEnclos; maj: (p: Partial<
   const total = parcours.reduce((t, e) => t + e.dureeSec, 0);
   return (
     <>
-      <Text style={styles.question}>À quel niveau sont-elles, et jusqu’où les monter ?</Text>
+      <Text style={styles.question} accessibilityRole="header">À quel niveau sont-elles, et jusqu’où les monter ?</Text>
       <View style={styles.bloc}>
         <View style={styles.ligneNiveau}>
           <Text style={[texte.corps, { flex: 1 }]}>Niveau actuel</Text>
@@ -233,11 +234,13 @@ export default function AssistantDepart({
   const [valeur, setValeur] = useState(initial);
   const [etape, setEtape] = useState(0);
   const maj = (p: Partial<DepartEnclos>) => setValeur((v) => ({ ...v, ...p }));
+  const reduit = useMouvementReduit();
   const apparition = useMemo(() => new Animated.Value(1), []);
   useEffect(() => {
+    if (reduit) return apparition.setValue(1);
     apparition.setValue(0);
     Animated.timing(apparition, { toValue: 1, duration: duree.base, easing: Easing.out(Easing.cubic), useNativeDriver: true }).start();
-  }, [etape, apparition]);
+  }, [etape, apparition, reduit]);
   const derniere = etape === ETAPES.length - 1;
 
   return (
