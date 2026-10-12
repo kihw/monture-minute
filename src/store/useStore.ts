@@ -52,7 +52,10 @@ interface EleveurState {
   redemarrerEnclos: (id: string, depart: DepartEnclos) => void;
 
   /** Démarre l'étape : les jauges ont été activées en jeu avec ce carburant. */
+  /** Lance l'étape avec le carburant mis dans chaque jauge, et retient ces choix comme habitudes. */
   demarrerEtape: (id: string, carburant: Partial<Record<JaugeType, number>>) => void;
+  /** Fin d'étape en un geste : valide l'étape terminée puis lance la suivante avec ce carburant. */
+  validerEtLancer: (id: string, carburant: Partial<Record<JaugeType, number>>) => void;
   /** « Plus tard » sur la notification : nouveau rappel dans 30 min. */
   reporterRappel: (id: string) => void;
   /** Reprogramme les notifications des étapes en cours (au démarrage de l’app Windows, dont les minuteries ne survivent pas). */
@@ -309,6 +312,12 @@ export const useEleveurStore = create<EleveurState>()(
           if (!e || e.enCours) return;
           const etape = prochaineEtape(e.lot, ctxEnclos(reglages, e), carburant);
           if (!etape || etape.cycles === 0) return;
+          // Habitudes : jauge laissée telle quelle (il restait ce carburant) ou remplie à ce niveau.
+          const habitudes = { ...reglages.habitudes };
+          for (const [j, v] of Object.entries(carburant) as [JaugeType, number][]) {
+            habitudes[j] = e.carburant[j] > 0 && v === e.carburant[j] ? 'telquel' : v;
+          }
+          set({ reglages: { ...get().reglages, habitudes } });
           const demarreeAt = Date.now();
           const finAt = demarreeAt + etape.dureeSec * 1000;
           majEnclos(id, (x) => ({
@@ -317,6 +326,11 @@ export const useEleveurStore = create<EleveurState>()(
             enCours: { etape, demarreeAt, finAt, segments: [] },
           }));
           planifierNotifications(id, finAt, true);
+        },
+
+        validerEtLancer: (id, carburant) => {
+          get().validerEtape(id);
+          get().demarrerEtape(id, carburant);
         },
 
         replanifierNotifications: () => {

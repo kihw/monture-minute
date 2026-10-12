@@ -154,12 +154,17 @@ export interface Enclos {
   enCours: EtapeEnCours | null;
 }
 
+/** Habitude de remplissage d'une jauge au lancement d'une étape : laissée telle quelle, ou remplie à ce niveau. */
+export type Habitude = 'telquel' | number;
+
 export interface Reglages {
   configuree: boolean;
   /** Valeurs proposées par défaut à la création d'un enclos. */
   depart: DepartEnclos;
   /** Niveau auquel le joueur remplit habituellement ses jauges (proposé à chaque activation). */
   remplissage: number;
+  /** Ce que le joueur a fait de chaque jauge à son dernier lancement d'étape (proposé la fois suivante). */
+  habitudes?: Partial<Record<JaugeType, Habitude>>;
   prudent: boolean;
   /** Gain de temps minimal (min) pour que l'app conseille une recharge. */
   seuilConseilMin: number;

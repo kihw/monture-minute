@@ -4,13 +4,12 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import PopupCarburant from '../../components/ChoixCarburant';
 import { PopupDepart } from '../../components/FormulaireDepart';
-import PanneauJauges from '../../components/PanneauJauges';
 import { Confirmation, MenuActions } from '../../components/Popup';
 import PopupAjustement from '../../components/PopupAjustement';
 import PopupRecharge from '../../components/PopupRecharge';
 import { JaugesActives } from '../../components/Reservoirs';
 import { Ecran, retour } from '../../components/ui';
-import { ActionsHeros, Avancement, Heros, NomJauge, Section } from '../../components/v2/base';
+import { ActionsHeros, Avancement, Heros, Section } from '../../components/v2/base';
 import {
   AIDE_JAUGES,
   AIDE_PARCOURS,
@@ -21,8 +20,9 @@ import {
   IdentiteEnclos,
   SelecteurEnclos,
 } from '../../components/v2/enclos';
+import { SetupEtape } from '../../components/v2/setup';
 import { conseil as calculerConseil, etatJauge } from '../../engine/descente';
-import { niveauLot, prochaineEtape } from '../../engine/parcours';
+import { niveauLot, prochaineEtape, remplissageHabituel } from '../../engine/parcours';
 import { carburantPropose, vueEnclos } from '../../engine/statut';
 import { useCalcul, useMaintenant } from '../../hooks/useElevage';
 import { useEleveurStore, useListeEnclos } from '../../store/useStore';
@@ -48,8 +48,9 @@ export default function DetailEnclos() {
   const calcul = useCalcul();
   const maintenant = useMaintenant();
   const [popup, setPopup] = useState<PopupOuverte>(null);
-  // Jauges validées comme activées en jeu, avec le carburant qui y a été mis.
-  const [cochees, setCochees] = useState<Partial<Record<JaugeType, number>>>({});
+  // Carburant ajusté à la main pour la préparation de l'étape (effacé quand l'étape change).
+  const [ajuste, setAjuste] = useState<{ cle: string; valeurs: Partial<Record<JaugeType, number>> }>({ cle: '', valeurs: {} });
+  // Saisie d'un niveau précis (« Autre ») pour une jauge de la préparation.
   const [selection, setSelection] = useState<{ type: JaugeType; valeur: number } | null>(null);
   // Feuille « Recharger ? » ouverte sur une jauge, et saisie libre d'une recharge ou d'une correction.
   const [recharge, setRecharge] = useState<JaugeType | null>(null);
@@ -61,13 +62,6 @@ export default function DetailEnclos() {
   const vue = vues[index] ?? vueEnclos(enclos, calcul, maintenant);
   const ctx = vue.ctx;
   const etape = vue.etape;
-  const aActiver = vue.statut === 'termine' || !etape ? [] : etape.jauges;
-  const activees = vue.statut === 'attente' ? aActiver.filter((j) => cochees[j] !== undefined) : aActiver;
-  // En attente, le panneau montre le carburant saisi (ou en cours de saisie) par-dessus le dernier connu.
-  const carburantAffiche =
-    vue.statut === 'attente'
-      ? { ...vue.carburant, ...cochees, ...(selection ? { [selection.type]: selection.valeur } : {}) }
-      : vue.carburant;
   const fermer = () => setPopup(null);
   // L'étape s'est arrêtée faute de carburant : il faut recharger avant de continuer.
   const vide = vue.statut === 'a_confirmer' && !!etape && etape.vides.length > 0;
@@ -91,50 +85,58 @@ export default function DetailEnclos() {
     setSaisie(null);
   }
 
-  function basculer(type: JaugeType) {
-    if (vue.statut !== 'attente') return;
-    if (cochees[type] !== undefined) {
-      const { [type]: _retiree, ...reste } = cochees;
-      setCochees(reste);
-      return;
-    }
-    setSelection({ type, valeur: carburantPropose(enclos!, ctx, type) });
-  }
-
-  function validerSelection() {
-    if (!selection) return;
-    const suivantes = { ...cochees, [selection.type]: selection.valeur };
-    setSelection(null);
-    // Toutes les jauges demandées sont activées en jeu : le timer de l'étape démarre.
-    if (aActiver.every((j) => suivantes[j] !== undefined)) {
-      store.demarrerEtape(id, suivantes);
-      setCochees({});
-    } else {
-      setCochees(suivantes);
-    }
-  }
-
   function confirmer(anticipee?: boolean) {
     store.validerEtape(id, anticipee);
     const lot = useEleveurStore.getState().enclos[id]?.lot;
     if (lot && !prochaineEtape(lot, ctx)) router.replace(`/objectifs/${id}`);
   }
 
-  // Durée prévue si l'étape démarrait avec le carburant en cours de saisie.
-  const dureeSelection =
-    selection && etape
-      ? prochaineEtape(enclos.lot, ctx, {
-          ...Object.fromEntries(aActiver.map((j) => [j, carburantPropose(enclos, ctx, j)])),
-          ...cochees,
-          [selection.type]: selection.valeur,
-        })
-      : null;
+  // Préparation de l'étape à lancer : celle qui attend, ou la suivante dès qu'une étape est finie.
+  const suivante = vue.aVenir[0];
+  const preparation =
+    vue.statut === 'attente' && etape
+      ? { etape, reste: enclos.carburant, lot: enclos.lot }
+      : vue.statut === 'a_confirmer' && !vide && suivante
+        ? { etape: suivante, reste: vue.carburant, lot: vue.lot }
+        : null;
+  const cleSetup = `${vue.statut}-${vue.numeroEtape}`;
+  const ajustees = ajuste.cle === cleSetup ? ajuste.valeurs : {};
+  const valeurs: Partial<Record<JaugeType, number>> = preparation
+    ? Object.fromEntries(preparation.etape.jauges.map((j) => [j, ajustees[j] ?? carburantPropose(preparation.reste, ctx, j)]))
+    : {};
+  const prevue = preparation ? prochaineEtape(preparation.lot, ctx, valeurs) : null;
+  const choisir = (j: JaugeType, niveau: number) => setAjuste({ cle: cleSetup, valeurs: { ...ajustees, [j]: niveau } });
+
+  function lancer() {
+    if (vue.statut === 'attente') store.demarrerEtape(id, valeurs);
+    else store.validerEtLancer(id, valeurs);
+  }
+
+  const blocSetup =
+    preparation && prevue ? (
+      <>
+        <SetupEtape
+          jauges={preparation.etape.jauges}
+          reste={preparation.reste}
+          valeurs={valeurs}
+          habituel={(j) => remplissageHabituel(ctx, j)}
+          onChoisir={choisir}
+          onAutre={(j) => setSelection({ type: j, valeur: valeurs[j] ?? ctx.remplissage })}
+        />
+        <Text style={texte.legende}>
+          Durée {formatDureeClaire(prevue.dureeSec)} · fin vers {formatHeure(maintenant + prevue.dureeSec * 1000)}
+        </Text>
+        {prevue.vides.length > 0 && (
+          <Text style={[texte.legende, { color: couleurs.attention }]}>
+            Pas assez de carburant : {prevue.vides.map((j) => INFO_JAUGE[j].nom).join(', ')} se videra avant la fin. Mets-en davantage.
+          </Text>
+        )}
+      </>
+    ) : null;
 
   const nomJ = (j: JaugeType) => INFO_JAUGE[j].nom;
   const nomMin = (j: JaugeType) => (j === 'xp' ? 'l’XP' : `la jauge ${INFO_JAUGE[j].nom}`);
   const ratioEtape = vue.statut === 'en_cours' && etape ? 1 - vue.restantSec / Math.max(1, etape.dureeSec) : 1;
-  const prochaineASaisir = aActiver.find((j) => cochees[j] === undefined);
-  const suivante = vue.aVenir[0];
 
   // La carte héros : l'état de l'enclos en une phrase, et la seule chose à faire.
   let heros: ReactNode;
@@ -160,14 +162,26 @@ export default function DetailEnclos() {
     ];
     heros = (
       <Heros cle="fini" ton="ok" icone="check-circle-outline" surtitre={`Étape ${vue.numeroEtape} terminée`} titre={gains.length ? gains.join(' · ') : 'Objectif de l’étape atteint'}>
-        {suivante ? (
-          <Text style={texte.legende}>
-            Ensuite : {titreClair(suivante.titre)}, avec {suivante.jauges.map(nomJ).join(' et ')}, environ {formatDureeClaire(suivante.dureeSec)}.
-          </Text>
+        {suivante && blocSetup ? (
+          <>
+            <View style={styles.separateur} />
+            <Text style={styles.prepare}>
+              Prépare l’étape {vue.numeroEtape + 1} · {titreClair(suivante.titre)}
+            </Text>
+            <Text style={texte.legende}>Active en jeu ces jauges avec ce carburant :</Text>
+            {blocSetup}
+            <ActionsHeros
+              label={`Jauges activées · lancer l’étape ${vue.numeroEtape + 1}`}
+              onPress={lancer}
+              secondaire={{ label: 'Valider sans lancer', onPress: () => confirmer() }}
+            />
+          </>
         ) : (
-          <Text style={texte.legende}>C’était la dernière étape.</Text>
+          <>
+            <Text style={texte.legende}>C’était la dernière étape.</Text>
+            <ActionsHeros label="Valider et voir le bilan" onPress={() => confirmer()} />
+          </>
         )}
-        <ActionsHeros label={suivante ? `Passer à l’étape ${vue.numeroEtape + 1}` : 'Valider et voir le bilan'} onPress={() => confirmer()} />
       </Heros>
     );
   } else if (vue.statut === 'en_cours' && etape && enCours) {
@@ -215,23 +229,11 @@ export default function DetailEnclos() {
       );
     }
   } else if (etape) {
-    const saisies = aActiver.filter((j) => cochees[j] !== undefined).length;
     heros = (
-      <Heros cle="attente" ton="action" icone="gesture-tap" surtitre={`À faire · ${saisies} sur ${aActiver.length} jauges prêtes`} titre="Active ces jauges en jeu">
-        <View style={styles.pilules}>
-          {aActiver.map((j) => (
-            <NomJauge key={j} nom={nomJ(j)} couleur={INFO_JAUGE[j].couleur} />
-          ))}
-        </View>
-        <Text style={texte.legende}>
-          Puis indique le carburant mis dans chacune : le minuteur démarre quand tout est saisi. Durée prévue : {formatDureeClaire(etape.dureeSec)}.
-        </Text>
-        {etape.vides.length > 0 && (
-          <Text style={[texte.legende, { color: couleurs.attention }]}>
-            Pas assez de carburant : {etape.vides.map(nomJ).join(', ')} se videra avant la fin. Mets-en davantage.
-          </Text>
-        )}
-        {prochaineASaisir && <ActionsHeros label={`Saisir le carburant · ${nomJ(prochaineASaisir)}`} onPress={() => basculer(prochaineASaisir)} />}
+      <Heros cle="attente" ton="action" icone="gesture-tap" surtitre={`À faire · étape ${vue.numeroEtape}`} titre="Active ces jauges en jeu">
+        <Text style={texte.legende}>Avec ce carburant (tes habitudes, touche pour changer) :</Text>
+        {blocSetup}
+        <ActionsHeros label="Jauges activées · lancer" onPress={lancer} />
       </Heros>
     );
   }
@@ -244,13 +246,6 @@ export default function DetailEnclos() {
       {liste.length > 1 && <SelecteurEnclos enclos={liste} vues={vues} actifId={id} onAjouter={() => setPopup('ajout')} />}
 
       {heros}
-
-      {vue.statut === 'attente' && (
-        <Section titre="Les jauges de l’enclos" aide={AIDE_JAUGES}>
-          <PanneauJauges carburant={carburantAffiche} aActiver={aActiver} activees={activees} onBasculer={basculer} />
-          <Text style={[texte.etiquette, { textAlign: 'center' }]}>Les jauges qui clignotent sont à activer · touche-les une fois activées en jeu</Text>
-        </Section>
-      )}
 
       {enCours && (vue.statut === 'en_cours' || vide) && (
         <Section titre="Jauges actives" aide={AIDE_JAUGES}>
@@ -279,9 +274,13 @@ export default function DetailEnclos() {
       <PopupCarburant
         type={selection?.type ?? null}
         valeur={selection?.valeur ?? 0}
-        duree={dureeSelection ? formatDureeClaire(dureeSelection.dureeSec) : undefined}
+        duree={selection && preparation ? formatDureeClaire(prochaineEtape(preparation.lot, ctx, { ...valeurs, [selection.type]: selection.valeur })?.dureeSec ?? 0) : undefined}
+        libelle="Choisir"
         onChange={(valeur) => selection && setSelection({ ...selection, valeur })}
-        onValider={validerSelection}
+        onValider={() => {
+          if (selection) choisir(selection.type, selection.valeur);
+          setSelection(null);
+        }}
         onFermer={() => setSelection(null)}
       />
 
@@ -385,7 +384,6 @@ export default function DetailEnclos() {
         onFermer={fermer}
         onValider={(depart) => {
           store.redemarrerEnclos(id, depart);
-          setCochees({});
           fermer();
         }}
       />
@@ -434,6 +432,7 @@ export default function DetailEnclos() {
 }
 
 const styles = StyleSheet.create({
-  pilules: { flexDirection: 'row', flexWrap: 'wrap', gap: s(6) },
   gain: { color: couleurs.succes, fontSize: s(14), fontWeight: '700' },
+  separateur: { height: 1, backgroundColor: couleurs.liseret, marginVertical: s(4) },
+  prepare: { color: couleurs.texte, fontSize: s(14), fontWeight: '700' },
 });

@@ -272,10 +272,11 @@ function creerPages(): Page[] {
     {
       titre: "Lancer une étape",
       texte:
-        "Les jauges à activer clignotent en or. Active-les en jeu, puis touche-les ici et indique le carburant que tu y as mis : le minuteur démarre.",
+        "L’app te dit quelles jauges activer, avec le carburant déjà prérempli d’après tes habitudes. Active-les en jeu, puis touche « Jauges activées » : le minuteur démarre.",
       points: [
-        "Raccourcis Élixir, Potion, Philtre, Extrait",
-        "La durée de l’étape s’affiche avant de valider",
+        "Par jauge : telle quelle, remplie, ou un autre niveau",
+        "L’app retient tes choix pour la fois suivante",
+        "À la fin d’une étape, la suivante se lance en un geste",
       ],
       illustration: (
         <View style={styles.lancer}>
@@ -293,7 +294,7 @@ function creerPages(): Page[] {
             color={couleurs.accent}
           />
           <View style={styles.bouton}>
-            <Text style={styles.boutonTexte}>Jauge activée</Text>
+            <Text style={styles.boutonTexte}>Jauges activées</Text>
           </View>
         </View>
       ),

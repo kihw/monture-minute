@@ -70,11 +70,19 @@ La frise de l’écran d’enclos montre l’étape en cours et la suite.
 
 ## 6. Lancer une étape
 
-1. Les jauges à activer **clignotent en or** sur l’écran de l’enclos.
-2. Active-les **en jeu**.
-3. Touche chaque jauge dans l’app et indique le **carburant mis** (raccourcis Élixir, Potion,
-   Philtre, Extrait, ou curseur). La durée de l’étape s’affiche avant de valider.
-4. Quand toutes les jauges sont validées, le **minuteur démarre**.
+1. La carte du haut de l’enclos indique **les jauges à activer**, avec le carburant **prérempli
+   d’après tes habitudes**.
+2. Pour chaque jauge, garde la proposition ou change-la d’un geste : **telle quelle** (ce qui
+   reste de l’étape précédente), **remplie** à ton niveau habituel, ou **autre** niveau précis.
+   La durée et l’heure de fin suivent en direct.
+3. Active ces jauges **en jeu**, puis touche **Jauges activées** : le **minuteur démarre**.
+
+L’app retient ce que tu fais de chaque jauge (laissée telle quelle ou remplie, et à quel niveau)
+et te le repropose à l’étape suivante.
+
+Quand une étape se termine, la carte montre ce qui a été gagné **et prépare déjà la suivante** :
+un seul geste, **Jauges activées · lancer l’étape suivante**, valide l’étape finie et lance la
+nouvelle. *Valider sans lancer* reste possible.
 
 ## 7. Pendant l’étape : la descente en temps réel
 

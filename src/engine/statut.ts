@@ -2,7 +2,7 @@
 
 import { Carburant, Enclos, Etape, EtatLot, JaugeType } from '../types/domain';
 import { appliquerEnCours } from './descente';
-import { ContexteCalcul, contexteDepuis, genererParcours, ReglagesCalcul } from './parcours';
+import { ContexteCalcul, contexteDepuis, genererParcours, ReglagesCalcul, remplissageHabituel } from './parcours';
 
 export type Statut = 'attente' | 'en_cours' | 'a_confirmer' | 'termine';
 
@@ -27,9 +27,14 @@ export interface VueEnclos {
   dureeTotaleSec: number;
 }
 
-/** Carburant proposé à l'activation d'une jauge : ce qu'il reste dedans, sinon le remplissage habituel. */
-export function carburantPropose(enclos: Enclos, ctx: ContexteCalcul, j: JaugeType): number {
-  return enclos.carburant[j] > 0 ? enclos.carburant[j] : ctx.remplissage;
+/**
+ * Carburant proposé au lancement d'une étape, d'après les habitudes du joueur : la jauge laissée
+ * telle quelle s'il le fait d'habitude (et qu'il en reste), sinon remplie à son niveau habituel.
+ */
+export function carburantPropose(reste: Partial<Carburant>, ctx: ContexteCalcul, j: JaugeType): number {
+  const r = reste[j] ?? 0;
+  if (ctx.habitudes?.[j] === 'telquel' && r > 0) return r;
+  return Math.max(r, remplissageHabituel(ctx, j));
 }
 
 export function vueEnclos(enclos: Enclos, calcul: ReglagesCalcul, maintenant: number): VueEnclos {
@@ -60,7 +65,7 @@ export function vueEnclos(enclos: Enclos, calcul: ReglagesCalcul, maintenant: nu
 
   const base = { ctx, lot: enclos.lot, carburant: enclos.carburant };
   const premiere = genererParcours(enclos.lot, ctx, {})[0];
-  const proposes = premiere ? Object.fromEntries(premiere.jauges.map((j) => [j, carburantPropose(enclos, ctx, j)])) : {};
+  const proposes = premiere ? Object.fromEntries(premiere.jauges.map((j) => [j, carburantPropose(enclos.carburant, ctx, j)])) : {};
   const plan = genererParcours(enclos.lot, ctx, proposes);
   if (plan.length === 0) {
     return {

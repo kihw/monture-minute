@@ -46,5 +46,6 @@ export function useHydrate(): boolean {
 export function useCalcul(): ReglagesCalcul {
   const remplissage = useEleveurStore((s) => s.reglages.remplissage);
   const prudent = useEleveurStore((s) => s.reglages.prudent);
-  return useMemo(() => ({ remplissage, prudent }), [remplissage, prudent]);
+  const habitudes = useEleveurStore((s) => s.reglages.habitudes);
+  return useMemo(() => ({ remplissage, prudent, habitudes }), [remplissage, prudent, habitudes]);
 }

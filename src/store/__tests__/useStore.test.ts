@@ -103,3 +103,41 @@ describe('recharges en cours d’étape', () => {
     expect(enclosActif().enclos.enCours!.segments).toEqual([]);
   });
 });
+
+describe('habitudes et enchaînement des étapes', () => {
+  it('retient le carburant mis comme habitude, puis valide et lance la suivante en un geste', async () => {
+    const { id } = enclosActif();
+    useEleveurStore.getState().demarrerEtape(id, { endurance: 180_000, xp: 200_000 });
+    await attendre();
+    expect(enclosActif().enclos.enCours).not.toBeNull();
+    expect(useEleveurStore.getState().reglages.habitudes).toEqual({ endurance: 180_000, xp: 200_000 });
+
+    // L'étape est finie : on enchaîne en laissant l'XP telle quelle.
+    jest.setSystemTime(enclosActif().enclos.enCours!.finAt + 1000);
+    const resteXp = Math.round(enclosActif().enclos.carburant.xp);
+    const etapeAvant = enclosActif().enclos.enCours!.etape.titre;
+    useEleveurStore.getState().validerEtape(id);
+    const resteApres = useEleveurStore.getState().enclos[id].carburant.xp;
+    useEleveurStore.getState().annulerEtape(id);
+    expect(resteApres).toBeGreaterThan(0);
+    useEleveurStore.getState().demarrerEtape(id, { plus: 140_000, xp: resteApres });
+    await attendre();
+    const e = enclosActif().enclos;
+    expect(e.etapesValidees.map((v) => v.titre)).toEqual([etapeAvant]);
+    expect(e.enCours?.etape.jauges).toEqual(['plus', 'xp']);
+    expect(useEleveurStore.getState().reglages.habitudes).toMatchObject({ plus: 140_000, xp: 'telquel' });
+    expect(resteXp).toBeGreaterThanOrEqual(0);
+  });
+
+  it('validerEtLancer enchaîne validation et démarrage', async () => {
+    const { id } = enclosActif();
+    useEleveurStore.getState().demarrerEtape(id, { endurance: 200_000, xp: 200_000 });
+    await attendre();
+    jest.setSystemTime(enclosActif().enclos.enCours!.finAt + 1000);
+    useEleveurStore.getState().validerEtLancer(id, { plus: 200_000, xp: 200_000 });
+    await attendre();
+    const e = enclosActif().enclos;
+    expect(e.etapesValidees).toHaveLength(1);
+    expect(e.enCours?.etape.jauges).toEqual(['plus', 'xp']);
+  });
+});

@@ -27,6 +27,7 @@ import {
   CARACTERISTIQUES,
   Etape,
   EtatLot,
+  Habitude,
   INFO_SUIVI,
   JAUGE_DE_CARACTERISTIQUE,
   JaugeType,
@@ -40,6 +41,8 @@ export interface ContexteCalcul {
   prudent: boolean;
   /** Carburant mis par défaut dans une jauge qu'on active (et pour planifier les étapes futures). */
   remplissage: number;
+  /** Habitude de remplissage de chaque jauge (sinon `remplissage`). */
+  habitudes?: Partial<Record<JaugeType, Habitude>>;
   niveauDepart: number;
   niveauCible: number;
   xpRequise: number;
@@ -49,12 +52,20 @@ export interface ContexteCalcul {
 export interface ReglagesCalcul {
   prudent: boolean;
   remplissage: number;
+  habitudes?: Partial<Record<JaugeType, Habitude>>;
+}
+
+/** Niveau auquel le joueur remplit habituellement cette jauge. */
+export function remplissageHabituel(ctx: Pick<ContexteCalcul, 'remplissage' | 'habitudes'>, j: JaugeType): number {
+  const h = ctx.habitudes?.[j];
+  return typeof h === 'number' ? h : ctx.remplissage;
 }
 
 export function contexteDepuis(r: ReglagesCalcul, niveaux: { niveauDepart: number; niveauCible: number }): ContexteCalcul {
   return {
     prudent: r.prudent,
     remplissage: r.remplissage,
+    habitudes: r.habitudes,
     niveauDepart: niveaux.niveauDepart,
     niveauCible: niveaux.niveauCible,
     xpRequise: Math.max(0, xpPourNiveau(niveaux.niveauCible) - xpPourNiveau(niveaux.niveauDepart)),
@@ -203,7 +214,7 @@ function planifier(lot: EtatLot, ctx: ContexteCalcul): Plan | null {
  * tourne en parallèle pendant ce temps.
  */
 function chiffrer(plan: Plan, ctx: ContexteCalcul, carburant: Partial<Record<JaugeType, number>>, recharge: boolean): Etape {
-  const niveau = (j: JaugeType) => carburant[j] ?? ctx.remplissage;
+  const niveau = (j: JaugeType) => carburant[j] ?? remplissageHabituel(ctx, j);
   const conso = (j: JaugeType, max?: number) => consommer(niveau(j), plan.besoins[j] ?? 0, max, recharge);
   const principales = plan.jauges.filter((j) => j !== 'xp');
   const cycles = principales.length
