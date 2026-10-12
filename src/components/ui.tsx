@@ -71,7 +71,7 @@ export function Ecran({
           scrollEventThrottle={32}
           contentContainerStyle={[
             styles.contenu,
-            { paddingTop: (entete ? 0 : insets.top) + esp.lg, paddingBottom: padBas + esp.lg },
+            { paddingTop: entete ? esp.sm : insets.top + esp.lg, paddingBottom: padBas + esp.xs },
           ]}
           showsVerticalScrollIndicator={false}
         >
