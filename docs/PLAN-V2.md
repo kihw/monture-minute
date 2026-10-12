@@ -115,7 +115,7 @@ Sous le héros, dans l’ordre :
 | **0. Fondations** ✅ | tokens V2, formats en clair, composants `v2/` | tests de format, lint, tsc |
 | **1. Enclos** ✅ | héros par état, cartes de jauges actives, règle de sérénité, frise verticale, menu Options | les 6 états vérifiés au navigateur et sur téléphone |
 | **2. Navigation & accueil** ✅ | barre d’onglets, accueil résumé, cartes enclos, état vide | captures téléphone |
-| **3. Assistant de création** | 3 écrans + récapitulatif du parcours | création / redémarrage testés |
+| **3. Assistant de création** ✅ | 3 écrans + récapitulatif du parcours | création / redémarrage testés |
 | **4. Recharges & carburant** | feuille recharge en cartes, saisie par objets | tests du moteur inchangés |
 | **5. Aide** | visite guidée, bulles « ? », onglet Alertes | parcours de premier lancement |
 | **6. Finitions** | réglages, mouvements, accessibilité, site vitrine, guide mis à jour | build Android + Windows, release v3.0.0 |

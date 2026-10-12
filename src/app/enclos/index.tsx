@@ -1,14 +1,11 @@
 import { router } from 'expo-router';
-import { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
-import { PopupDepart } from '../../components/FormulaireDepart';
 import Monture from '../../components/Monture';
 import { BoutonPrincipal, Ecran } from '../../components/ui';
 import { BarreOnglets, CarteEnclos, CarteNouvelEnclos, EnTeteOnglet } from '../../components/v2/onglets';
 import { Alerte } from '../../engine/alertes';
 import { useTableau } from '../../hooks/useTableau';
-import { useEleveurStore } from '../../store/useStore';
 import { couleurs, grille, texte } from '../../theme';
 import { formatHeure } from '../../utils/format';
 import { s } from '../../echelle';
@@ -38,9 +35,7 @@ function resume(aFaire: Alerte[], aVenir: Alerte[], enCours: number): { texte: s
 /** Accueil « Mes enclos » : résumé, une carte par enclos (l'urgent d'abord), ajout d'enclos. */
 export default function ListeEnclos() {
   const { liste, vues, conseils, alertes } = useTableau();
-  const departDefaut = useEleveurStore((s) => s.reglages.depart);
-  const store = useEleveurStore.getState();
-  const [ajout, setAjout] = useState(false);
+  const nouvelEnclos = () => router.push('/depart?mode=ajout');
 
   const cartes = liste
     .map((e, i) => ({ enclos: e, index: i, vue: vues[i] }))
@@ -63,30 +58,17 @@ export default function ListeEnclos() {
           <Text style={[texte.legende, { textAlign: 'center' }]}>
             Indique où en sont tes montures : l’app calcule le parcours et te dit quoi faire, étape par étape.
           </Text>
-          <BoutonPrincipal label="Nouvel enclos" onPress={() => setAjout(true)} />
+          <BoutonPrincipal label="Nouvel enclos" onPress={nouvelEnclos} />
         </View>
       ) : (
         <>
           {cartes.map(({ enclos: e, index, vue }) => (
             <CarteEnclos key={e.id} enclos={e} vue={vue} conseil={conseils[e.id]} index={index} />
           ))}
-          <CarteNouvelEnclos onPress={() => setAjout(true)} />
+          <CarteNouvelEnclos onPress={nouvelEnclos} />
         </>
       )}
 
-      <PopupDepart
-        visible={ajout}
-        titre={`Enclos ${liste.length + 1}`}
-        message="État de départ de ce nouvel enclos."
-        initial={{ ...departDefaut, robe: liste.length % 7 }}
-        libelle="Ajouter"
-        onFermer={() => setAjout(false)}
-        onValider={(depart) => {
-          const id = store.ajouterEnclos(depart);
-          setAjout(false);
-          router.push(`/enclos/${id}`);
-        }}
-      />
     </Ecran>
   );
 }

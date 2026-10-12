@@ -58,6 +58,7 @@ export default function RootLayout() {
         <Stack.Screen name="enclos/index" options={{ animation: 'none' }} />
         <Stack.Screen name="alertes" options={{ animation: 'none' }} />
         <Stack.Screen name="reglages" options={{ animation: 'none' }} />
+        <Stack.Screen name="depart" options={{ animation: 'slide_from_bottom' }} />
         <Stack.Screen name="objectifs/[id]" options={{ animation: 'fade_from_bottom', gestureEnabled: false }} />
       </Stack>
       <MiseAJour />

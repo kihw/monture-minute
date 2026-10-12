@@ -1,11 +1,10 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Redirect, router, useLocalSearchParams } from 'expo-router';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo } from 'react';
 import { Animated, StyleSheet, Text, View } from 'react-native';
 
 import Monture from '../../components/Monture';
-import { PopupDepart } from '../../components/FormulaireDepart';
 import { BoutonContour, BoutonPrincipal, Carte, Ecran } from '../../components/ui';
 import { CARACTERISTIQUE_MAX } from '../../data/constants';
 import { contexteDepuis } from '../../engine/parcours';
@@ -33,7 +32,6 @@ export default function Objectifs() {
   const index = useListeEnclos().findIndex((e) => e.id === id);
   const calcul = useCalcul();
   const apparition = useMemo(() => new Animated.Value(0), []);
-  const [nouveauCycle, setNouveauCycle] = useState(false);
 
   useEffect(() => {
     Animated.spring(apparition, { toValue: 1, useNativeDriver: true, speed: 3, bounciness: 12 }).start();
@@ -55,7 +53,7 @@ export default function Objectifs() {
         <>
           <BoutonPrincipal
             label="Nouveau cycle"
-            onPress={() => setNouveauCycle(true)}
+            onPress={() => router.push(`/depart?mode=redemarrage&id=${id}`)}
           />
           <BoutonContour label="Retour au menu" onPress={() => router.replace('/enclos')} />
         </>
@@ -102,19 +100,6 @@ export default function Objectifs() {
           <LinearGradient colors={degrades.accent} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.remplissage} />
         </View>
       </Carte>
-      <PopupDepart
-        visible={nouveauCycle}
-        titre={`Nouveau cycle · ${enclos.nom}`}
-        message="Nouvel état de départ pour les montures de cet enclos."
-        initial={enclos.depart}
-        libelle="Démarrer le cycle"
-        onFermer={() => setNouveauCycle(false)}
-        onValider={(depart) => {
-          useEleveurStore.getState().redemarrerEnclos(id, depart);
-          setNouveauCycle(false);
-          router.replace(`/enclos/${id}`);
-        }}
-      />
     </Ecran>
   );
 }

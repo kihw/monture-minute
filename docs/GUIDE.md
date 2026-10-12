@@ -17,7 +17,10 @@ L’app ne suit pas les montures une par une. Un **enclos** décrit le **lot** q
 | **Niveau actuel** | 1 pour des bébés, 60 pour des montures sauvages capturées… |
 | **Niveau cible** | Le niveau à atteindre avec l’XP |
 
-Le premier enclos se crée au lancement ; les suivants avec le **+** de la barre du haut. Chaque
+Un assistant en trois écrans crée chaque enclos : **la monture** (famille et robe), **la sérénité**
+(toutes pareilles ou différentes, et la valeur), puis **les niveaux**, avec le parcours prévu et sa
+durée avant de valider. Le premier enclos se crée au lancement, les suivants avec **Nouvel enclos**
+sur l’accueil ; **Options › Redémarrer l’enclos** repasse par le même assistant. Chaque
 enclos garde son propre parcours. Les trois familles suivent les mêmes règles d’enclos : la famille
 sert à reconnaître tes enclos d’un coup d’œil.
 

@@ -3,7 +3,6 @@ import { ReactNode, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 import PopupCarburant from '../../components/ChoixCarburant';
-import { PopupDepart } from '../../components/FormulaireDepart';
 import { Confirmation, MenuActions } from '../../components/Popup';
 import PopupAjustement from '../../components/PopupAjustement';
 import PopupRecharge from '../../components/PopupRecharge';
@@ -31,7 +30,7 @@ import { CARACTERISTIQUES, INFO_JAUGE, INFO_SUIVI, JaugeType } from '../../types
 import { formatDureeClaire, formatHeure, formatPoints, formatSerenite, titreClair } from '../../utils/format';
 import { s } from '../../echelle';
 
-type PopupOuverte = 'menu' | 'ajustement' | 'redemarrage' | 'suppression' | 'terminer' | 'ajout' | null;
+type PopupOuverte = 'menu' | 'ajustement' | 'suppression' | 'terminer' | null;
 
 /**
  * Écran d'un enclos (V2) : une carte héros dit où en est l'enclos et la seule chose à faire,
@@ -42,7 +41,6 @@ export default function DetailEnclos() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const liste = useListeEnclos();
   const enclos = useEleveurStore((s) => s.enclos[id]);
-  const departDefaut = useEleveurStore((s) => s.reglages.depart);
   const seuilConseilMin = useEleveurStore((s) => s.reglages.seuilConseilMin ?? 15);
   const store = useEleveurStore.getState();
   const calcul = useCalcul();
@@ -243,7 +241,7 @@ export default function DetailEnclos() {
   return (
     <Ecran entete={<BarreHaut onOptions={() => setPopup('menu')} />}>
       <IdentiteEnclos enclos={enclos} vue={vue} index={index} />
-      {liste.length > 1 && <SelecteurEnclos enclos={liste} vues={vues} actifId={id} onAjouter={() => setPopup('ajout')} />}
+      {liste.length > 1 && <SelecteurEnclos enclos={liste} vues={vues} actifId={id} onAjouter={() => router.push('/depart?mode=ajout')} />}
 
       {heros}
 
@@ -353,7 +351,7 @@ export default function DetailEnclos() {
             titre: 'Redémarrer l’enclos',
             detail: 'Nouvel état de départ, parcours remis à zéro',
             couleur: couleurs.attention,
-            onPress: () => setPopup('redemarrage'),
+            onPress: () => router.push(`/depart?mode=redemarrage&id=${id}`),
           },
           {
             icone: 'trash-can-outline',
@@ -375,32 +373,7 @@ export default function DetailEnclos() {
         }}
       />
 
-      <PopupDepart
-        visible={popup === 'redemarrage'}
-        titre={`Redémarrer ${enclos.nom}`}
-        message="Le parcours de cet enclos repart de zéro, les autres ne bougent pas."
-        initial={enclos.depart}
-        libelle="Redémarrer"
-        onFermer={fermer}
-        onValider={(depart) => {
-          store.redemarrerEnclos(id, depart);
-          fermer();
-        }}
-      />
 
-      <PopupDepart
-        visible={popup === 'ajout'}
-        titre={`Enclos ${liste.length + 1}`}
-        message="État de départ de ce nouvel enclos."
-        initial={{ ...departDefaut, robe: liste.length % 7 }}
-        libelle="Ajouter"
-        onFermer={fermer}
-        onValider={(depart) => {
-          const nouveau = store.ajouterEnclos(depart);
-          fermer();
-          router.replace(`/enclos/${nouveau}`);
-        }}
-      />
 
       <Confirmation
         visible={popup === 'suppression'}
