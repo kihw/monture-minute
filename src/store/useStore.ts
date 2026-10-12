@@ -3,15 +3,11 @@ import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
 import { JAUGE_MAX } from '../data/constants';
-import { seuilAuDessus } from '../engine/carburant';
-import { appliquerEnCours, dureeAnnonceeSec, echeances, simulerEtape } from '../engine/descente';
-import { contexteDepuis, prochaineEtape } from '../engine/parcours';
-import {
-  annulerNotifications,
-  DELAI_RAPPEL_MS,
-  programmerAlerte,
-  programmerFinEtape,
-} from '../engine/notifications';
+import { appliquerEnCours, dureeAnnonceeSec, echeances, scenarios, simulerEtape } from '../engine/descente';
+import { messageFinEtape, messagePause, messageRalentit, messageVaSeVider } from '../engine/messages';
+import { contexteDepuis, prochaineEtape, remplissageHabituel } from '../engine/parcours';
+import { carburantPropose } from '../engine/statut';
+import { annulerNotifications, DELAI_RAPPEL_MS, programmer } from '../engine/notifications';
 import {
   carburantVide,
   DepartEnclos,
@@ -24,7 +20,6 @@ import {
   Reglages,
   Segment,
 } from '../types/domain';
-import { formatCarburantCourt } from '../utils/format';
 
 export interface Confirmation {
   id: string;
@@ -58,6 +53,10 @@ interface EleveurState {
   validerEtLancer: (id: string, carburant: Partial<Record<JaugeType, number>>) => void;
   /** « Plus tard » sur la notification : nouveau rappel dans 30 min. */
   reporterRappel: (id: string) => void;
+  /** « Jauges activées » d'une notification de fin d'étape : valide et lance la suite avec le carburant habituel. */
+  lancerSuiteHabituelle: (id: string) => void;
+  /** « Nouveau cycle » : relance l'enclos terminé avec les mêmes réglages. */
+  relancerCycle: (id: string) => void;
   /** Reprogramme les notifications des étapes en cours (au démarrage de l’app Windows, dont les minuteries ne survivent pas). */
   replanifierNotifications: () => void;
   /** Valide l'étape en cours. `anticipee` : n'applique que le temps réellement écoulé. */
@@ -170,53 +169,61 @@ export const useEleveurStore = create<EleveurState>()(
         const enCours = e.enCours;
         const { demarreeAt, etape } = enCours;
         const ctx = ctxEnclos(reglages, e);
-        const fin = appliquerEnCours(e.lot, enCours).lot;
-        const promesses: Promise<string | undefined>[] = [
-          programmerFinEtape({
-            enclosId: id,
-            enclosNom: e.nom,
-            numeroEtape: e.etapesValidees.length + 1,
-            derniere: etape.vides.length === 0 && prochaineEtape(fin, ctx) === null,
-            jaugesVides: etape.vides.map((j) => INFO_JAUGE[j].nom),
-            finAt: finEtape,
-            son: reglages.son,
-          }),
-        ];
+        const nom = (j: JaugeType) => INFO_JAUGE[j].nom;
+        const promesses: Promise<string | undefined>[] = [];
+
+        // Fin d'étape : la suite prête à lancer (carburant proposé d'après les habitudes), ou la pause
+        // d'une jauge vide, ou la fin du cycle.
+        const apres = appliquerEnCours(e.lot, enCours);
+        if (etape.vides.length) {
+          const j = etape.vides[0];
+          promesses.push(
+            programmer(messagePause({ enclos: e.nom, jauge: nom(j), niveau: remplissageHabituel(ctx, j) }), { enclosId: id, jauge: j, niveau: remplissageHabituel(ctx, j) }, finEtape, reglages.son)
+          );
+        } else {
+          const restes = { ...e.carburant, ...apres.carburant };
+          const plan = prochaineEtape(apres.lot, ctx);
+          const suivante = plan ? prochaineEtape(apres.lot, ctx, Object.fromEntries(plan.jauges.map((j) => [j, carburantPropose(restes, ctx, j)]))) : null;
+          promesses.push(
+            programmer(
+              messageFinEtape({
+                enclos: e.nom,
+                numero: e.etapesValidees.length + 1,
+                suivante: suivante ? { titre: suivante.titre, jauges: suivante.jauges.map(nom), dureeSec: suivante.dureeSec } : null,
+              }),
+              { enclosId: id },
+              finEtape,
+              reglages.son
+            )
+          );
+        }
+
+        // Pendant l'étape : prévenir avant qu'une jauge ralentisse (seulement si recharger fait
+        // gagner au moins le seuil de conseil) ou se vide, avec le niveau à mettre et l'heure de fin.
         if (avecCarburant) {
           const maintenant = Date.now();
           const avance = (reglages.anticipationMin ?? 5) * 60_000;
+          const seuilGain = (reglages.seuilConseilMin ?? 15) * 60_000;
           for (const ev of echeances(enCours, maintenant)) {
-            if (!ev.jauge || ev.type === 'fin') continue;
-            const nom = INFO_JAUGE[ev.jauge].nom;
-            // La fin d'étape couvre déjà la jauge vide qui l'arrête, et la dernière jauge couverte.
-            if (ev.type !== 'palier' && ev.quand >= finEtape - 10_000) continue;
-            if (ev.type === 'couverte') {
-              promesses.push(
-                programmerAlerte({
-                  enclosId: id,
-                  titre: `${nom} terminée`,
-                  corps: `${e.nom} : la jauge ${nom} a fini son travail, elle ne consomme plus.`,
-                  quand: ev.quand,
-                  son: false,
-                })
-              );
-              continue;
-            }
+            if (!ev.jauge || (ev.type !== 'palier' && ev.type !== 'vide')) continue;
+            // La fin d'étape couvre déjà la jauge vide qui l'arrête.
+            if (ev.type === 'vide' && ev.quand >= finEtape - 10_000) continue;
+            const j = ev.jauge;
             const quand = Math.max(maintenant + 1000, ev.quand - avance);
-            const delai = Math.round((ev.quand - quand) / 60_000);
-            const dans = delai > 0 ? ` dans ${delai} min` : '';
-            promesses.push(
-              programmerAlerte({
-                enclosId: id,
-                titre: ev.type === 'vide' ? `${nom} vide${dans}` : `${nom} passe ×${ev.palier}${dans}`,
-                corps:
-                  ev.type === 'vide'
-                    ? `${e.nom} : recharge la jauge ${nom}, sinon l'étape s'arrête.`
-                    : `${e.nom} : recharge ${nom} au-dessus de ${formatCarburantCourt(seuilAuDessus(ev.palier ?? 10))} pour garder un palier plus rapide.`,
-                quand,
-                son: reglages.son,
-              })
+            const dansMin = Math.round((ev.quand - quand) / 60_000);
+            // Même base que le conseil de l'écran d'enclos : le remplissage habituel des réglages.
+            const plein = scenarios(enCours, j, quand, { remplissage: reglages.remplissage, prudent: reglages.prudent }).find(
+              (sc) => sc.type === 'plein'
             );
+            const niveau = plein?.recharge?.niveau ?? reglages.remplissage;
+            let message;
+            if (ev.type === 'palier') {
+              if (!plein?.finAt || !plein.gainMs || plein.gainMs < seuilGain) continue;
+              message = messageRalentit({ enclos: e.nom, jauge: nom(j), dansMin, palier: ev.palier ?? 10, niveau, finAvec: plein.finAt, gainMs: plein.gainMs });
+            } else {
+              message = messageVaSeVider({ enclos: e.nom, jauge: nom(j), dansMin, niveau, finAvec: plein?.finAt ?? null });
+            }
+            promesses.push(programmer(message, { enclosId: id, jauge: j, niveau }, quand, reglages.son));
           }
         }
         const ids = (await Promise.all(promesses)).filter((x): x is string => !!x);
@@ -339,6 +346,23 @@ export const useEleveurStore = create<EleveurState>()(
             majEnclos(e.id, (x) => (x.enCours ? { ...x, enCours: { ...x.enCours, notificationIds: [] } } : x));
             planifierNotifications(e.id, e.enCours.finAt, true);
           }
+        },
+
+        lancerSuiteHabituelle: (id) => {
+          const e = get().enclos[id];
+          if (!e?.enCours || e.enCours.finAt > Date.now()) return;
+          get().validerEtape(id);
+          const apres = get().enclos[id];
+          if (!apres) return;
+          const ctx = ctxEnclos(get().reglages, apres);
+          const plan = prochaineEtape(apres.lot, ctx);
+          if (!plan) return;
+          get().demarrerEtape(id, Object.fromEntries(plan.jauges.map((j) => [j, carburantPropose(apres.carburant, ctx, j)])));
+        },
+
+        relancerCycle: (id) => {
+          const e = get().enclos[id];
+          if (e) get().redemarrerEnclos(id, e.depart);
         },
 
         reporterRappel: (id) => {

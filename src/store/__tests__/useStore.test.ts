@@ -7,15 +7,14 @@ const programmes: { titre: string; quand: number }[] = [];
 const annules: string[] = [];
 jest.mock('../../engine/notifications', () => {
   let n = 0;
-  const programmer = async (p: { titre?: string; quand?: number; finAt?: number }) => {
+  const programmer = async (message: { titre: string }, _contexte: unknown, quand: number) => {
     const id = `n${++n}`;
-    programmes.push({ titre: p.titre ?? 'fin', quand: p.quand ?? p.finAt ?? 0 });
+    programmes.push({ titre: message.titre, quand });
     return id;
   };
   return {
     DELAI_RAPPEL_MS: 30 * 60 * 1000,
-    programmerFinEtape: programmer,
-    programmerAlerte: programmer,
+    programmer,
     annulerNotifications: (ids?: string[]) => annules.push(...(ids ?? [])),
   };
 });
@@ -44,8 +43,8 @@ afterEach(() => jest.useRealTimers());
 describe('recharges en cours d’étape', () => {
   it('démarre une étape sans recharge, puis une recharge au plein avance la fin et reprogramme les alertes', async () => {
     const { id } = enclosActif();
-    // Endurance & XP avec seulement 100k d'endurance : ×20 puis ×10.
-    useEleveurStore.getState().demarrerEtape(id, { endurance: 100_000, xp: 200_000 });
+    // Endurance & XP avec 90k d'endurance : ×20 jusqu'à 80k, puis ×10 avant d'avoir fini.
+    useEleveurStore.getState().demarrerEtape(id, { endurance: 90_000, xp: 200_000 });
     await attendre();
     const avant = enclosActif().enclos.enCours!;
     expect(avant.segments).toEqual([]);
@@ -139,5 +138,42 @@ describe('habitudes et enchaînement des étapes', () => {
     const e = enclosActif().enclos;
     expect(e.etapesValidees).toHaveLength(1);
     expect(e.enCours?.etape.jauges).toEqual(['plus', 'xp']);
+  });
+});
+
+describe('notifications et réponses rapides', () => {
+  it('annonce la fin d’étape avec la suite, et une baisse de vitesse seulement si recharger fait gagner du temps', async () => {
+    const { id } = enclosActif();
+    // 90k : la jauge passe à ×10 avant d'avoir fourni ses 20 000 points ; recharger fait gagner du temps.
+    useEleveurStore.getState().demarrerEtape(id, { endurance: 90_000, xp: 200_000 });
+    await attendre();
+    const titres = programmes.map((p) => p.titre);
+    expect(titres).toContain('Enclos 1 · étape 1 finie');
+    expect(titres.some((t) => /^Enclos 1 · Endurance passe ×10/.test(t))).toBe(true);
+    // Pas d'alerte « jauge terminée » ni de baisse de vitesse de l'XP, qui ne fixe pas la fin : trop de bruit.
+    expect(titres.some((t) => /terminée|XP passe/.test(t))).toBe(false);
+  });
+
+  it('« Jauges activées » valide l’étape finie et lance la suivante avec le carburant habituel', async () => {
+    const { id } = enclosActif();
+    useEleveurStore.getState().demarrerEtape(id, { endurance: 200_000, xp: 200_000 });
+    await attendre();
+    // Trop tôt : rien ne se passe.
+    useEleveurStore.getState().lancerSuiteHabituelle(id);
+    expect(enclosActif().enclos.etapesValidees).toHaveLength(0);
+    jest.setSystemTime(enclosActif().enclos.enCours!.finAt + 1000);
+    useEleveurStore.getState().lancerSuiteHabituelle(id);
+    await attendre();
+    const e = enclosActif().enclos;
+    expect(e.etapesValidees).toHaveLength(1);
+    expect(e.enCours?.etape.jauges).toEqual(['plus', 'xp']);
+  });
+
+  it('« Nouveau cycle » relance l’enclos avec les mêmes réglages', () => {
+    const { id, enclos } = enclosActif();
+    useEleveurStore.getState().relancerCycle(id);
+    const e = enclosActif().enclos;
+    expect(e.depart).toEqual(enclos.depart);
+    expect(e.etapesValidees).toHaveLength(0);
   });
 });

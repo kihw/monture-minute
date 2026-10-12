@@ -119,12 +119,21 @@ Fin d’étape, alertes et conseil se recalculent aussitôt.
 
 ## 8. Les alertes
 
-- Avant chaque **baisse de palier** ou **jauge vide** (5 min d’avance par défaut, réglable) ;
-- quand une jauge a **fini son travail** (discret) ;
-- à la **fin de l’étape**, avec « Plus tard » (rappel dans 30 min) et « Voir ».
+Chaque notification tient en deux lignes : **l’enclos et l’événement**, puis **l’info utile**
+(niveau à mettre, heure de fin, temps gagné), avec une **réponse rapide** :
 
-Sur Windows, les alertes passent par les notifications du système tant que l’app est ouverte, et
-l’option **Toujours au premier plan** la garde par-dessus le jeu.
+| Notification | Exemple | Boutons |
+|---|---|---|
+| Fin d’étape | *Enclos 1 · étape 2 finie* — Suite : Maturité et Amour (1 h 51). Active Maturité + Amour. | **Jauges activées** (valide et lance la suite avec ton carburant habituel), Plus tard |
+| Ralentissement | *Enclos 1 · Amour passe ×10 dans 5 min* — Remplis à 200 000 : fin 16:58, 28 min gagnées. | **C’est rechargé**, Ignorer |
+| Jauge bientôt vide | *Enclos 1 · Endurance vide dans 5 min* — Sinon l’étape s’arrête. Remplis à 200 000 : fin 17:40. | **C’est rechargé**, Ignorer |
+| Étape en pause | *Enclos 1 · Endurance vide* — Étape en pause. Remplis-la à 200 000 pour reprendre. | **C’est rechargé**, Plus tard |
+| Cycle terminé | *Enclos 1 · cycle terminé* — Montures fécondables. | **Nouveau cycle**, Voir |
+
+Un ralentissement n’est signalé que si recharger fait gagner au moins le seuil de conseil
+(15 min par défaut) ; l’avance des alertes est réglable (5 min par défaut). « Plus tard » rappelle
+30 min après. Sur Windows, les notifications passent par le système tant que l’app est ouverte
+(un clic ouvre l’enclos), et **Toujours au premier plan** garde la fenêtre par-dessus le jeu.
 
 ## 9. Fin d’étape
 

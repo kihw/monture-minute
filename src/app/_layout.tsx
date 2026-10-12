@@ -40,7 +40,14 @@ export default function RootLayout() {
     configurerNotifications();
     return ecouterReponses({
       ouvrir: (url) => router.push(url as never),
-      reporter: (id) => useEleveurStore.getState().reporterRappel(id),
+      // Réponses rapides des notifications, exécutées avant d'ouvrir l'enclos.
+      agir: (action, { enclosId, jauge, niveau }) => {
+        const store = useEleveurStore.getState();
+        if (action === 'plustard') store.reporterRappel(enclosId);
+        else if (action === 'lancer') store.lancerSuiteHabituelle(enclosId);
+        else if (action === 'cycle') store.relancerCycle(enclosId);
+        else if (action === 'recharger' && jauge && niveau) store.rechargerJauge(enclosId, jauge, niveau);
+      },
     });
   }, []);
 

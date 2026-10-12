@@ -1,21 +1,45 @@
-// Notifications locales : une notification programmée à la fin de chaque étape,
-// avec deux actions « Plus tard » (rappel dans 30 min) et « Voir » (ouvre l'enclos).
-// Android : expo-notifications. Windows : la coquille Electron (voir bureau.ts),
-// qui affiche des notifications système tant que l'app tourne.
+// Notifications locales, courtes et actionnables : un titre (enclos + événement), une ligne utile,
+// et une réponse rapide selon le cas (voir messages.ts) :
+//   fin d'étape   → « Jauges activées » lance la suite avec le carburant habituel, « Plus tard » ;
+//   jauge vide    → « C'est rechargé », « Plus tard » ;
+//   ralentit/vide → « C'est rechargé », « Ignorer » ;
+//   cycle terminé → « Nouveau cycle », « Voir ».
+// Android : expo-notifications. Windows : la coquille Electron (voir bureau.ts), qui affiche des
+// notifications système (un clic ouvre l'enclos) tant que l'app tourne.
 
 import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
 
+import { JaugeType } from '../types/domain';
 import { pontBureau } from './bureau';
+import { ActionRapide, CategorieNotif, MessageNotif } from './messages';
 
 const CANAL = 'fin-etape';
-// Pas de « - » ni de « : » dans un identifiant de catégorie (contrainte expo-notifications).
-const CATEGORIE = 'finetape';
+const ACTION_IGNORER = 'ignorer';
 const ACTION_VOIR = 'voir';
-const ACTION_PLUS_TARD = 'plustard';
 export const DELAI_RAPPEL_MS = 30 * 60 * 1000;
 
 const natif = Platform.OS !== 'web';
+
+// Pas de « - » ni de « : » dans les identifiants de catégorie et d'action (contrainte expo-notifications).
+const BOUTONS: Record<CategorieNotif, { id: ActionRapide | typeof ACTION_IGNORER | typeof ACTION_VOIR; titre: string; ouvre: boolean }[]> = {
+  finetape: [
+    { id: 'lancer', titre: 'Jauges activées', ouvre: true },
+    { id: 'plustard', titre: 'Plus tard', ouvre: false },
+  ],
+  pause: [
+    { id: 'recharger', titre: 'C’est rechargé', ouvre: true },
+    { id: 'plustard', titre: 'Plus tard', ouvre: false },
+  ],
+  recharge: [
+    { id: 'recharger', titre: 'C’est rechargé', ouvre: true },
+    { id: ACTION_IGNORER, titre: 'Ignorer', ouvre: false },
+  ],
+  cycle: [
+    { id: 'cycle', titre: 'Nouveau cycle', ouvre: true },
+    { id: ACTION_VOIR, titre: 'Voir', ouvre: true },
+  ],
+};
 
 export function configurerNotifications() {
   if (!natif) return;
@@ -27,13 +51,15 @@ export function configurerNotifications() {
       shouldSetBadge: false,
     }),
   });
-  Notifications.setNotificationCategoryAsync(CATEGORIE, [
-    { identifier: ACTION_PLUS_TARD, buttonTitle: 'Plus tard', options: { opensAppToForeground: false } },
-    { identifier: ACTION_VOIR, buttonTitle: 'Voir', options: { opensAppToForeground: true } },
-  ]).catch(() => {});
+  for (const [categorie, boutons] of Object.entries(BOUTONS)) {
+    Notifications.setNotificationCategoryAsync(
+      categorie,
+      boutons.map((b) => ({ identifier: b.id, buttonTitle: b.titre, options: { opensAppToForeground: b.ouvre } }))
+    ).catch(() => {});
+  }
   if (Platform.OS === 'android') {
     Notifications.setNotificationChannelAsync(CANAL, {
-      name: "Fin d'étape",
+      name: 'Élevage',
       importance: Notifications.AndroidImportance.HIGH,
     }).catch(() => {});
   }
@@ -51,74 +77,39 @@ export async function demanderPermission(): Promise<boolean> {
   }
 }
 
-/** Programme une notification sur la plateforme courante ; renvoie son identifiant. */
-async function planifier(n: {
+/** Ce qu'une réponse rapide doit savoir pour agir sans ouvrir de saisie. */
+export interface ContexteNotif {
   enclosId: string;
-  titre: string;
-  corps: string;
-  quand: number;
-  son: boolean;
-  avecActions?: boolean;
-}): Promise<string | undefined> {
-  if (n.quand <= Date.now()) return undefined;
-  const url = `/enclos/${n.enclosId}`;
+  /** Jauge à recharger et niveau proposé (« C'est rechargé »). */
+  jauge?: JaugeType;
+  niveau?: number;
+}
+
+/** Programme une notification sur la plateforme courante ; renvoie son identifiant. */
+export async function programmer(message: MessageNotif, contexte: ContexteNotif, quand: number, son: boolean): Promise<string | undefined> {
+  if (quand <= Date.now()) return undefined;
+  const url = `/enclos/${contexte.enclosId}`;
   const bureau = pontBureau();
   if (bureau) {
-    const id = `notif-${n.quand}-${Math.random().toString(36).slice(2, 8)}`;
-    bureau.notifier({ id, titre: n.titre, corps: n.corps, quand: n.quand, url });
+    const id = `notif-${quand}-${Math.random().toString(36).slice(2, 8)}`;
+    bureau.notifier({ id, titre: message.titre, corps: message.corps, quand, url });
     return id;
   }
   if (!natif || !(await demanderPermission())) return undefined;
   try {
     return await Notifications.scheduleNotificationAsync({
       content: {
-        title: n.titre,
-        body: n.corps,
-        sound: n.son ? 'default' : undefined,
-        categoryIdentifier: n.avecActions ? CATEGORIE : undefined,
-        data: { url, enclosId: n.enclosId },
+        title: message.titre,
+        body: message.corps,
+        sound: son ? 'default' : undefined,
+        categoryIdentifier: message.categorie,
+        data: { url, ...contexte },
       },
-      trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: n.quand, channelId: CANAL },
+      trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: quand, channelId: CANAL },
     });
   } catch {
     return undefined;
   }
-}
-
-export function programmerFinEtape(params: {
-  enclosId: string;
-  enclosNom: string;
-  numeroEtape: number;
-  derniere: boolean;
-  /** Jauges vidées qui arrêtent l'étape avant son objectif. */
-  jaugesVides: string[];
-  finAt: number;
-  son: boolean;
-}): Promise<string | undefined> {
-  const nom = params.enclosNom.toLowerCase();
-  return planifier({
-    enclosId: params.enclosId,
-    titre: params.jaugesVides.length ? `Étape ${params.numeroEtape} : jauge vide` : `Étape ${params.numeroEtape} terminée !`,
-    corps: params.jaugesVides.length
-      ? `L’${nom} n’a plus de carburant (${params.jaugesVides.join(', ')}). Recharge pour continuer.`
-      : params.derniere
-        ? `L’${nom} a atteint tous les objectifs.`
-        : `L’${nom} a atteint les objectifs. Passe à l’étape ${params.numeroEtape + 1} ?`,
-    quand: params.finAt,
-    son: params.son,
-    avecActions: true,
-  });
-}
-
-/** Alerte ponctuelle pendant une étape (changement de palier, jauge vide). */
-export function programmerAlerte(params: {
-  enclosId: string;
-  titre: string;
-  corps: string;
-  quand: number;
-  son: boolean;
-}): Promise<string | undefined> {
-  return planifier(params);
 }
 
 export function annulerNotifications(ids?: string[]) {
@@ -132,16 +123,24 @@ export function annulerNotifications(ids?: string[]) {
   for (const id of ids) Notifications.cancelScheduledNotificationAsync(id).catch(() => {});
 }
 
-/** Réagit aux notifications : « Voir » ou un appui ouvre l'enclos, « Plus tard » demande un rappel. */
-export function ecouterReponses(handlers: { ouvrir: (url: string) => void; reporter: (enclosId: string) => void }): () => void {
+/**
+ * Réagit aux notifications : une réponse rapide est exécutée (`agir`), puis l'enclos s'ouvre ;
+ * un simple appui ouvre l'enclos ; « Ignorer » ne fait rien.
+ */
+export function ecouterReponses(handlers: {
+  ouvrir: (url: string) => void;
+  agir: (action: ActionRapide, contexte: ContexteNotif) => void;
+}): () => void {
   const bureau = pontBureau();
   if (bureau) return bureau.onOuvrir(handlers.ouvrir);
   if (!natif) return () => {};
   const abonnement = Notifications.addNotificationResponseReceivedListener((reponse) => {
-    const data = reponse.notification.request.content.data ?? {};
-    if (reponse.actionIdentifier === ACTION_PLUS_TARD) {
-      if (typeof data.enclosId === 'string') handlers.reporter(data.enclosId);
-      return;
+    const data = (reponse.notification.request.content.data ?? {}) as Partial<ContexteNotif> & { url?: string };
+    const action = reponse.actionIdentifier;
+    if (action === ACTION_IGNORER) return;
+    if (typeof data.enclosId === 'string' && ['lancer', 'recharger', 'cycle', 'plustard'].includes(action)) {
+      handlers.agir(action as ActionRapide, { enclosId: data.enclosId, jauge: data.jauge, niveau: data.niveau });
+      if (action === 'plustard') return;
     }
     if (typeof data.url === 'string') handlers.ouvrir(data.url);
   });
