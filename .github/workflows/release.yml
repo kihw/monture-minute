@@ -77,6 +77,8 @@ jobs:
         with:
           distribution: temurin
           java-version: 17
+      # Cache Gradle (dépendances, résultats de compilation) d'une release à l'autre.
+      - uses: gradle/actions/setup-gradle@v4
       - name: Clé de signature
         id: cle
         env:
@@ -103,7 +105,8 @@ jobs:
           ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
-        run: ./gradlew assembleRelease --no-daemon
+        # Deux architectures (quasiment tous les téléphones), comme l'APK compilé en local : deux fois moins long.
+        run: ./gradlew assembleRelease --no-daemon -PreactNativeArchitectures=arm64-v8a,armeabi-v7a
       - run: cp android/app/build/outputs/apk/release/app-release.apk MontureMinute-Android.apk
       - uses: actions/upload-artifact@v4
         with:

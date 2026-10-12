@@ -16,7 +16,8 @@
 // ANDROID_KEY_PASSWORD, et ne les écrit nulle part.
 
 import { createHash } from 'node:crypto';
-import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { execFileSync, spawnSync } from 'node:child_process';
 
@@ -24,6 +25,9 @@ const RACINE = resolve(import.meta.dirname, '..');
 const WINDOWS = process.platform === 'win32';
 const ARCHITECTURES = 'arm64-v8a,armeabi-v7a';
 const SIGNATURE = ['ANDROID_KEYSTORE_PATH', 'ANDROID_KEYSTORE_PASSWORD', 'ANDROID_KEY_ALIAS', 'ANDROID_KEY_PASSWORD'];
+// Empreinte SHA-256 du certificat de l'app publiée (information publique), retenue après une
+// première comparaison avec l'APK de la dernière release.
+const FICHIER_EMPREINTE = join(RACINE, 'scripts', 'signature-android.sha256');
 
 function arreter(message) {
   console.error(`\n✖ ${message}`);
@@ -127,14 +131,26 @@ try {
   mkdirSync(join(RACINE, 'dist'), { recursive: true });
   copyFileSync(join(dossier, 'android', 'app', 'build', 'outputs', 'apk', 'release', 'app-release.apk'), apk);
 
-  // Contrôle de la signature : l'empreinte doit être celle de toujours, sinon Android refusera la mise à jour.
+  // Contrôle de la signature : le certificat doit être celui de l'app déjà publiée, sinon Android
+  // refuserait la mise à jour sur tous les téléphones. Rien ne part en cas d'écart.
   const outils = join(sdk, 'build-tools');
   const derniers = existsSync(outils) ? readdirSync(outils).sort() : [];
-  if (derniers.length) {
-    const apksigner = join(outils, derniers[derniers.length - 1], WINDOWS ? 'apksigner.bat' : 'apksigner');
-    const certificat = lire(apksigner, ['verify', '--print-certs', apk]);
-    console.log(certificat.split('\n').find((l) => l.includes('SHA-256')) ?? certificat);
+  if (!derniers.length) throw new Error('apksigner introuvable (build-tools du SDK Android) : impossible de contrôler la signature.');
+  const apksigner = join(outils, derniers[derniers.length - 1], WINDOWS ? 'apksigner.bat' : 'apksigner');
+  const empreinte = (fichier) => lire(apksigner, ['verify', '--print-certs', fichier]).match(/SHA-256 digest:\s*([0-9a-f]+)/i)?.[1]?.toLowerCase();
+  const locale = empreinte(apk);
+  let attendue = existsSync(FICHIER_EMPREINTE) ? readFileSync(FICHIER_EMPREINTE, 'utf8').trim().toLowerCase() : null;
+  if (!attendue) {
+    console.log('Comparaison avec l’APK de la dernière release…');
+    const temp = mkdtempSync(join(tmpdir(), 'monture-apk-'));
+    lancer('gh', ['release', 'download', '--repo', 'kihw/monture-minute', '--pattern', 'MontureMinute-Android.apk', '--dir', temp]);
+    attendue = empreinte(join(temp, 'MontureMinute-Android.apk'));
+    if (attendue) writeFileSync(FICHIER_EMPREINTE, `${attendue}\n`);
   }
+  if (!locale || locale !== attendue) {
+    throw new Error(`Signature différente de l'app publiée (locale ${locale ?? '?'}, publiée ${attendue ?? '?'}) : mauvaise clé, rien n'est envoyé.`);
+  }
+  console.log(`Signature conforme à l'app publiée (SHA-256 ${locale.slice(0, 16)}…)`);
   console.log(`APK prêt : ${apk}`);
 } catch (e) {
   console.error(`\n✖ ${e.message}`);

@@ -10,8 +10,9 @@ npm run publier -- patch    # ou minor / major
 1. vérifications (lint, types, tests) ;
 2. nouvelle version : `package.json` et `desktop/package.json`, commit et tag `vX.Y.Z` ;
 3. APK release signé, compilé dans un dossier court (`C:\mm` par défaut, réglable avec
-   `MONTURE_DOSSIER_BUILD`) pour arm64-v8a et armeabi-v7a, copié dans `dist/` ; l'empreinte
-   SHA-256 du certificat s'affiche (elle doit toujours être la même) ;
+   `MONTURE_DOSSIER_BUILD`) pour arm64-v8a et armeabi-v7a, copié dans `dist/`. Son certificat
+   est comparé à celui de l'APK publié (`scripts/signature-android.sha256`, sinon l'APK de la
+   dernière release) : s'ils diffèrent, rien n'est envoyé ;
 4. envoi de `main` et du tag ;
 5. release GitHub créée tout de suite avec l'APK et les notes de `docs/notes/vX.Y.Z.md` (sinon des
    notes générées). Le tag lance ensuite `.github/workflows/release.yml`, qui compile
