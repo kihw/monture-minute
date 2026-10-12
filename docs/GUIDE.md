@@ -103,7 +103,10 @@ Chaque option donne l’heure de fin, le temps gagné et le carburant consommé.
 conseillée que si elle fait gagner au moins **15 min** (réglable) ; à gain quasi égal, l’option la
 moins gourmande l’emporte. Une jauge qui va se vider passe toujours en priorité.
 
-- **Toucher une jauge** ouvre la feuille « Recharger ? » ; **Fait** enregistre la recharge faite en jeu.
+- **Toucher une jauge** ouvre la feuille « Recharger » : l’heure de fin sans recharge, puis chaque
+  recharge utile en carte (heure de fin, temps gagné, carburant ajouté), la conseillée en avant.
+  Recharge en jeu, puis **C’est rechargé** ; **Autre niveau** pour un objet ou une valeur précise
+  (Élixir, Potion, Philtre, Extrait, ou le niveau lu en jeu).
 - **Appui long** (ou **Corriger** dans la feuille) recale la jauge sur la valeur lue en jeu.
 
 Fin d’étape, alertes et conseil se recalculent aussitôt.

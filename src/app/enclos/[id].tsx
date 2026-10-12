@@ -71,9 +71,9 @@ export default function DetailEnclos() {
 
   function ouvrirSaisie(mode: 'recharge' | 'correction', type: JaugeType) {
     if (!enCours) return;
-    const actuel = etatJauge(enCours, type, Date.now()).niveau;
+    const actuel = etatJauge(enCours, type, maintenant).niveau;
     setRecharge(null);
-    setSaisie({ mode, type, valeur: mode === 'recharge' ? Math.max(actuel, calcul.remplissage) : Math.round(actuel / 2000) * 2000 });
+    setSaisie({ mode, type, valeur: mode === 'recharge' ? Math.max(actuel, remplissageHabituel(ctx, type)) : Math.round(actuel / 2000) * 2000 });
   }
 
   function validerSaisie() {
@@ -287,8 +287,8 @@ export default function DetailEnclos() {
         enCours={enCours}
         jauge={recharge}
         maintenant={maintenant}
-        options={calcul}
-        conseille={conseil && conseil.jauge === recharge ? (conseil.scenario?.type ?? null) : null}
+        options={{ ...calcul, remplissage: recharge ? remplissageHabituel(ctx, recharge) : calcul.remplissage }}
+        conseille={conseil && (conseil.niveau === 'recharger' || conseil.niveau === 'vide') && conseil.jauge === recharge ? (conseil.scenario?.type ?? null) : null}
         onRecharger={(niveau) => {
           if (recharge) store.rechargerJauge(id, recharge, niveau);
           setRecharge(null);
@@ -301,8 +301,8 @@ export default function DetailEnclos() {
       <PopupCarburant
         type={saisie?.type ?? null}
         valeur={saisie?.valeur ?? 0}
-        titre={saisie ? `${INFO_JAUGE[saisie.type].nom} · ${saisie.mode === 'recharge' ? 'niveau après recharge' : 'niveau lu en jeu'}` : undefined}
-        libelle={saisie?.mode === 'correction' ? 'Corriger' : 'Recharge faite'}
+        titre={saisie ? `${INFO_JAUGE[saisie.type].nom} · ${saisie.mode === 'recharge' ? 'après la recharge' : 'valeur lue en jeu'}` : undefined}
+        libelle={saisie?.mode === 'correction' ? 'Corriger' : 'C’est rechargé'}
         onChange={(valeur) => saisie && setSaisie({ ...saisie, valeur })}
         onValider={validerSaisie}
         onFermer={() => setSaisie(null)}

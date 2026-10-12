@@ -1,19 +1,22 @@
-// Feuille « Recharger ? » d'une jauge en cours d'étape : courbe du carburant prévu, puis les
-// options chiffrées côte à côte (sans recharge, au plein, juste assez, au prochain palier) avec
-// leur heure de fin, le temps gagné et le carburant consommé.
+// Feuille « Recharger » d'une jauge en cours d'étape (V2) : état de la jauge en phrase, l'option
+// « sans recharge » comme repère, puis chaque recharge possible en carte (heure de fin, temps
+// gagné, carburant ajouté), la conseillée mise en avant. La courbe passe sous « Voir le détail ».
 
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import Svg, { Circle, Line, Path, Rect } from 'react-native-svg';
 
 import { JAUGE_MAX, TIERS_CARBURANT } from '../data/constants';
 import { s } from '../echelle';
 import { courbeCarburant, EnCoursSimulable, etatJauge, Scenario, scenarios, simulerEtape } from '../engine/descente';
-import { couleurs, rayon } from '../theme';
+import { couleurs, grille, rayon, texte } from '../theme';
 import { INFO_JAUGE, JaugeType } from '../types/domain';
-import { formatCarburantCourt, formatDureeCourte, formatHeure } from '../utils/format';
+import { formatDureeClaire, formatHeure, formatPoints } from '../utils/format';
 import Popup from './Popup';
-import { texteEcheance } from './Reservoirs';
+import { BarreCarburant, NomsPaliers, texteEcheance } from './Reservoirs';
 import { BoutonContour, BoutonPrincipal } from './ui';
+import { Lien } from './v2/base';
 
 const LARGEUR = 300;
 const HAUTEUR = 64;
@@ -33,14 +36,7 @@ export function CourbeCarburant({ enCours, jauge, maintenant }: { enCours: EnCou
     <View style={styles.courbe}>
       <Svg width="100%" height={s(HAUTEUR)} viewBox={`0 0 ${LARGEUR} ${HAUTEUR}`} preserveAspectRatio="none">
         {TIERS_CARBURANT.map((t, i) => (
-          <Rect
-            key={t.nom}
-            x={0}
-            width={LARGEUR}
-            y={y(t.plafond)}
-            height={y(t.seuil) - y(t.plafond)}
-            fill={`rgba(242,201,76,${0.03 + i * 0.03})`}
-          />
+          <Rect key={t.nom} x={0} width={LARGEUR} y={y(t.plafond)} height={y(t.seuil) - y(t.plafond)} fill={`rgba(242,201,76,${0.03 + i * 0.03})`} />
         ))}
         {TIERS_CARBURANT.filter((t) => t.seuil > 0).map((t) => (
           <Line key={t.seuil} x1={0} x2={LARGEUR} y1={y(t.seuil)} y2={y(t.seuil)} stroke="rgba(255,255,255,0.08)" strokeWidth={1} />
@@ -51,46 +47,58 @@ export function CourbeCarburant({ enCours, jauge, maintenant }: { enCours: EnCou
       </Svg>
       <View style={styles.axe}>
         <Text style={styles.axeTexte}>{formatHeure(debut)}</Text>
-        <Text style={styles.axeTexte}>Carburant prévu</Text>
+        <Text style={styles.axeTexte}>Carburant prévu sans recharge</Text>
         <Text style={styles.axeTexte}>{formatHeure(fin)}</Text>
       </View>
     </View>
   );
 }
 
-function titreScenario(sc: Scenario): string {
+function presentation(sc: Scenario): { titre: string; detail: string; icone: 'flask' | 'flask-outline' | 'clock-outline' } {
   switch (sc.type) {
-    case 'sans':
-      return 'Sans recharge';
     case 'plein':
-      return `Au plein · ${formatCarburantCourt(sc.recharge!.niveau)}`;
+      return { titre: `Remplir à ${formatPoints(sc.recharge!.niveau)}`, detail: 'Ton remplissage habituel', icone: 'flask' };
     case 'minimale':
-      return `Juste assez · ${formatCarburantCourt(sc.recharge!.niveau)}`;
-    case 'auPalier':
-      return `Au changement de palier · ${formatHeure(sc.recharge!.t)}`;
+      return { titre: `Juste assez : ${formatPoints(sc.recharge!.niveau)}`, detail: 'De quoi finir sans ralentir, sans gaspiller', icone: 'flask-outline' };
+    default:
+      return {
+        titre: `Plus tard, à ${formatHeure(sc.recharge!.t)}`,
+        detail: `Quand elle ralentira : remplis-la à ${formatPoints(sc.recharge!.niveau)}. Une alerte te préviendra.`,
+        icone: 'clock-outline',
+      };
   }
 }
 
-function LigneScenario({ sc, conseille, onFait }: { sc: Scenario; conseille: boolean; onFait?: () => void }) {
-  const fin = sc.finAt !== null ? `Fin ${formatHeure(sc.finAt)}` : sc.bloqueeA !== null ? `Bloquée à ${formatHeure(sc.bloqueeA)}` : 'Bloquée';
-  const gain = sc.type !== 'sans' && sc.gainMs !== null && sc.gainMs > 0 ? `−${formatDureeCourte(sc.gainMs / 1000)}` : null;
+function CarteOption({ sc, conseille, onFait }: { sc: Scenario; conseille: boolean; onFait?: () => void }) {
+  const p = presentation(sc);
+  const gain = sc.gainMs !== null && sc.gainMs > 0 ? sc.gainMs : 0;
   return (
-    <View style={[styles.scenario, conseille && styles.scenarioConseille]}>
-      <View style={{ flex: 1, minWidth: 0, gap: s(2) }}>
-        <Text style={styles.scenarioTitre} numberOfLines={1}>
-          {titreScenario(sc)}
-        </Text>
-        <Text style={styles.scenarioDetail} numberOfLines={1}>
-          <Text style={{ color: sc.finAt === null ? couleurs.danger : couleurs.texte }}>{fin}</Text>
-          {gain ? <Text style={{ color: couleurs.succes }}>{`  ${gain}`}</Text> : null}
-          {sc.carburantAjoute > 0 ? `  · +${formatCarburantCourt(sc.carburantAjoute)} carburant` : ''}
-        </Text>
+    <View style={[styles.option, conseille && styles.optionConseillee]}>
+      <View style={styles.optionTete}>
+        <MaterialCommunityIcons name={p.icone} size={s(16)} color={conseille ? couleurs.accent : couleurs.texteAttenue} />
+        <Text style={styles.optionTitre}>{p.titre}</Text>
+        {conseille && (
+          <View style={styles.badge}>
+            <Text style={styles.badgeTexte}>Conseillé</Text>
+          </View>
+        )}
       </View>
-      {onFait && (
-        <View style={{ width: s(72) }}>
-          <BoutonContour label="Fait" onPress={onFait} />
+      <Text style={texte.legende}>{p.detail}</Text>
+      <View style={styles.chiffres}>
+        <View style={styles.chiffre}>
+          <Text style={styles.chiffreLibelle}>Fin</Text>
+          <Text style={[styles.chiffreValeur, sc.finAt === null && { color: couleurs.danger }]}>{sc.finAt !== null ? formatHeure(sc.finAt) : 'bloquée'}</Text>
         </View>
-      )}
+        <View style={styles.chiffre}>
+          <Text style={styles.chiffreLibelle}>Gagné</Text>
+          <Text style={[styles.chiffreValeur, { color: gain > 0 ? couleurs.succes : couleurs.texteFaible }]}>{gain > 0 ? formatDureeClaire(gain / 1000) : 'rien'}</Text>
+        </View>
+        <View style={styles.chiffre}>
+          <Text style={styles.chiffreLibelle}>Carburant</Text>
+          <Text style={styles.chiffreValeur}>+{formatPoints(sc.carburantAjoute)}</Text>
+        </View>
+      </View>
+      {onFait && (conseille ? <BoutonPrincipal label="C’est rechargé" onPress={onFait} /> : <BoutonContour label="C’est rechargé" onPress={onFait} />)}
     </View>
   );
 }
@@ -111,6 +119,7 @@ export default function PopupRecharge({
   enCours: EnCoursSimulable | null;
   jauge: JaugeType | null;
   maintenant: number;
+  /** `remplissage` : niveau habituel de cette jauge. */
   options: { remplissage: number; prudent: boolean };
   /** Type d'option mise en avant par le conseil (si le conseil porte sur cette jauge). */
   conseille?: Scenario['type'] | null;
@@ -124,15 +133,15 @@ export default function PopupRecharge({
   return (
     <Popup
       visible={pret}
-      titre={info ? `Recharger ${info.nom} ?` : 'Recharger ?'}
+      titre={info ? `Recharger ${info.nom}` : 'Recharger'}
       onFermer={onFermer}
       pied={
-        <View style={styles.ligne}>
+        <View style={styles.pied}>
           <View style={{ flex: 1 }}>
-            <BoutonContour label="Corriger" onPress={onCorriger} />
+            <BoutonContour label="Corriger la jauge" onPress={onCorriger} />
           </View>
-          <View style={{ flex: 1.4 }}>
-            <BoutonPrincipal label="Autre niveau" onPress={onAutreNiveau} />
+          <View style={{ flex: 1 }}>
+            <BoutonContour label="Autre niveau" onPress={onAutreNiveau} />
           </View>
         </View>
       }
@@ -157,57 +166,99 @@ function ContenuRecharge({
   conseille?: Scenario['type'] | null;
   onRecharger: (niveau: number) => void;
 }) {
+  const [detail, setDetail] = useState(false);
   const sim = simulerEtape(enCours);
   const etat = etatJauge(enCours, jauge, maintenant, sim);
   const echeance = texteEcheance(etat, maintenant);
   const liste = scenarios(enCours, jauge, maintenant, options);
+  const sans = liste.find((sc) => sc.type === 'sans')!;
+  // Seules les recharges utiles : elles font finir plus tôt, ou débloquent une étape qui se viderait.
+  const recharges = liste.filter(
+    (sc) => sc.type !== 'sans' && ((sc.gainMs !== null && sc.gainMs > 0) || (sans.finAt === null && sc.finAt !== null))
+  );
+  const info = INFO_JAUGE[jauge];
   return (
     <>
-      <View style={styles.etat}>
-        <Text style={styles.niveau}>{formatCarburantCourt(etat.niveau)}</Text>
-        <Text style={styles.palier}>{etat.palier > 0 ? `×${etat.palier} / 10 s` : 'à l’arrêt'}</Text>
+      <View style={{ gap: s(4) }}>
+        <View style={styles.etat}>
+          <Text style={styles.niveau}>
+            {formatPoints(etat.niveau)}
+            <Text style={styles.niveauMax}> / {formatPoints(JAUGE_MAX)}</Text>
+          </Text>
+          <Text style={[styles.vitesse, { color: info.couleur }]}>{etat.palier > 0 ? `vitesse ×${etat.palier}` : 'à l’arrêt'}</Text>
+        </View>
+        <BarreCarburant ratio={Math.max(0, Math.min(1, etat.niveau / JAUGE_MAX))} couleur={info.couleur} />
+        <NomsPaliers niveau={etat.niveau} />
+        <Text style={[styles.echeance, { color: echeance.couleur }]}>{echeance.texte}</Text>
       </View>
-      <Text style={[styles.echeance, { color: echeance.couleur }]}>{echeance.texte}</Text>
-      <CourbeCarburant enCours={enCours} jauge={jauge} maintenant={maintenant} />
-      <View style={styles.scenarios}>
-        {liste.map((sc) => (
-          <LigneScenario
+
+      <View style={styles.reference}>
+        <Text style={texte.legende}>Sans recharge</Text>
+        <Text style={[styles.referenceValeur, sans.finAt === null && { color: couleurs.danger }]}>
+          {sans.finAt !== null ? `fin à ${formatHeure(sans.finAt)}` : `bloquée à ${sans.bloqueeA ? formatHeure(sans.bloqueeA) : '—'}`}
+        </Text>
+      </View>
+
+      {recharges.length === 0 ? (
+        <Text style={texte.legende}>
+          {etat.couverte
+            ? 'Cette jauge a déjà fait son travail : la recharger ne changerait rien.'
+            : 'La recharger ne ferait pas finir l’étape plus tôt : ce n’est pas elle qui fixe la fin.'}
+        </Text>
+      ) : (
+        recharges.map((sc) => (
+          <CarteOption
             key={sc.type}
             sc={sc}
             conseille={sc.type === conseille}
-            // Le scénario « au changement de palier » est à faire plus tard : l'alerte le rappellera.
-            onFait={sc.recharge && sc.type !== 'auPalier' ? () => onRecharger(sc.recharge!.niveau) : undefined}
+            // « Plus tard » se fait au changement de palier : l'alerte le rappellera.
+            onFait={sc.type !== 'auPalier' ? () => onRecharger(sc.recharge!.niveau) : undefined}
           />
-        ))}
-        {liste.length === 1 && <Text style={styles.note}>Cette jauge a déjà couvert son besoin : la recharger ne change rien.</Text>}
-      </View>
-      <Text style={styles.note}>« Fait » enregistre la recharge faite en jeu maintenant. « Corriger » recale la jauge sur la valeur lue en jeu.</Text>
+        ))
+      )}
+
+      <Lien label={detail ? 'Masquer la courbe' : 'Voir le détail'} onPress={() => setDetail(!detail)} />
+      {detail && <CourbeCarburant enCours={enCours} jauge={jauge} maintenant={maintenant} />}
+      <Text style={texte.etiquette}>Recharge en jeu d’abord, puis confirme ici. « Corriger » recale la jauge sur la valeur lue en jeu.</Text>
     </>
   );
 }
 
 const styles = StyleSheet.create({
-  ligne: { flexDirection: 'row', gap: s(6) },
+  pied: { flexDirection: 'row', gap: s(6) },
   etat: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between' },
-  niveau: { color: couleurs.texte, fontSize: s(26), fontWeight: '800', letterSpacing: s(-0.6), fontVariant: ['tabular-nums'] },
-  palier: { color: couleurs.accent, fontSize: s(12), fontWeight: '800' },
-  echeance: { fontSize: s(12), fontWeight: '700', marginTop: s(-4) },
+  niveau: { color: couleurs.texte, fontSize: s(24), fontWeight: '700', letterSpacing: s(-0.5), fontVariant: ['tabular-nums'] },
+  niveauMax: { color: couleurs.texteFaible, fontSize: s(13), fontWeight: '500' },
+  vitesse: { fontSize: s(12.5), fontWeight: '700' },
+  echeance: { fontSize: s(12.5), fontWeight: '600', marginTop: s(2) },
+  reference: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: s(8),
+    paddingHorizontal: grille.x3,
+    borderRadius: rayon.md,
+    backgroundColor: couleurs.surface,
+  },
+  referenceValeur: { color: couleurs.texte, fontSize: s(13), fontWeight: '700', fontVariant: ['tabular-nums'] },
+  option: {
+    gap: grille.x2,
+    padding: grille.x3,
+    borderRadius: rayon.lg,
+    borderWidth: 1,
+    borderColor: couleurs.liseret,
+    backgroundColor: couleurs.carte,
+  },
+  optionConseillee: { borderColor: 'rgba(242,201,76,0.6)', backgroundColor: couleurs.accentDoux },
+  optionTete: { flexDirection: 'row', alignItems: 'center', gap: s(6) },
+  optionTitre: { flex: 1, color: couleurs.texte, fontSize: s(14), fontWeight: '700' },
+  badge: { paddingHorizontal: s(7), paddingVertical: s(2), borderRadius: rayon.pill, backgroundColor: couleurs.accent },
+  badgeTexte: { color: couleurs.surAccent, fontSize: s(10.5), fontWeight: '800' },
+  chiffres: { flexDirection: 'row', gap: grille.x2 },
+  chiffre: { flex: 1, gap: s(1) },
+  chiffreLibelle: { color: couleurs.texteFaible, fontSize: s(10.5), fontWeight: '600' },
+  chiffreValeur: { color: couleurs.texte, fontSize: s(14), fontWeight: '700', fontVariant: ['tabular-nums'] },
   courbe: { gap: s(3) },
   axe: { flexDirection: 'row', justifyContent: 'space-between' },
   axeTexte: { color: couleurs.texteFaible, fontSize: s(9.5), fontWeight: '700' },
-  scenarios: { gap: s(5) },
-  scenario: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: s(8),
-    padding: s(8),
-    borderRadius: rayon.md,
-    backgroundColor: couleurs.surface,
-    borderWidth: 1,
-    borderColor: couleurs.liseret,
-  },
-  scenarioConseille: { borderColor: couleurs.accent, backgroundColor: couleurs.accentDoux },
-  scenarioTitre: { color: couleurs.texte, fontSize: s(12.5), fontWeight: '800' },
-  scenarioDetail: { color: couleurs.texteAttenue, fontSize: s(11), fontWeight: '700' },
-  note: { color: couleurs.texteFaible, fontSize: s(10.5), fontWeight: '600' },
 });
