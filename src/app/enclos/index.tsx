@@ -1,143 +1,77 @@
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 
-import { AvatarAnneau, BarreEnclos } from '../../components/Compact';
 import { PopupDepart } from '../../components/FormulaireDepart';
-import { MiniJauges } from '../../components/PanneauJauges';
+import Monture from '../../components/Monture';
 import { BoutonPrincipal, Ecran } from '../../components/ui';
-import { echeances } from '../../engine/descente';
-import { prochaineEtape } from '../../engine/parcours';
-import { vueEnclos, VueEnclos } from '../../engine/statut';
-import { useCalcul, useMaintenant } from '../../hooks/useElevage';
-import { useEleveurStore, useListeEnclos } from '../../store/useStore';
-import { couleurs, rayon } from '../../theme';
-import { Enclos, INFO_JAUGE } from '../../types/domain';
-import { formatCompteARebours, formatHeure } from '../../utils/format';
+import { BarreOnglets, CarteEnclos, CarteNouvelEnclos, EnTeteOnglet } from '../../components/v2/onglets';
+import { Alerte } from '../../engine/alertes';
+import { useTableau } from '../../hooks/useTableau';
+import { useEleveurStore } from '../../store/useStore';
+import { couleurs, grille, texte } from '../../theme';
+import { formatHeure } from '../../utils/format';
 import { s } from '../../echelle';
 
 // Ordre d'affichage : ce qui demande une action d'abord.
-const PRIORITE = { a_confirmer: 0, en_cours: 1, attente: 2, termine: 3 } as const;
+const PRIORITE = { a_confirmer: 0, attente: 1, en_cours: 2, termine: 3 } as const;
 
-/** Prochaines alertes de tous les enclos : changements de palier, jauges vides, fins d'étape. */
-function prochainesAlertes(liste: Enclos[], maintenant: number) {
-  const alertes: { quand: number; texte: string }[] = [];
-  liste.forEach((e, i) => {
-    if (!e.enCours) return;
-    const { finAt } = e.enCours;
-    if (finAt > maintenant) alertes.push({ quand: finAt, texte: `E${i + 1} · fin d’étape` });
-    for (const ev of echeances(e.enCours, maintenant)) {
-      if (!ev.jauge || ev.type === 'couverte' || ev.type === 'fin') continue;
-      alertes.push({
-        quand: ev.quand,
-        texte: ev.type === 'vide' ? `E${i + 1} · ${INFO_JAUGE[ev.jauge].nom} vide` : `E${i + 1} · ${INFO_JAUGE[ev.jauge].nom} passe ×${ev.palier}`,
-      });
-    }
-  });
-  return alertes.sort((a, b) => a.quand - b.quand).slice(0, 3);
+/** Phrase de résumé de l'élevage : ce qui attend le joueur, sinon la prochaine échéance. */
+function resume(aFaire: Alerte[], aVenir: Alerte[], enCours: number): { texte: string; couleur: string } {
+  const enclosAFaire = new Set(aFaire.map((a) => a.enclosId)).size;
+  if (enclosAFaire > 0) {
+    return {
+      texte: enclosAFaire === 1 ? `${aFaire[0].enclosNom} attend une action.` : `${enclosAFaire} enclos attendent une action.`,
+      couleur: couleurs.accent,
+    };
+  }
+  const prochaine = aVenir[0];
+  if (prochaine?.quand) {
+    return {
+      texte: `${enCours} ${enCours > 1 ? 'enclos tournent' : 'enclos tourne'}, rien à faire. Prochaine échéance à ${formatHeure(prochaine.quand)} : ${prochaine.texte.toLowerCase()} (${prochaine.enclosNom}).`,
+      couleur: couleurs.texteAttenue,
+    };
+  }
+  return { texte: 'Rien en cours.', couleur: couleurs.texteAttenue };
 }
 
-/** Vue liste ultra compacte : une ligne par enclos, l'action urgente directement dans la ligne. */
+/** Accueil « Mes enclos » : résumé, une carte par enclos (l'urgent d'abord), ajout d'enclos. */
 export default function ListeEnclos() {
-  const liste = useListeEnclos();
-  const calcul = useCalcul();
-  const maintenant = useMaintenant();
+  const { liste, vues, conseils, alertes } = useTableau();
   const departDefaut = useEleveurStore((s) => s.reglages.depart);
   const store = useEleveurStore.getState();
   const [ajout, setAjout] = useState(false);
 
-  const vues = liste.map((e) => vueEnclos(e, calcul, maintenant));
-  const lignes = liste
+  const cartes = liste
     .map((e, i) => ({ enclos: e, index: i, vue: vues[i] }))
     .sort((a, b) => PRIORITE[a.vue.statut] - PRIORITE[b.vue.statut] || a.vue.restantSec - b.vue.restantSec);
-  const alertes = prochainesAlertes(liste, maintenant);
-
-  function valider(e: Enclos, vue: VueEnclos) {
-    store.validerEtape(e.id);
-    const lot = useEleveurStore.getState().enclos[e.id]?.lot;
-    if (lot && !prochaineEtape(lot, vue.ctx)) router.push(`/objectifs/${e.id}`);
-  }
+  const r = resume(alertes.aFaire, alertes.aVenir, vues.filter((v) => v.statut === 'en_cours').length);
+  const aFaire = new Set(alertes.aFaire.map((a) => a.enclosId)).size;
 
   return (
-    <Ecran entete={<BarreEnclos enclos={liste} vues={vues} onAjouter={() => setAjout(true)} />}>
-      {liste.length === 0 && (
+    <Ecran basDePage={<BarreOnglets actif="enclos" pastilles={{ alertes: aFaire }} />}>
+      <EnTeteOnglet titre="Mes enclos" resume={liste.length > 0 && <Text style={[styles.resume, { color: r.couleur }]}>{r.texte}</Text>} />
+
+      {liste.length === 0 ? (
         <View style={styles.vide}>
-          <Text style={styles.videTexte}>Aucun enclos pour l’instant.</Text>
-          <BoutonPrincipal label="Ajouter un enclos" onPress={() => setAjout(true)} />
+          <View style={styles.videMontures}>
+            <Monture famille="muldo" robe={1} taille={s(70)} fond={false} />
+            <Monture famille="dragodinde" robe={2} taille={s(90)} fond={false} />
+            <Monture famille="volkorne" robe={3} taille={s(70)} fond={false} />
+          </View>
+          <Text style={[texte.titre, { textAlign: 'center' }]}>Crée ton premier enclos</Text>
+          <Text style={[texte.legende, { textAlign: 'center' }]}>
+            Indique où en sont tes montures : l’app calcule le parcours et te dit quoi faire, étape par étape.
+          </Text>
+          <BoutonPrincipal label="Nouvel enclos" onPress={() => setAjout(true)} />
         </View>
-      )}
-
-      {lignes.map(({ enclos: e, index, vue }) => {
-        const aValider = vue.statut === 'a_confirmer';
-        return (
-          <Pressable
-            key={e.id}
-            onPress={() => router.push(vue.statut === 'termine' ? `/objectifs/${e.id}` : `/enclos/${e.id}`)}
-            style={({ pressed }) => [styles.ligne, aValider && styles.ligneAlerte, pressed && { opacity: 0.8 }]}
-          >
-            <AvatarAnneau famille={e.depart.famille ?? 'dragodinde'} robe={e.depart.robe ?? index} avancement={vue.avancement} taille={s(30)} couleur={aValider ? couleurs.attention : couleurs.accent} />
-            <View style={{ flex: 1, minWidth: 0, gap: s(4) }}>
-              <Text style={styles.nom} numberOfLines={1}>
-                {e.nom}
-                <Text style={styles.etape}>
-                  {vue.etape ? `  ·  ${vue.numeroEtape}/${vue.totalEtapes} ${vue.etape.titre}` : '  ·  objectifs atteints'}
-                </Text>
-              </Text>
-              {/* Une graduation par étape du parcours. */}
-              <View style={styles.segments}>
-                {Array.from({ length: vue.totalEtapes }, (_, k) => {
-                  const fait = k < vue.numeroEtape - 1 || vue.statut === 'termine';
-                  const actuel = k === vue.numeroEtape - 1 && vue.statut !== 'termine';
-                  const ratio = actuel ? (vue.statut === 'a_confirmer' ? 1 : vue.avancement * vue.totalEtapes - k) : 0;
-                  return (
-                    <View key={k} style={styles.segment}>
-                      <View
-                        style={[
-                          styles.segmentRempli,
-                          {
-                            width: fait ? '100%' : `${Math.max(0, Math.min(1, ratio)) * 100}%`,
-                            backgroundColor: aValider ? couleurs.attention : couleurs.accent,
-                          },
-                        ]}
-                      />
-                    </View>
-                  );
-                })}
-              </View>
-            </View>
-            {aValider ? (
-              <Pressable onPress={() => valider(e, vue)} style={styles.boutonValider} accessibilityLabel={`Valider l’étape de ${e.nom}`}>
-                <Text style={styles.boutonValiderTexte}>Valider</Text>
-              </Pressable>
-            ) : vue.statut === 'en_cours' ? (
-              <View style={styles.droite}>
-                <MiniJauges carburant={vue.carburant} actives={vue.etape?.jauges ?? []} />
-                <Text style={styles.timer}>{formatCompteARebours(vue.restantSec)}</Text>
-              </View>
-            ) : vue.statut === 'termine' ? (
-              <MaterialCommunityIcons name="check-decagram" size={s(18)} color={couleurs.succes} />
-            ) : (
-              <View style={styles.boutonLancer}>
-                <Text style={styles.boutonLancerTexte}>Lancer</Text>
-              </View>
-            )}
-          </Pressable>
-        );
-      })}
-
-      {alertes.length > 0 && (
-        <View style={styles.alertes}>
-          <Text style={styles.alertesTitre}>PROCHAINES ALERTES</Text>
-          {alertes.map((a, i) => (
-            <View key={i} style={styles.alerte}>
-              <Text style={styles.alerteTexte} numberOfLines={1}>
-                {a.texte}
-              </Text>
-              <Text style={styles.alerteHeure}>{formatHeure(a.quand)}</Text>
-            </View>
+      ) : (
+        <>
+          {cartes.map(({ enclos: e, index, vue }) => (
+            <CarteEnclos key={e.id} enclos={e} vue={vue} conseil={conseils[e.id]} index={index} />
           ))}
-        </View>
+          <CarteNouvelEnclos onPress={() => setAjout(true)} />
+        </>
       )}
 
       <PopupDepart
@@ -158,46 +92,7 @@ export default function ListeEnclos() {
 }
 
 const styles = StyleSheet.create({
-  vide: { gap: s(10), paddingVertical: s(20) },
-  videTexte: { color: couleurs.texteAttenue, fontSize: s(12.5), textAlign: 'center' },
-  ligne: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: s(9),
-    paddingVertical: s(8),
-    paddingHorizontal: s(10),
-    borderRadius: rayon.md,
-    backgroundColor: couleurs.carte,
-  },
-  ligneAlerte: { backgroundColor: 'rgba(245,161,66,0.1)', borderWidth: 1, borderColor: 'rgba(245,161,66,0.4)' },
-  nom: { color: couleurs.texte, fontSize: s(12.5), fontWeight: '800' },
-  etape: { color: couleurs.texteAttenue, fontWeight: '600' },
-  segments: { flexDirection: 'row', gap: s(3) },
-  segment: { width: s(16), height: s(3), borderRadius: s(2), backgroundColor: 'rgba(255,255,255,0.1)', overflow: 'hidden' },
-  segmentRempli: { height: '100%' },
-  droite: { flexDirection: 'row', alignItems: 'center', gap: s(8) },
-  timer: { color: couleurs.accent, fontSize: s(14), fontWeight: '800', fontVariant: ['tabular-nums'], minWidth: s(56), textAlign: 'right' },
-  boutonValider: {
-    height: s(26),
-    paddingHorizontal: s(10),
-    borderRadius: rayon.sm,
-    justifyContent: 'center',
-    backgroundColor: couleurs.attention,
-  },
-  boutonValiderTexte: { color: '#2a1603', fontSize: s(11.5), fontWeight: '800' },
-  boutonLancer: {
-    height: s(26),
-    paddingHorizontal: s(10),
-    borderRadius: rayon.sm,
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(242,201,76,0.4)',
-    backgroundColor: couleurs.accentDoux,
-  },
-  boutonLancerTexte: { color: couleurs.accent, fontSize: s(11.5), fontWeight: '800' },
-  alertes: { marginTop: s(4), padding: s(10), borderRadius: rayon.md, backgroundColor: couleurs.surface, gap: s(5) },
-  alertesTitre: { color: couleurs.texteFaible, fontSize: s(9.5), fontWeight: '800', letterSpacing: s(1.2) },
-  alerte: { flexDirection: 'row', justifyContent: 'space-between', gap: s(8) },
-  alerteTexte: { flex: 1, color: '#c9c6e0', fontSize: s(11.5), fontWeight: '700' },
-  alerteHeure: { color: couleurs.texteAttenue, fontSize: s(11.5), fontWeight: '700', fontVariant: ['tabular-nums'] },
+  resume: { fontSize: s(13), fontWeight: '600', lineHeight: s(18) },
+  vide: { gap: grille.x3, paddingVertical: grille.x6 },
+  videMontures: { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'center', gap: grille.x2 },
 });

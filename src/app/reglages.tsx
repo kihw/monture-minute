@@ -4,13 +4,14 @@ import { Linking, StyleSheet, Text } from 'react-native';
 
 import { rechercherMiseAJour, useMiseAJour } from '../components/MiseAJour';
 import { Confirmation, PopupChoix } from '../components/Popup';
-import { Carte, Ecran, EnTete, LigneReglage, Titre } from '../components/ui';
+import { Carte, Ecran, LigneReglage, Titre } from '../components/ui';
+import { BarreOnglets, EnTeteOnglet } from '../components/v2/onglets';
 import { TIERS_CARBURANT } from '../data/constants';
 import { pontBureau } from '../engine/bureau';
 import { palierPourNiveau, tierPourNiveau } from '../engine/carburant';
 import { VERSION_APP } from '../engine/miseAJour';
 import { demanderPermission } from '../engine/notifications';
-import { useEleveurStore, useListeEnclos } from '../store/useStore';
+import { useEleveurStore } from '../store/useStore';
 import { couleurs, esp } from '../theme';
 import { formatNombre } from '../utils/format';
 import { s } from '../echelle';
@@ -19,44 +20,65 @@ export default function Reglages() {
   const reglages = useEleveurStore((s) => s.reglages);
   const modifier = useEleveurStore((s) => s.modifierReglages);
   const reinitialiserTout = useEleveurStore((s) => s.reinitialiserTout);
-  const liste = useListeEnclos();
   const [popup, setPopup] = useState<'reset' | 'remplissage' | 'mode' | 'seuil' | 'anticipation' | null>(null);
   const verification = useMiseAJour((s) => s.verification);
   const bureau = pontBureau();
   const fermer = () => setPopup(null);
 
-  const enCours = liste.find((e) => e.enCours) ?? liste[0];
+  const nbHabitudes = Object.keys(reglages.habitudes ?? {}).length;
   // Remplissages proposés : le plafond de chaque tier (Élixir 200k, Potion 180k, Philtre 140k, Extrait 80k).
   const remplissages = TIERS_CARBURANT.map((t) => t.plafond).reverse();
 
   return (
-    <Ecran>
-      <EnTete avecRetour titre="Réglages" />
+    <Ecran basDePage={<BarreOnglets actif="reglages" />}>
+      <EnTeteOnglet titre="Réglages" />
 
       <Carte style={styles.groupe}>
-        <Titre>Cycle</Titre>
+        <Titre>Carburant</Titre>
         <LigneReglage
-          icone="play"
-          couleur={couleurs.xp}
-          titre="Reprendre le parcours"
-          sousTitre="Continue là où tu t’es arrêté"
-          onPress={() => enCours && router.push(`/enclos/${enCours.id}`)}
+          icone="flask-outline"
+          couleur={couleurs.accent}
+          titre="Remplissage habituel"
+          sousTitre={`Proposé pour une jauge sans habitude : ${tierPourNiveau(reglages.remplissage).nom}, vitesse ×${palierPourNiveau(reglages.remplissage)}`}
+          valeur={formatNombre(reglages.remplissage)}
+          onPress={() => setPopup('remplissage')}
         />
         <LigneReglage
-          icone="water-off-outline"
-          couleur={couleurs.amour}
-          titre="Réinitialiser l’élevage"
-          sousTitre="Supprime tous les enclos et revient à l’accueil"
-          onPress={() => setPopup('reset')}
+          icone="history"
+          couleur={couleurs.accent}
+          titre="Habitudes retenues"
+          sousTitre={
+            nbHabitudes > 0
+              ? `${nbHabitudes} ${nbHabitudes > 1 ? 'jauges' : 'jauge'} : l’app repropose ce que tu as fait la dernière fois. Toucher pour oublier.`
+              : 'L’app retiendra ce que tu fais de chaque jauge au lancement d’une étape.'
+          }
+          onPress={nbHabitudes > 0 ? () => modifier({ habitudes: {} }) : undefined}
+        />
+        <LigneReglage
+          icone="flask-plus-outline"
+          couleur={couleurs.accent}
+          titre="Conseil de recharge"
+          sousTitre="Conseiller une recharge seulement si l’étape finit au moins autant plus tôt"
+          valeur={`≥ ${reglages.seuilConseilMin ?? 15} min`}
+          onPress={() => setPopup('seuil')}
+        />
+        <LigneReglage
+          icone="calculator-variant-outline"
+          couleur={couleurs.texteAttenue}
+          titre="Mode de calcul"
+          sousTitre="Prudent : durées majorées de 10 % pour absorber les écarts avec le jeu"
+          valeur={reglages.prudent ? 'Prudent' : 'Optimisé'}
+          onPress={() => setPopup('mode')}
         />
       </Carte>
 
       <Carte style={styles.groupe}>
-        <Titre>Préférences</Titre>
+        <Titre>Alertes</Titre>
         <LigneReglage
           icone="bell-outline"
-          couleur={couleurs.texteAttenue}
+          couleur={couleurs.accent}
           titre="Notifications"
+          sousTitre="Te prévenir des fins d’étape, paliers et jauges vides"
           interrupteur={{
             actif: reglages.notifications,
             onChange: (v) => {
@@ -66,9 +88,18 @@ export default function Reglages() {
           }}
         />
         <LigneReglage
+          icone="bell-ring-outline"
+          couleur={couleurs.accent}
+          titre="Prévenir avant palier ou jauge vide"
+          sousTitre="Le temps d’aller recharger en jeu"
+          valeur={(reglages.anticipationMin ?? 5) > 0 ? `${reglages.anticipationMin ?? 5} min avant` : 'Au moment'}
+          onPress={() => setPopup('anticipation')}
+        />
+        <LigneReglage
           icone="volume-high"
           couleur={couleurs.texteAttenue}
-          titre="Son & alertes"
+          titre="Son"
+          sousTitre="Les alertes font du bruit"
           interrupteur={{ actif: reglages.son, onChange: (v) => modifier({ son: v }) }}
         />
         {bureau && (
@@ -89,7 +120,7 @@ export default function Reglages() {
       </Carte>
 
       <Carte style={styles.groupe}>
-        <Titre>Application</Titre>
+        <Titre>Aide</Titre>
         <LigneReglage
           icone="school-outline"
           couleur={couleurs.accent}
@@ -97,6 +128,17 @@ export default function Reglages() {
           sousTitre="Enclos, jauges, carburant, alertes : tout en 10 pages"
           onPress={() => router.push('/guide')}
         />
+        <LigneReglage
+          icone="chart-bar"
+          couleur={couleurs.accent}
+          titre="Historique"
+          sousTitre="Étapes validées, avancement des enclos, fin estimée"
+          onPress={() => router.push('/stats')}
+        />
+      </Carte>
+
+      <Carte style={styles.groupe}>
+        <Titre>À propos</Titre>
         <LigneReglage
           icone="update"
           couleur={couleurs.accent}
@@ -119,52 +161,17 @@ export default function Reglages() {
           sousTitre="kihw.github.io/monture-minute"
           onPress={() => Linking.openURL('https://kihw.github.io/monture-minute/')}
         />
-        <Text style={styles.note}>
-          Projet de fan non lucratif, non affilié à Ankama. DOFUS et les images de dragodindes sont la propriété
-          d’Ankama Games.
-        </Text>
-      </Carte>
-
-      <Carte style={styles.groupe}>
-        <Titre>Jauges</Titre>
         <LigneReglage
-          icone="flask-plus-outline"
-          couleur={couleurs.accent}
-          titre="Conseil de recharge"
-          sousTitre="Recharger seulement si l’étape finit au moins autant plus tôt"
-          valeur={`≥ ${reglages.seuilConseilMin ?? 15} min`}
-          onPress={() => setPopup('seuil')}
-        />
-        <LigneReglage
-          icone="bell-ring-outline"
-          couleur={couleurs.accent}
-          titre="Alerte avant palier ou jauge vide"
-          sousTitre="Laisse le temps d’aller recharger en jeu"
-          valeur={(reglages.anticipationMin ?? 5) > 0 ? `${reglages.anticipationMin ?? 5} min avant` : 'Au moment'}
-          onPress={() => setPopup('anticipation')}
-        />
-      </Carte>
-
-      <Carte style={styles.groupe}>
-        <Titre>Avancé</Titre>
-        <LigneReglage
-          icone="flask-outline"
-          couleur={couleurs.texteAttenue}
-          titre="Remplissage habituel"
-          sousTitre={`${tierPourNiveau(reglages.remplissage).nom} · ${palierPourNiveau(reglages.remplissage)} pts / 10 s`}
-          valeur={formatNombre(reglages.remplissage)}
-          onPress={() => setPopup('remplissage')}
-        />
-        <LigneReglage
-          icone="calculator-variant-outline"
-          couleur={couleurs.texteAttenue}
-          titre="Mode de calcul"
-          valeur={reglages.prudent ? 'Prudent' : 'Optimisé'}
-          onPress={() => setPopup('mode')}
+          icone="water-off-outline"
+          couleur={couleurs.amour}
+          titre="Réinitialiser l’élevage"
+          sousTitre="Supprime tous les enclos et revient à l’accueil"
+          danger
+          onPress={() => setPopup('reset')}
         />
         <Text style={styles.note}>
-          Mode prudent : durées majorées de 10 %. XP : seuls les niveaux 100 et 200 sont connus, les niveaux
-          intermédiaires sont estimés.
+          Projet de fan non lucratif, non affilié à Ankama. DOFUS et les images de montures sont la propriété
+          d’Ankama Games. XP : seuls les niveaux 100 et 200 sont connus, les niveaux intermédiaires sont estimés.
         </Text>
       </Carte>
 
