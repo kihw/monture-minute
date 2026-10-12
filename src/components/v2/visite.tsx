@@ -53,6 +53,8 @@ export default function VisiteGuidee({
   const { width, height } = useWindowDimensions();
   const [index, setIndex] = useState(0);
   const [cadre, setCadre] = useState<Cadre | null>(null);
+  // Hauteur réelle de la bulle (mesurée), pour la placer sans jamais sortir de l'écran.
+  const [hBulle, setHBulle] = useState(s(240));
   const apparition = useMemo(() => new Animated.Value(0), []);
   const reduit = useMouvementReduit();
   const etape = etapes[index];
@@ -89,18 +91,29 @@ export default function VisiteGuidee({
 
   if (!visible || !etape) return null;
   const derniere = index === etapes.length - 1;
-  // Cadre autour de l'élément, gardé dans l'écran ; un élément très haut n'est entouré que sur sa partie visible.
-  const trou = cadre && (() => {
+  // Cadre autour de l'élément, gardé dans l'écran. La bulle va dessous s'il y a la place, sinon
+  // dessus ; si ni l'un ni l'autre (élément haut, petite fenêtre), elle se cale en bas de l'écran
+  // et le cadre n'entoure que la partie de l'élément qui tient au-dessus d'elle.
+  const ESPACE = s(12);
+  const brut = cadre && (() => {
     const x = Math.max(2, cadre.x - MARGE);
     const y = Math.max(2, cadre.y - MARGE);
-    return {
-      x,
-      y,
-      l: Math.min(width - 2, cadre.x + cadre.l + MARGE) - x,
-      h: Math.min(cadre.y + cadre.h + MARGE, y + height * 0.5) - y,
-    };
+    return { x, y, l: Math.min(width - 2, cadre.x + cadre.l + MARGE) - x, h: Math.min(cadre.y + cadre.h + MARGE, height - 2) - y };
   })();
-  const bulleEnBas = !trou || trou.y + trou.h + s(190) < height;
+  const placement: 'dessous' | 'dessus' | 'bas' = !brut
+    ? 'bas'
+    : brut.y + brut.h + ESPACE + hBulle + ESPACE <= height
+      ? 'dessous'
+      : brut.y - ESPACE - hBulle - ESPACE >= 0
+        ? 'dessus'
+        : 'bas';
+  const trou = brut && (placement === 'bas' ? { ...brut, h: Math.max(s(56), height - hBulle - ESPACE * 3 - brut.y) } : brut);
+  const positionBulle =
+    placement === 'dessous' && trou
+      ? { top: trou.y + trou.h + ESPACE }
+      : placement === 'dessus' && trou
+        ? { bottom: height - trou.y + ESPACE }
+        : { bottom: ESPACE };
 
   return (
     <Modal visible transparent animationType="none" statusBarTranslucent onRequestClose={onFin}>
@@ -120,12 +133,16 @@ export default function VisiteGuidee({
         <Animated.View
           style={[
             styles.bulle,
-            bulleEnBas ? { top: trou ? trou.y + trou.h + s(12) : height * 0.35 } : { bottom: height - (trou?.y ?? 0) + s(12) },
+            positionBulle,
             {
               opacity: apparition,
-              transform: [{ translateY: apparition.interpolate({ inputRange: [0, 1], outputRange: [bulleEnBas ? s(8) : -s(8), 0] }) }],
+              transform: [{ translateY: apparition.interpolate({ inputRange: [0, 1], outputRange: [placement === 'dessus' ? -s(8) : s(8), 0] }) }],
             },
           ]}
+          onLayout={(e) => {
+            const h = Math.round(e.nativeEvent.layout.height);
+            if (Math.abs(h - hBulle) > 2) setHBulle(h);
+          }}
         >
           <View style={styles.bulleTete}>
             <Text style={styles.compteur}>
