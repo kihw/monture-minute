@@ -1,9 +1,9 @@
 // Notifications locales, courtes et actionnables : un titre (enclos + événement), une ligne utile,
 // et une réponse rapide selon le cas (voir messages.ts) :
-//   fin d'étape   → « Jauges activées » lance la suite avec le carburant habituel, « Plus tard » ;
-//   jauge vide    → « C'est rechargé », « Plus tard » ;
-//   ralentit/vide → « C'est rechargé », « Ignorer » ;
-//   cycle terminé → « Nouveau cycle », « Voir ».
+//   fin d'étape   → « Jauges activées » lance la suite avec le carburant habituel, « Plus tard » ;
+//   jauge vide    → « C'est rechargé », « Plus tard » ;
+//   ralentit/vide → « C'est rechargé », « Ignorer » ;
+//   cycle terminé → « Nouveau cycle », « Voir ».
 // Android : expo-notifications. Windows : la coquille Electron (voir bureau.ts), qui affiche des
 // notifications système (un clic ouvre l'enclos) tant que l'app tourne.
 
@@ -21,7 +21,7 @@ export const DELAI_RAPPEL_MS = 30 * 60 * 1000;
 
 const natif = Platform.OS !== 'web';
 
-// Pas de « - » ni de « : » dans les identifiants de catégorie et d'action (contrainte expo-notifications).
+// Pas de « - » ni de « : » dans les identifiants de catégorie et d'action (contrainte expo-notifications).
 const BOUTONS: Record<CategorieNotif, { id: ActionRapide | typeof ACTION_IGNORER | typeof ACTION_VOIR; titre: string; ouvre: boolean }[]> = {
   finetape: [
     { id: 'lancer', titre: 'Jauges activées', ouvre: true },
@@ -80,7 +80,7 @@ export async function demanderPermission(): Promise<boolean> {
 /** Ce qu'une réponse rapide doit savoir pour agir sans ouvrir de saisie. */
 export interface ContexteNotif {
   enclosId: string;
-  /** Jauge à recharger et niveau proposé (« C'est rechargé »). */
+  /** Jauge à recharger et niveau proposé (« C'est rechargé »). */
   jauge?: JaugeType;
   niveau?: number;
 }
@@ -125,7 +125,7 @@ export function annulerNotifications(ids?: string[]) {
 
 /**
  * Réagit aux notifications : une réponse rapide est exécutée (`agir`), puis l'enclos s'ouvre ;
- * un simple appui ouvre l'enclos ; « Ignorer » ne fait rien.
+ * un simple appui ouvre l'enclos ; « Ignorer » ne fait rien.
  */
 export function ecouterReponses(handlers: {
   ouvrir: (url: string) => void;

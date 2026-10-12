@@ -10,7 +10,7 @@ export function formatDuree(secondes: number | null): string {
   return `${Math.ceil(secondes)} s`;
 }
 
-/** Durée très compacte pour les listes : « 1j 08h », « 2h 14m », « 12m ». */
+/** Durée très compacte pour les listes : « 1j 08h », « 2h 14m », « 12m ». */
 export function formatDureeCourte(secondes: number): string {
   const s = Math.max(0, Math.ceil(secondes));
   const j = Math.floor(s / 86400);
@@ -58,7 +58,7 @@ export function formatDateHeure(horodatage: number): string {
   });
 }
 
-/** Carburant lisible : « 81,8k », « 200k », « 950 ». */
+/** Carburant lisible : « 81,8k », « 200k », « 950 ». */
 export function formatCarburantCourt(n: number): string {
   const v = Math.max(0, Math.round(n));
   if (v < 1000) return String(v);
@@ -66,12 +66,12 @@ export function formatCarburantCourt(n: number): string {
   return `${(Math.round(k * 10) / 10).toLocaleString('fr-FR')}k`;
 }
 
-/** Carburant ou points en toutes lettres : « 126 000 ». */
+/** Carburant ou points en toutes lettres : « 126 000 ». */
 export function formatPoints(n: number): string {
   return formatNombre(Math.max(0, n));
 }
 
-/** Durée en clair pour la V2 : « 45 s », « 46 min », « 1 h 12 », « 2 j 4 h ». */
+/** Durée en clair pour la V2 : « 45 s », « 46 min », « 1 h 12 », « 2 j 4 h ». */
 export function formatDureeClaire(secondes: number): string {
   const t = Math.max(0, Math.ceil(secondes));
   const j = Math.floor(t / 86400);
@@ -83,7 +83,7 @@ export function formatDureeClaire(secondes: number): string {
   return `${t} s`;
 }
 
-/** Titre d'étape lisible : « Endurance & XP » → « Endurance et XP ». */
+/** Titre d'étape lisible : « Endurance & XP » → « Endurance et XP ». */
 export function titreClair(titre: string): string {
   return titre.replace(/ & /g, ' et ');
 }

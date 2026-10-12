@@ -6,7 +6,7 @@
 // le résultat est le même après une mise en veille ou un redémarrage de l'app.
 //
 // On en tire l'état de chaque jauge à l'instant présent, les échéances à venir (paliers,
-// jauges vides, besoins couverts, fin d'étape) et un conseil « recharger ou pas » chiffré.
+// jauges vides, besoins couverts, fin d'étape) et un conseil « recharger ou pas » chiffré.
 
 import { CARACTERISTIQUE_MAX, CYCLE_DUREE_SEC, JAUGE_MAX, MAJORATION_PRUDENT, SERENITE_MAX, SERENITE_MIN } from '../data/constants';
 import { Etape, EtatLot, JaugeType, Segment } from '../types/domain';
@@ -229,7 +229,7 @@ export type TypeScenario = 'sans' | 'plein' | 'minimale' | 'auPalier';
 export interface Scenario {
   type: TypeScenario;
   jauge: JaugeType | null;
-  /** Recharge simulée (absente pour « sans recharge »). */
+  /** Recharge simulée (absente pour « sans recharge »). */
   recharge: Segment | null;
   /** Fin de l'étape, ou null si elle reste bloquée par une jauge vide. */
   finAt: number | null;
@@ -237,7 +237,7 @@ export interface Scenario {
   bloqueeA: number | null;
   /** Points de carburant ajoutés par la recharge. */
   carburantAjoute: number;
-  /** Temps gagné par rapport à « sans recharge » (ms), null si non comparable. */
+  /** Temps gagné par rapport à « sans recharge » (ms), null si non comparable. */
   gainMs: number | null;
 }
 

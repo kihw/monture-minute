@@ -39,5 +39,5 @@ export const SERENITE_MAX = 5000;
 // les petits écarts entre la simulation et le jeu.
 export const MARGE_ZONE = 500;
 
-// Majoration des durées en mode de calcul « Prudent ».
+// Majoration des durées en mode de calcul « Prudent ».
 export const MAJORATION_PRUDENT = 1.1;

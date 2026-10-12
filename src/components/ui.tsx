@@ -144,7 +144,7 @@ export function Carte({ children, style }: { children: ReactNode; style?: StyleP
   return <View style={[styles.carte, style]}>{children}</View>;
 }
 
-/** Étiquette de section d'une carte (« SÉRÉNITÉ DE DÉPART », « CYCLE »). */
+/** Étiquette de section d'une carte (« SÉRÉNITÉ DE DÉPART », « CYCLE »). */
 export function Titre({ children, style }: { children: ReactNode; style?: StyleProp<any> }) {
   return <Text style={[typo.etiquette, style]}>{children}</Text>;
 }
@@ -170,7 +170,7 @@ export function BoutonPrincipal({
   );
 }
 
-/** Bouton pilule à contour (« Retour au menu », « Voir le parcours »). */
+/** Bouton pilule à contour (« Retour au menu », « Voir le parcours »). */
 export function BoutonContour({
   label,
   onPress,

@@ -51,11 +51,11 @@ interface EleveurState {
   demarrerEtape: (id: string, carburant: Partial<Record<JaugeType, number>>) => void;
   /** Fin d'étape en un geste : valide l'étape terminée puis lance la suivante avec ce carburant. */
   validerEtLancer: (id: string, carburant: Partial<Record<JaugeType, number>>) => void;
-  /** « Plus tard » sur la notification : nouveau rappel dans 30 min. */
+  /** « Plus tard » sur la notification : nouveau rappel dans 30 min. */
   reporterRappel: (id: string) => void;
-  /** « Jauges activées » d'une notification de fin d'étape : valide et lance la suite avec le carburant habituel. */
+  /** « Jauges activées » d'une notification de fin d'étape : valide et lance la suite avec le carburant habituel. */
   lancerSuiteHabituelle: (id: string) => void;
-  /** « Nouveau cycle » : relance l'enclos terminé avec les mêmes réglages. */
+  /** « Nouveau cycle » : relance l'enclos terminé avec les mêmes réglages. */
   relancerCycle: (id: string) => void;
   /** Reprogramme les notifications des étapes en cours (au démarrage de l’app Windows, dont les minuteries ne survivent pas). */
   replanifierNotifications: () => void;
@@ -425,7 +425,7 @@ export const useEleveurStore = create<EleveurState>()(
       // v5 : simulation du carburant des jauges (le palier fixe des réglages disparaît).
       // v6 : valeurs DOFUS 3.7 (jauges de 200 000, paliers 80k/140k/180k).
       // v7 : niveau de départ propre à chaque enclos.
-      // v8 : option « premier plan » de l'app Windows.
+      // v8 : option « premier plan » de l'app Windows.
       // v9 : recharges en cours d'étape, seuil de conseil et délai d'alerte des jauges.
       // v10 : famille (dragodinde, muldo, volkorne) et robe de chaque enclos ; guide vu ou non.
       version: 10,

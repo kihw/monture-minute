@@ -150,11 +150,11 @@ describe('notifications et réponses rapides', () => {
     const titres = programmes.map((p) => p.titre);
     expect(titres).toContain('Enclos 1 · étape 1 finie');
     expect(titres.some((t) => /^Enclos 1 · Endurance passe ×10/.test(t))).toBe(true);
-    // Pas d'alerte « jauge terminée » ni de baisse de vitesse de l'XP, qui ne fixe pas la fin : trop de bruit.
+    // Pas d'alerte « jauge terminée » ni de baisse de vitesse de l'XP, qui ne fixe pas la fin : trop de bruit.
     expect(titres.some((t) => /terminée|XP passe/.test(t))).toBe(false);
   });
 
-  it('« Jauges activées » valide l’étape finie et lance la suivante avec le carburant habituel', async () => {
+  it('« Jauges activées » valide l’étape finie et lance la suivante avec le carburant habituel', async () => {
     const { id } = enclosActif();
     useEleveurStore.getState().demarrerEtape(id, { endurance: 200_000, xp: 200_000 });
     await attendre();
@@ -169,7 +169,7 @@ describe('notifications et réponses rapides', () => {
     expect(e.enCours?.etape.jauges).toEqual(['plus', 'xp']);
   });
 
-  it('« Nouveau cycle » relance l’enclos avec les mêmes réglages', () => {
+  it('« Nouveau cycle » relance l’enclos avec les mêmes réglages', () => {
     const { id, enclos } = enclosActif();
     useEleveurStore.getState().relancerCycle(id);
     const e = enclosActif().enclos;

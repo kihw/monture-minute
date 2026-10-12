@@ -1,6 +1,6 @@
 // Préparation d'une étape (V2) : le carburant de chaque jauge à activer, prérempli d'après les
 // habitudes du joueur. Un choix rapide par jauge (telle quelle / remplie / autre niveau), la
-// durée qui suit en direct, et un seul bouton « jauges activées » pour lancer le minuteur.
+// durée qui suit en direct, et un seul bouton « jauges activées » pour lancer le minuteur.
 
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
@@ -41,15 +41,15 @@ function Choix({ libelle, valeur, actif, couleur, onPress }: { libelle: string; 
   );
 }
 
-/** Consigne de la préparation, avec son aide « ? ». */
+/** Consigne de la préparation, avec son aide « ? ». */
 export function ConsigneSetup({ texte: consigne }: { texte: string }) {
   return (
     <View style={styles.consigne}>
       <Text style={styles.consigneTexte}>{consigne}</Text>
       <Aide titre="Le carburant de l’étape">
-        <P>« Telle quelle » : la jauge garde ce qui restait de l’étape précédente, tu n’y touches pas en jeu.</P>
-        <P>« Remplie à » : tu la remplis jusqu’à ton niveau habituel pour cette jauge.</P>
-        <P>« Autre » : un objet (Élixir, Potion, Philtre, Extrait) ou un niveau précis lu en jeu.</P>
+        <P>« Telle quelle » : la jauge garde ce qui restait de l’étape précédente, tu n’y touches pas en jeu.</P>
+        <P>« Remplie à » : tu la remplis jusqu’à ton niveau habituel pour cette jauge.</P>
+        <P>« Autre » : un objet (Élixir, Potion, Philtre, Extrait) ou un niveau précis lu en jeu.</P>
         <P>L’app retient ce que tu choisis pour chaque jauge et te le repropose la fois suivante. Plus il y a de carburant, plus la jauge va vite.</P>
       </Aide>
     </View>

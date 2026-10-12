@@ -14,7 +14,7 @@ const T0 = Date.UTC(2026, 9, 11, 14, 45);
 const minutes = (n: number) => n * 60_000;
 const cycles = (n: number) => n * 10_000;
 
-// Étape « Maturité & Amour » des planches : maturité 152k (×30), amour 81,8k (×20).
+// Étape « Maturité & Amour » des planches : maturité 152k (×30), amour 81,8k (×20).
 function etape(carburant: { maturite: number; amour: number }, besoins = { maturite: 7_600, amour: 5_200 }): Etape {
   return {
     type: 'progression',

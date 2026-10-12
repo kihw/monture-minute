@@ -30,6 +30,7 @@ npm install
 npm start              # serveur Expo (Android via Expo Go ou build de développement)
 npm run verifier       # lint + types + tests
 npm run bureau:demarrer  # lance la version Windows (Electron) en local
+# MONTURE_PROFIL=<dossier> : données de test séparées de l'app installée
 ```
 
 Structure, choix techniques et feuille de route : [docs/PLAN.md](docs/PLAN.md) ; refonte V2 :

@@ -1,6 +1,6 @@
-// Feuille « Recharger » d'une jauge en cours d'étape (V2) : état de la jauge en phrase, l'option
-// « sans recharge » comme repère, puis chaque recharge possible en carte (heure de fin, temps
-// gagné, carburant ajouté), la conseillée mise en avant. La courbe passe sous « Voir le détail ».
+// Feuille « Recharger » d'une jauge en cours d'étape (V2) : état de la jauge en phrase, l'option
+// « sans recharge » comme repère, puis chaque recharge possible en carte (heure de fin, temps
+// gagné, carburant ajouté), la conseillée mise en avant. La courbe passe sous « Voir le détail ».
 
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useState } from 'react';
@@ -203,7 +203,9 @@ function ContenuRecharge({
         <Text style={texte.legende}>
           {etat.couverte
             ? 'Cette jauge a déjà fait son travail : la recharger ne changerait rien.'
-            : 'La recharger ne ferait pas finir l’étape plus tôt : ce n’est pas elle qui fixe la fin.'}
+            : etat.niveau >= options.remplissage - 2000
+              ? 'Elle est déjà pleine (ou presque) : la recharger ne ferait rien gagner.'
+              : 'La recharger ne ferait pas finir l’étape plus tôt : ce n’est pas elle qui fixe la fin.'}
         </Text>
       ) : (
         recharges.map((sc) => (
@@ -211,7 +213,7 @@ function ContenuRecharge({
             key={sc.type}
             sc={sc}
             conseille={sc.type === conseille}
-            // « Plus tard » se fait au changement de palier : l'alerte le rappellera.
+            // « Plus tard » se fait au changement de palier : l'alerte le rappellera.
             onFait={sc.type !== 'auPalier' ? () => onRecharger(sc.recharge!.niveau) : undefined}
           />
         ))
@@ -219,7 +221,7 @@ function ContenuRecharge({
 
       <Lien label={detail ? 'Masquer la courbe' : 'Voir le détail'} onPress={() => setDetail(!detail)} />
       {detail && <CourbeCarburant enCours={enCours} jauge={jauge} maintenant={maintenant} />}
-      <Text style={texte.etiquette}>Recharge en jeu d’abord, puis confirme ici. « Corriger » recale la jauge sur la valeur lue en jeu.</Text>
+      <Text style={texte.etiquette}>Recharge en jeu d’abord, puis confirme ici. « Corriger » recale la jauge sur la valeur lue en jeu.</Text>
     </>
   );
 }

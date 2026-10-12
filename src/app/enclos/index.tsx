@@ -32,7 +32,7 @@ function resume(aFaire: Alerte[], aVenir: Alerte[], enCours: number): { texte: s
   return { texte: 'Rien en cours.', couleur: couleurs.texteAttenue };
 }
 
-/** Accueil « Mes enclos » : résumé, une carte par enclos (l'urgent d'abord), ajout d'enclos. */
+/** Accueil « Mes enclos » : résumé, une carte par enclos (l'urgent d'abord), ajout d'enclos. */
 export default function ListeEnclos() {
   const { liste, vues, conseils, alertes } = useTableau();
   const nouvelEnclos = () => router.push('/depart?mode=ajout');

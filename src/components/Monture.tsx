@@ -68,7 +68,7 @@ const GEOMETRIE: Record<Famille, { ratio: number; zoom: number; tete: { x: numbe
 /** En dessous de cette taille, l'avatar montre la tête, seule partie lisible. */
 const SEUIL_TETE = s(80);
 
-/** Nom de la robe accordé à la famille : « Dragodinde Rousse », « Muldo Roux ». */
+/** Nom de la robe accordé à la famille : « Dragodinde Rousse », « Muldo Roux ». */
 export function nomRobe(famille: Famille, index: number): string {
   const r = robe(index);
   return FAMILLES[famille].feminin ? r.nom : (r.masculin ?? r.nom);

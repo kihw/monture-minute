@@ -1,5 +1,5 @@
 import { s } from './echelle';
-// Système de design « Nuit d'Amakna » : app ultra compacte, fond indigo très sombre,
+// Système de design « Nuit d'Amakna » : app ultra compacte, fond indigo très sombre,
 // or chaud de DOFUS pour tout ce qui est actif, couleurs des jauges reprises du jeu.
 
 export const couleurs = {
@@ -28,7 +28,7 @@ export const couleurs = {
   accentDoux: 'rgba(242,201,76,0.14)',
   surAccent: '#241c03',
 
-  // Couleurs des 6 jauges, comme dans le panneau « Enclos ».
+  // Couleurs des 6 jauges, comme dans le panneau « Enclos ».
   sereniteMoins: '#c35be0',
   sereniteePlus: '#da70f0',
   endurance: '#f4c331',
@@ -81,7 +81,7 @@ export const ombre = {
   },
 };
 
-// ── V2 « Amakna V2 » (docs/PLAN-V2.md) ─────────────────────────────────────────
+// ── V2 « Amakna V2 » (docs/PLAN-V2.md) ─────────────────────────────────────────
 // Couleur = sens : or = action à faire, vert = tout va bien, orange = attention, rouge = bloqué.
 export type Ton = 'action' | 'ok' | 'attention' | 'bloque' | 'neutre';
 

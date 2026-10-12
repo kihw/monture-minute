@@ -1,5 +1,5 @@
 // Briques V2 (docs/PLAN-V2.md) : carte héros qui dit quoi faire, sections titrées,
-// bulle d'aide « ? » qui explique une notion sur place.
+// bulle d'aide « ? » qui explique une notion sur place.
 
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { ReactNode, useEffect, useMemo, useState } from 'react';
@@ -23,7 +23,7 @@ export function Heros({
 }: {
   ton: Ton;
   icone: Icone;
-  /** Petite ligne d'état au-dessus du titre (« Tout roule », « Recharge conseillée »). */
+  /** Petite ligne d'état au-dessus du titre (« Tout roule », « Recharge conseillée »). */
   surtitre: string;
   titre?: string;
   detail?: string;
@@ -163,7 +163,7 @@ export function Onglets<T extends string>({
   );
 }
 
-/** Bulle « ? » : ouvre une explication courte de la notion, sans quitter l'écran. */
+/** Bulle « ? » : ouvre une explication courte de la notion, sans quitter l'écran. */
 export function Aide({ titre, children }: { titre: string; children: ReactNode }) {
   const [ouverte, setOuverte] = useState(false);
   return (
@@ -189,7 +189,7 @@ export function P({ children }: { children: ReactNode }) {
   return <Text style={texte.corps}>{children}</Text>;
 }
 
-/** Puce colorée « jauge » dans une phrase : petit point + nom. */
+/** Puce colorée « jauge » dans une phrase : petit point + nom. */
 export function NomJauge({ nom, couleur }: { nom: string; couleur: string }) {
   return (
     <View style={[styles.nomJauge, { backgroundColor: `${couleur}1f`, borderColor: `${couleur}55` }]}>

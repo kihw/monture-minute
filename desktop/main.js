@@ -18,8 +18,16 @@ protocol.registerSchemesAsPrivileged([
   { scheme: 'app', privileges: { standard: true, secure: true, supportFetchAPI: true, corsEnabled: true } },
 ]);
 
+// Profil de test (MONTURE_PROFIL=dossier) : données séparées de l'app installée, pour essayer
+// une version locale sans toucher à son élevage. À définir avant tout accès aux dossiers de l'app.
+if (process.env.MONTURE_PROFIL) app.setPath('userData', path.resolve(process.env.MONTURE_PROFIL));
+
 let fenetre = null;
 const minuteries = new Map();
+// Notifications affichées : gardées en mémoire tant qu'elles sont visibles, sinon Windows peut les
+// libérer et le clic (ouvrir l'enclos) est perdu.
+const affichees = new Set();
+const ICONE = path.join(__dirname, 'build', 'icon.png');
 
 function servir(requete) {
   const { pathname } = new URL(requete.url);
@@ -54,7 +62,7 @@ function creerFenetre() {
     title: 'Monture Minute',
     backgroundColor: '#0b0a14',
     autoHideMenuBar: true,
-    icon: path.join(__dirname, 'build', 'icon.png'),
+    icon: ICONE,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
@@ -117,13 +125,19 @@ ipcMain.on('bureau:notifier', (_e, { id, titre, corps, quand, url }) => {
     id,
     setTimeout(() => {
       minuteries.delete(id);
-      const notification = new Notification({ title: titre, body: corps });
+      const notification = new Notification({ title: titre, body: corps, icon: ICONE });
+      affichees.add(notification);
+      const oublier = () => affichees.delete(notification);
       notification.on('click', () => {
+        oublier();
         if (!fenetre) creerFenetre();
+        if (fenetre.isMinimized()) fenetre.restore();
         fenetre.show();
         fenetre.focus();
         if (url) envoyer('bureau:ouvrir', url);
       });
+      notification.on('close', oublier);
+      notification.on('failed', oublier);
       notification.show();
     }, delai)
   );

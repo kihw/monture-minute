@@ -23,8 +23,8 @@ export default function Alertes() {
         titre="Alertes"
         droite={
           <Aide titre="Les alertes">
-            <P>« À faire maintenant » : une étape à lancer ou à valider, une jauge vide, une recharge qui fait gagner du temps.</P>
-            <P>« À venir » : quand une jauge ralentira, se videra, et quand chaque étape finira, pour tous tes enclos.</P>
+            <P>« À faire maintenant » : une étape à lancer ou à valider, une jauge vide, une recharge qui fait gagner du temps.</P>
+            <P>« À venir » : quand une jauge ralentira, se videra, et quand chaque étape finira, pour tous tes enclos.</P>
             <P>Les notifications te préviennent un peu avant (réglable dans Réglages › Alertes), même app fermée sur Android.</P>
           </Aide>
         }

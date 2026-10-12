@@ -27,7 +27,7 @@ export default function RootLayout() {
   const hydrate = useHydrate();
 
   // App Windows : ses minuteries de notification ne survivent pas à un redémarrage,
-  // on les reprogramme une fois l'état rechargé, et on réapplique « premier plan ».
+  // on les reprogramme une fois l'état rechargé, et on réapplique « premier plan ».
   useEffect(() => {
     const bureau = pontBureau();
     if (!hydrate || !bureau) return;

@@ -8,7 +8,7 @@ import { useCalcul, useMaintenant } from '../hooks/useElevage';
 import { useEleveurStore, useListeEnclos } from '../store/useStore';
 import { couleurs, esp, typo } from '../theme';
 import { CARACTERISTIQUES, INFO_SUIVI } from '../types/domain';
-import { formatDateHeure, formatDuree } from '../utils/format';
+import { formatDateHeure, formatDureeClaire } from '../utils/format';
 import { s } from '../echelle';
 
 export default function Stats() {
@@ -33,7 +33,7 @@ export default function Stats() {
         <View style={{ flex: 1, gap: esp.sm }}>
           <Chiffre label="Étapes validées" valeur={String(etapesFaites)} />
           <Chiffre label="Enclos terminés" valeur={`${termines}/${liste.length}`} />
-          <Chiffre label="Fin estimée" valeur={formatDuree(plusLong)} />
+          <Chiffre label="Fin estimée" valeur={formatDureeClaire(plusLong)} />
         </View>
       </Carte>
 
@@ -56,7 +56,7 @@ export default function Stats() {
         </View>
       </Carte>
 
-      <Titre>Dernières confirmations</Titre>
+      <Titre>Dernières étapes validées</Titre>
       <Carte style={{ gap: esp.sm }}>
         {journal.length === 0 && <Text style={typo.petit}>Aucune étape validée pour l’instant.</Text>}
         {journal.slice(0, 15).map((c) => (

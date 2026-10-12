@@ -14,7 +14,7 @@ export interface Release {
   urlApk?: string;
 }
 
-/** Compare deux versions « X.Y.Z » (un éventuel « v » initial est ignoré) : < 0, 0 ou > 0. */
+/** Compare deux versions « X.Y.Z » (un éventuel « v » initial est ignoré) : < 0, 0 ou > 0. */
 export function comparerVersions(a: string, b: string): number {
   const parties = (v: string) => v.replace(/^v/, '').split('.').map((n) => parseInt(n, 10) || 0);
   const [pa, pb] = [parties(a), parties(b)];

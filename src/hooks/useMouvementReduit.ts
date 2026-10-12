@@ -1,4 +1,4 @@
-// Réglage système « réduire les animations » : les transitions décoratives sont alors coupées.
+// Réglage système « réduire les animations » : les transitions décoratives sont alors coupées.
 
 import { useEffect, useState } from 'react';
 import { AccessibilityInfo } from 'react-native';

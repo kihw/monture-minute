@@ -1,7 +1,7 @@
 import { comparerVersions, NOM_APK, verifierMiseAJour } from '../miseAJour';
 
 describe('comparerVersions', () => {
-  it('ordonne les versions numériquement, préfixe « v » ignoré', () => {
+  it('ordonne les versions numériquement, préfixe « v » ignoré', () => {
     expect(comparerVersions('1.0.10', '1.0.9')).toBeGreaterThan(0);
     expect(comparerVersions('v2.0.0', '1.9.9')).toBeGreaterThan(0);
     expect(comparerVersions('1.2.0', 'v1.2.0')).toBe(0);

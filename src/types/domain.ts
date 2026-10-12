@@ -1,5 +1,5 @@
 // Modèle de domaine. L'application ne suit PAS les dragodindes une par une :
-// un enclos porte un « lot » de montures décrit par une sérénité de référence
+// un enclos porte un « lot » de montures décrit par une sérénité de référence
 // et la progression commune des caractéristiques. Le moteur de parcours en
 // déduit les étapes à enchaîner (voir src/engine/parcours.ts).
 

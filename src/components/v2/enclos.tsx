@@ -1,4 +1,4 @@
-// Écran d'enclos V2 : barre du haut libellée, sélecteur d'enclos nommé, carte « Tes montures »
+// Écran d'enclos V2 : barre du haut libellée, sélecteur d'enclos nommé, carte « Tes montures »
 // (règle de sérénité avec ses zones, caractéristiques, niveau) et parcours en frise verticale.
 
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -29,7 +29,7 @@ function listeNoms(cs: Caracteristique[]): string {
   return noms.length <= 1 ? (noms[0] ?? '') : `${noms.slice(0, -1).join(', ')} et ${noms[noms.length - 1]}`;
 }
 
-/** « À −5 000, seule l'endurance progresse. » */
+/** « À −5 000, seule l'endurance progresse. » */
 export function phraseSerenite(serenite: number): string {
   const cs = progressentA(serenite);
   const a = `À ${formatSerenite(serenite)}`;
@@ -46,7 +46,7 @@ const SEULE: Record<Caracteristique, string> = {
 
 // ── Barre du haut ──────────────────────────────────────────────────────────────
 
-/** Barre du haut : retour à « Mes enclos », identité de l'enclos (monture, nom, étape), Options. */
+/** Barre du haut : retour à « Mes enclos », identité de l'enclos (monture, nom, étape), Options. */
 export function BarreHaut({ onOptions, enclos, vue, index }: { onOptions: () => void; enclos: Enclos; vue: VueEnclos; index: number }) {
   return (
     <View style={styles.barre}>
@@ -199,7 +199,7 @@ function TuileStat({ nom, couleur, valeur, max, suffixe }: { nom: string; couleu
           {plein ? ' ✓' : ''}
         </Text>
       </View>
-      <View style={styles.statPiste}>
+      <View style={styles.tuilePiste}>
         <View style={[styles.statBarre, { width: `${Math.max(0, Math.min(1, valeur / Math.max(1, max))) * 100}%`, backgroundColor: couleur }]} />
       </View>
     </View>
@@ -207,7 +207,7 @@ function TuileStat({ nom, couleur, valeur, max, suffixe }: { nom: string; couleu
 }
 
 export function CarteMontures({ lot, ctx, cible }: { lot: EtatLot; ctx: ContexteCalcul; cible?: number }) {
-  const niveau = niveauLot(lot, ctx);
+  const niveau = Math.min(niveauLot(lot, ctx), ctx.niveauCible);
   return (
     <View style={styles.carte}>
       <View style={styles.carteTete}>
@@ -411,6 +411,7 @@ const styles = StyleSheet.create({
   statNom: { width: s(62), color: couleurs.texteAttenue, fontSize: s(11.5), fontWeight: '600' },
   statPiste: { flex: 1, height: s(5), borderRadius: s(3), backgroundColor: couleurs.piste, overflow: 'hidden' },
   statBarre: { height: '100%', borderRadius: s(3) },
+  tuilePiste: { height: s(5), borderRadius: s(3), backgroundColor: couleurs.piste, overflow: 'hidden' },
   statValeur: { minWidth: s(92), textAlign: 'right', color: couleurs.texte, fontSize: s(11.5), fontWeight: '600', fontVariant: ['tabular-nums'] },
   etape: { flexDirection: 'row', gap: grille.x3 },
   etapeRail: { alignItems: 'center', width: s(16) },

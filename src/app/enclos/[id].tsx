@@ -48,9 +48,9 @@ export default function DetailEnclos() {
   const [popup, setPopup] = useState<PopupOuverte>(null);
   // Carburant ajusté à la main pour la préparation de l'étape (effacé quand l'étape change).
   const [ajuste, setAjuste] = useState<{ cle: string; valeurs: Partial<Record<JaugeType, number>> }>({ cle: '', valeurs: {} });
-  // Saisie d'un niveau précis (« Autre ») pour une jauge de la préparation.
+  // Saisie d'un niveau précis (« Autre ») pour une jauge de la préparation.
   const [selection, setSelection] = useState<{ type: JaugeType; valeur: number } | null>(null);
-  // Feuille « Recharger ? » ouverte sur une jauge, et saisie libre d'une recharge ou d'une correction.
+  // Feuille « Recharger ? » ouverte sur une jauge, et saisie libre d'une recharge ou d'une correction.
   const [recharge, setRecharge] = useState<JaugeType | null>(null);
   // Visite guidée de la V2, proposée une fois sur l'écran d'enclos.
   const visiteVue = useEleveurStore((s) => s.reglages.visiteVue ?? false);
@@ -267,7 +267,7 @@ export default function DetailEnclos() {
             cible: refJauges,
             titre: preparation ? 'Le carburant, prérempli' : 'Tes jauges en direct',
             texte: preparation
-              ? 'Pour chaque jauge, l’app propose le carburant d’après tes habitudes : telle quelle, remplie, ou un autre niveau. Active-les en jeu, puis « Jauges activées » lance le minuteur.'
+              ? 'Pour chaque jauge, l’app propose le carburant d’après tes habitudes : telle quelle, remplie, ou un autre niveau. Active-les en jeu, puis « Jauges activées » lance le minuteur.'
               : 'Chaque jauge descend en direct, avec sa vitesse et sa prochaine échéance. Touche-la pour voir les recharges utiles, appui long pour la recaler sur le jeu.',
           },
         ]
@@ -275,12 +275,12 @@ export default function DetailEnclos() {
     {
       cible: refMontures,
       titre: 'Tes montures et le parcours',
-      texte: 'Deux onglets : la sérénité du lot (ce qui progresse à cet endroit), caractéristiques et niveau, avec « Ajuster » si le jeu diffère ; puis les étapes du parcours. Les « ? » expliquent chaque notion.',
+      texte: 'Deux onglets : la sérénité du lot (ce qui progresse à cet endroit), caractéristiques et niveau, avec « Ajuster » si le jeu diffère ; puis les étapes du parcours. Les « ? » expliquent chaque notion.',
     },
     {
       cible: refBarre,
       titre: 'Tout le reste',
-      texte: 'La flèche ‹ ramène à « Mes enclos », qui résume tous tes enclos, avec l’onglet Alertes pour ce qui arrive. « Options » sert à redémarrer, terminer une étape ou supprimer l’enclos.',
+      texte: 'La flèche ‹ ramène à « Mes enclos », qui résume tous tes enclos, avec l’onglet Alertes pour ce qui arrive. « Options » sert à redémarrer, terminer une étape ou supprimer l’enclos.',
     },
   ];
 

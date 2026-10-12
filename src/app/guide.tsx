@@ -113,7 +113,7 @@ function creerPages(): Page[] {
       points: [
         "Toutes à la même sérénité, ou différentes : l’app unifie d’abord",
         "Niveau actuel et niveau visé du lot",
-        "« Nouvel enclos » sur l’accueil pour en ajouter",
+        "« Nouvel enclos » sur l’accueil pour en ajouter",
       ],
       illustration: (
         <View style={styles.lot}>
@@ -272,7 +272,7 @@ function creerPages(): Page[] {
     {
       titre: "Lancer une étape",
       texte:
-        "L’app te dit quelles jauges activer, avec le carburant déjà prérempli d’après tes habitudes. Active-les en jeu, puis touche « Jauges activées » : le minuteur démarre.",
+        "L’app te dit quelles jauges activer, avec le carburant déjà prérempli d’après tes habitudes. Active-les en jeu, puis touche « Jauges activées » : le minuteur démarre.",
       points: [
         "Par jauge : telle quelle, remplie, ou un autre niveau",
         "L’app retient tes choix pour la fois suivante",
@@ -343,7 +343,7 @@ function creerPages(): Page[] {
         "Une notification arrive avant chaque baisse de vitesse ou jauge vide, et à la fin de l’étape. L’onglet Alertes liste tout ce qui arrive, pour tous tes enclos.",
       points: [
         "Délai d’avance réglable dans Réglages › Alertes",
-        "« Plus tard » repousse le rappel de 30 min",
+        "« Plus tard » repousse le rappel de 30 min",
         "Sur Windows, l’app peut rester au premier plan sur le jeu",
       ],
       illustration: (
@@ -366,7 +366,7 @@ function creerPages(): Page[] {
     {
       titre: "Valider et continuer",
       texte:
-        "Quand l’étape est finie, la carte montre ce qui a été gagné et prépare déjà la suivante : « Jauges activées » valide et relance en un geste. Si le jeu diffère, ajuste le lot depuis Options.",
+        "Quand l’étape est finie, la carte montre ce qui a été gagné et prépare déjà la suivante : « Jauges activées » valide et relance en un geste. Si le jeu diffère, ajuste le lot depuis Options.",
       points: [
         "Options › Terminer l’étape compte le temps déjà passé",
         "À la fin : tes montures sont fécondables",
