@@ -3,10 +3,10 @@ import { s } from './echelle';
 // or chaud de DOFUS pour tout ce qui est actif, couleurs des jauges reprises du jeu.
 
 export const couleurs = {
-  fond: '#0b0a14',
-  fondHaut: '#141226',
-  carte: '#15132a',
-  carteClaire: '#1e1b37',
+  fond: '#0c0a17',
+  fondHaut: '#151229',
+  carte: '#1a1731',
+  carteClaire: '#252141',
   colonne: 'rgba(255,255,255,0.045)',
   bandeau: '#2a2745',
   piste: '#07060d',
@@ -15,6 +15,8 @@ export const couleurs = {
   surfaceElevee: 'rgba(255,255,255,0.07)',
   liseret: 'rgba(255,255,255,0.07)',
   liseretVif: 'rgba(255,255,255,0.14)',
+  // Arête haute des cartes, un peu plus claire : la lumière vient d'en haut.
+  liseretHaut: 'rgba(255,255,255,0.12)',
 
   texte: '#f3f1fb',
   texteAttenue: '#9d99bd',
@@ -43,7 +45,7 @@ export const couleurs = {
 
 export const degrades = {
   accent: ['#f7d76a', '#e9bb33'] as const,
-  ecran: ['#0f0d1d', '#0b0a14', '#0b0a14'] as const,
+  ecran: ['#13102a', '#0c0a17', '#0a0913'] as const,
   bandeau: ['#5a5779', '#423f60'] as const,
   carte: ['rgba(255,255,255,0.05)', 'rgba(255,255,255,0.02)'] as const,
 };
@@ -72,6 +74,13 @@ export const typo = {
 };
 
 export const ombre = {
+  carte: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: s(6) },
+    shadowOpacity: 0.35,
+    shadowRadius: s(14),
+    elevation: 4,
+  },
   lueurAccent: {
     shadowColor: couleurs.accent,
     shadowOffset: { width: 0, height: s(4) },
@@ -79,6 +88,15 @@ export const ombre = {
     shadowRadius: s(12),
     elevation: 6,
   },
+};
+
+/** Surface de carte commune : fond, liseré éclairé par le haut, ombre portée douce. */
+export const surface = {
+  backgroundColor: couleurs.carte,
+  borderWidth: 1,
+  borderColor: couleurs.liseret,
+  borderTopColor: couleurs.liseretHaut,
+  ...ombre.carte,
 };
 
 // ── V2 « Amakna V2 » (docs/PLAN-V2.md) ─────────────────────────────────────────

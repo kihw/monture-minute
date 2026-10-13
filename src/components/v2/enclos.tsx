@@ -10,7 +10,7 @@ import { CARACTERISTIQUE_MAX, SERENITE_MAX, SERENITE_MIN } from '../../data/cons
 import { s } from '../../echelle';
 import { ContexteCalcul, niveauLot } from '../../engine/parcours';
 import { VueEnclos } from '../../engine/statut';
-import { couleurs, grille, rayon, texte } from '../../theme';
+import { couleurs, grille, rayon, surface, texte } from '../../theme';
 import { Caracteristique, CARACTERISTIQUES, Enclos, Etape, EtapeValidee, EtatLot, INFO_SUIVI, ZONE_CARACTERISTIQUE } from '../../types/domain';
 import { formatDureeClaire, formatPoints, formatSerenite, titreClair } from '../../utils/format';
 import { AvatarAnneau } from '../Compact';
@@ -383,9 +383,7 @@ const styles = StyleSheet.create({
     padding: grille.x3,
     gap: grille.x2,
     borderRadius: rayon.lg,
-    backgroundColor: couleurs.carte,
-    borderWidth: 1,
-    borderColor: couleurs.liseret,
+    ...surface,
   },
   carteTete: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between' },
   sereniteValeur: { color: couleurs.texte, fontSize: s(16), fontWeight: '700', fontVariant: ['tabular-nums'] },

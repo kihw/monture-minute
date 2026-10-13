@@ -2,12 +2,13 @@
 // bulle d'aide « ? » qui explique une notion sur place.
 
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { ReactNode, useEffect, useMemo, useState } from 'react';
 import { Animated, Easing, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { s } from '../../echelle';
 import { useMouvementReduit } from '../../hooks/useMouvementReduit';
-import { couleurs, duree, grille, rayon, texte, Ton, tons } from '../../theme';
+import { couleurs, duree, grille, rayon, surface, texte, Ton, tons } from '../../theme';
 import Popup from '../Popup';
 import { BoutonPrincipal, Icone } from '../ui';
 
@@ -43,12 +44,22 @@ export function Heros({
     <Animated.View
       style={[
         styles.heros,
-        { backgroundColor: t.fond, borderColor: t.liseret },
+        { borderColor: t.liseret, shadowColor: t.couleur },
         { opacity: apparition, transform: [{ translateY: apparition.interpolate({ inputRange: [0, 1], outputRange: [s(6), 0] }) }] },
       ]}
     >
-      <View style={styles.herosEtat}>
-        <MaterialCommunityIcons name={icone} size={s(15)} color={t.couleur} />
+      {/* Lumière de la couleur de sens, plus vive en haut à gauche. */}
+      <LinearGradient
+        colors={[`${t.couleur}2a`, `${t.couleur}0a`, `${t.couleur}00`]}
+        locations={[0, 0.55, 1]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0.8, y: 1 }}
+        style={styles.herosLumiere}
+        pointerEvents="none"
+      />
+      <View style={[styles.herosFilet, { backgroundColor: t.couleur }]} />
+      <View style={[styles.herosEtat, { backgroundColor: `${t.couleur}1f`, borderColor: `${t.couleur}40` }]}>
+        <MaterialCommunityIcons name={icone} size={s(13)} color={t.couleur} />
         <Text style={[styles.herosSurtitre, { color: t.couleur }]}>{surtitre}</Text>
       </View>
       {titre && (
@@ -199,21 +210,45 @@ export function NomJauge({ nom, couleur }: { nom: string; couleur: string }) {
   );
 }
 
-/** Fine barre d'avancement. */
-export function Avancement({ ratio, couleur = couleurs.accent }: { ratio: number; couleur?: string }) {
+/** Barre d'avancement (fine par défaut). */
+export function Avancement({ ratio, couleur = couleurs.accent, epaisseur = s(4) }: { ratio: number; couleur?: string; epaisseur?: number }) {
   return (
-    <View style={styles.avancement}>
-      <View style={[styles.avancementBarre, { width: `${Math.round(Math.max(0, Math.min(1, ratio)) * 100)}%`, backgroundColor: couleur }]} />
+    <View style={[styles.avancement, { height: epaisseur, borderRadius: epaisseur / 2 }]}>
+      <View
+        style={[
+          styles.avancementBarre,
+          { width: `${Math.round(Math.max(0, Math.min(1, ratio)) * 100)}%`, backgroundColor: couleur, borderRadius: epaisseur / 2 },
+        ]}
+      />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  heros: { borderRadius: rayon.xl, borderWidth: 1, padding: grille.x3, gap: s(6) },
+  heros: {
+    ...surface,
+    borderRadius: rayon.xl,
+    padding: grille.x3,
+    paddingTop: s(14),
+    gap: s(8),
+    shadowOpacity: 0.18,
+    shadowRadius: s(18),
+  },
+  herosLumiere: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, borderRadius: rayon.xl },
+  herosFilet: { position: 'absolute', top: 0, left: grille.x4, right: grille.x4, height: s(2), borderBottomLeftRadius: s(2), borderBottomRightRadius: s(2), opacity: 0.8 },
   liens: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', columnGap: grille.x4 },
-  herosEtat: { flexDirection: 'row', alignItems: 'center', gap: s(6) },
-  herosSurtitre: { fontSize: s(12), fontWeight: '700' },
-  herosTitre: { ...texte.titre, fontSize: s(17), lineHeight: s(22) },
+  herosEtat: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    gap: s(5),
+    paddingHorizontal: s(9),
+    paddingVertical: s(3),
+    borderRadius: rayon.pill,
+    borderWidth: 1,
+  },
+  herosSurtitre: { fontSize: s(11.5), fontWeight: '800' },
+  herosTitre: { ...texte.titre, fontSize: s(18), fontWeight: '800', lineHeight: s(23), letterSpacing: s(-0.3) },
   actions: { gap: grille.x2, marginTop: grille.x1 },
   lien: { alignSelf: 'center', paddingVertical: s(4) },
   lienTexte: { fontSize: s(12), fontWeight: '600', textDecorationLine: 'underline' },
@@ -246,6 +281,6 @@ const styles = StyleSheet.create({
   },
   nomJaugePoint: { width: s(6), height: s(6), borderRadius: s(3) },
   nomJaugeTexte: { fontSize: s(12), fontWeight: '700' },
-  avancement: { height: s(4), borderRadius: s(2), backgroundColor: couleurs.piste, overflow: 'hidden' },
-  avancementBarre: { height: '100%', borderRadius: s(2) },
+  avancement: { backgroundColor: couleurs.piste, overflow: 'hidden' },
+  avancementBarre: { height: '100%' },
 });

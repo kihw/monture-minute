@@ -10,7 +10,7 @@ import { Animated, Easing, Pressable, StyleSheet, Text, View } from 'react-nativ
 import { JAUGE_MAX, TIERS_CARBURANT } from '../data/constants';
 import { s } from '../echelle';
 import { EnCoursSimulable, EtatJauge, etatJauge, simulerEtape } from '../engine/descente';
-import { couleurs, grille, rayon } from '../theme';
+import { couleurs, grille, rayon, surface } from '../theme';
 import { INFO_JAUGE, JaugeType } from '../types/domain';
 import { formatDureeClaire, formatHeure, formatPoints } from '../utils/format';
 
@@ -182,9 +182,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: grille.x3,
     gap: s(6),
     borderRadius: rayon.lg,
-    backgroundColor: couleurs.carte,
-    borderWidth: 1,
-    borderColor: couleurs.liseret,
+    ...surface,
   },
   entete: { flexDirection: 'row', alignItems: 'center', gap: s(8) },
   pastille: { width: s(24), height: s(24), borderRadius: s(8), alignItems: 'center', justifyContent: 'center' },

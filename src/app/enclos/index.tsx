@@ -3,36 +3,22 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import Monture from '../../components/Monture';
 import { BoutonPrincipal, Ecran } from '../../components/ui';
-import { BarreOnglets, CarteEnclos, CarteNouvelEnclos, EnTeteOnglet } from '../../components/v2/onglets';
-import { Alerte } from '../../engine/alertes';
+import { BarreOnglets, CarteEnclos, CarteNouvelEnclos, EnTeteOnglet, ResumeElevage, TitreGroupe } from '../../components/v2/onglets';
+import { VueEnclos } from '../../engine/statut';
 import { useTableau } from '../../hooks/useTableau';
 import { couleurs, grille, texte } from '../../theme';
-import { formatHeure } from '../../utils/format';
 import { s } from '../../echelle';
 
-// Ordre d'affichage : ce qui demande une action d'abord.
+// Groupes d'affichage : ce qui demande une action d'abord.
+const GROUPES = [
+  { id: 'aFaire', titre: 'À faire', couleur: couleurs.accent, statuts: ['a_confirmer', 'attente'] },
+  { id: 'enCours', titre: 'En cours', couleur: couleurs.texteFaible, statuts: ['en_cours'] },
+  { id: 'termines', titre: 'Terminés', couleur: couleurs.texteFaible, statuts: ['termine'] },
+] as const satisfies readonly { id: string; titre: string; couleur: string; statuts: readonly VueEnclos['statut'][] }[];
+
 const PRIORITE = { a_confirmer: 0, attente: 1, en_cours: 2, termine: 3 } as const;
 
-/** Phrase de résumé de l'élevage : ce qui attend le joueur, sinon la prochaine échéance. */
-function resume(aFaire: Alerte[], aVenir: Alerte[], enCours: number): { texte: string; couleur: string } {
-  const enclosAFaire = new Set(aFaire.map((a) => a.enclosId)).size;
-  if (enclosAFaire > 0) {
-    return {
-      texte: enclosAFaire === 1 ? `${aFaire[0].enclosNom} attend une action.` : `${enclosAFaire} enclos attendent une action.`,
-      couleur: couleurs.accent,
-    };
-  }
-  const prochaine = aVenir[0];
-  if (prochaine?.quand) {
-    return {
-      texte: `${enCours} ${enCours > 1 ? 'enclos tournent' : 'enclos tourne'}, rien à faire. Prochaine échéance à ${formatHeure(prochaine.quand)} : ${prochaine.texte.toLowerCase()} (${prochaine.enclosNom}).`,
-      couleur: couleurs.texteAttenue,
-    };
-  }
-  return { texte: 'Rien en cours.', couleur: couleurs.texteAttenue };
-}
-
-/** Accueil « Mes enclos » : résumé, une carte par enclos (l'urgent d'abord), ajout d'enclos. */
+/** Accueil « Mes enclos » : chiffres clés, enclos groupés par ce qu'ils attendent, ajout d'enclos. */
 export default function ListeEnclos() {
   const { liste, vues, conseils, alertes } = useTableau();
   const nouvelEnclos = () => router.push('/depart?mode=ajout');
@@ -40,12 +26,19 @@ export default function ListeEnclos() {
   const cartes = liste
     .map((e, i) => ({ enclos: e, index: i, vue: vues[i] }))
     .sort((a, b) => PRIORITE[a.vue.statut] - PRIORITE[b.vue.statut] || a.vue.restantSec - b.vue.restantSec);
-  const r = resume(alertes.aFaire, alertes.aVenir, vues.filter((v) => v.statut === 'en_cours').length);
   const aFaire = new Set(alertes.aFaire.map((a) => a.enclosId)).size;
+  const enCours = cartes.filter((c) => c.vue.statut === 'en_cours');
+  const prochaineFin = enCours.reduce<number | null>((min, c) => {
+    const fin = c.enclos.enCours?.finAt;
+    return fin && (min === null || fin < min) ? fin : min;
+  }, null);
 
   return (
     <Ecran basDePage={<BarreOnglets actif="enclos" pastilles={{ alertes: aFaire }} />}>
-      <EnTeteOnglet titre="Mes enclos" resume={liste.length > 0 && <Text style={[styles.resume, { color: r.couleur }]}>{r.texte}</Text>} />
+      <EnTeteOnglet
+        titre="Mes enclos"
+        resume={liste.length > 0 && <ResumeElevage aFaire={aFaire} enCours={enCours.length} prochaineFin={prochaineFin} />}
+      />
 
       {liste.length === 0 ? (
         <View style={styles.vide}>
@@ -62,19 +55,27 @@ export default function ListeEnclos() {
         </View>
       ) : (
         <>
-          {cartes.map(({ enclos: e, index, vue }) => (
-            <CarteEnclos key={e.id} enclos={e} vue={vue} conseil={conseils[e.id]} index={index} />
-          ))}
+          {GROUPES.map((g) => {
+            const membres = cartes.filter((c) => (g.statuts as readonly string[]).includes(c.vue.statut));
+            if (membres.length === 0) return null;
+            return (
+              <View key={g.id} style={styles.groupe}>
+                <TitreGroupe titre={g.titre} nombre={membres.length} couleur={g.couleur} />
+                {membres.map(({ enclos: e, index, vue }) => (
+                  <CarteEnclos key={e.id} enclos={e} vue={vue} conseil={conseils[e.id]} index={index} />
+                ))}
+              </View>
+            );
+          })}
           <CarteNouvelEnclos onPress={nouvelEnclos} />
         </>
       )}
-
     </Ecran>
   );
 }
 
 const styles = StyleSheet.create({
-  resume: { fontSize: s(13), fontWeight: '600', lineHeight: s(18) },
+  groupe: { gap: grille.x2 },
   vide: { gap: grille.x3, paddingVertical: grille.x6 },
   videMontures: { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'center', gap: grille.x2 },
 });

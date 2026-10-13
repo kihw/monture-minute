@@ -237,11 +237,25 @@ export default function DetailEnclos() {
       heros = (
         <Heros cle="roule" ton="ok" icone="check-circle-outline" surtitre="Tout roule, rien à faire">
           <View style={styles.ligneTemps}>
-            <Text style={texte.affiche}>{formatDureeClaire(vue.restantSec)}</Text>
-            <Text style={[texte.legende, { textAlign: 'right' }]}>fin à {fin}</Text>
+            <View style={{ gap: s(1) }}>
+              <Text style={styles.tempsEtiquette}>Temps restant</Text>
+              <Text style={styles.tempsGrand}>{formatDureeClaire(vue.restantSec)}</Text>
+            </View>
+            <View style={styles.finBloc}>
+              <Text style={styles.tempsEtiquette}>Fin</Text>
+              <Text style={styles.finHeure}>{fin}</Text>
+            </View>
+          </View>
+          <View style={{ gap: s(4) }}>
+            <Avancement ratio={ratioEtape} couleur={couleurs.succes} epaisseur={s(7)} />
+            <View style={styles.ligneAvancement}>
+              <Text style={styles.tempsEtiquette}>
+                Étape {vue.numeroEtape}/{vue.totalEtapes} · {titreClair(etape.titre)}
+              </Text>
+              <Text style={[styles.tempsEtiquette, { color: couleurs.succes }]}>{Math.round(ratioEtape * 100)} %</Text>
+            </View>
           </View>
           {!!sc?.gainMs && <Text style={texte.legende}>Recharger ne ferait gagner que {formatDureeClaire(sc.gainMs / 1000)}.</Text>}
-          <Avancement ratio={ratioEtape} couleur={couleurs.succes} />
         </Heros>
       );
     }
@@ -488,6 +502,11 @@ export default function DetailEnclos() {
 const styles = StyleSheet.create({
   gain: { color: couleurs.succes, fontSize: s(14), fontWeight: '700' },
   separateur: { height: 1, backgroundColor: couleurs.liseret, marginVertical: s(4) },
-  ligneTemps: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', gap: s(8) },
+  ligneTemps: { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', gap: s(8) },
+  tempsEtiquette: { color: couleurs.texteFaible, fontSize: s(11), fontWeight: '600', fontVariant: ['tabular-nums'] },
+  tempsGrand: { color: couleurs.texte, fontSize: s(34), fontWeight: '800', letterSpacing: s(-1), lineHeight: s(38), fontVariant: ['tabular-nums'] },
+  finBloc: { alignItems: 'flex-end', gap: s(1), paddingBottom: s(3) },
+  finHeure: { color: couleurs.texte, fontSize: s(17), fontWeight: '700', fontVariant: ['tabular-nums'] },
+  ligneAvancement: { flexDirection: 'row', justifyContent: 'space-between', gap: s(8) },
   prepare: { color: couleurs.texte, fontSize: s(14), fontWeight: '700' },
 });

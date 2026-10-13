@@ -12,7 +12,7 @@ import { s } from '../../echelle';
 import { contexteDepuis, genererParcours } from '../../engine/parcours';
 import { useCalcul } from '../../hooks/useElevage';
 import { useMouvementReduit } from '../../hooks/useMouvementReduit';
-import { couleurs, duree, grille, rayon, texte } from '../../theme';
+import { couleurs, duree, grille, rayon, surface, texte } from '../../theme';
 import { DepartEnclos, FAMILLE_LISTE, FAMILLES, lotInitial } from '../../types/domain';
 import { formatDureeClaire, formatSerenite, titreClair } from '../../utils/format';
 import Curseur from '../Curseur';
@@ -332,9 +332,7 @@ const styles = StyleSheet.create({
     gap: grille.x2,
     padding: grille.x3,
     borderRadius: rayon.lg,
-    backgroundColor: couleurs.carte,
-    borderWidth: 1,
-    borderColor: couleurs.liseret,
+    ...surface,
   },
   grandChiffre: { color: couleurs.texte, fontSize: s(28), fontWeight: '700', textAlign: 'center', fontVariant: ['tabular-nums'] },
   raccourcis: { flexDirection: 'row', flexWrap: 'wrap', gap: s(6) },

@@ -9,7 +9,7 @@ import { NativeScrollEvent, NativeSyntheticEvent, Pressable, ScrollView, StylePr
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Defs, RadialGradient, Rect, Stop } from 'react-native-svg';
 
-import { couleurs, degrades, esp, ombre, rayon, typo } from '../theme';
+import { couleurs, degrades, esp, ombre, rayon, surface, typo } from '../theme';
 import { INFO_JAUGE, JaugeType } from '../types/domain';
 import AnimatedPressable from './AnimatedPressable';
 import { s } from '../echelle';
@@ -23,16 +23,21 @@ function FondEcran() {
       <LinearGradient colors={degrades.ecran} style={StyleSheet.absoluteFill} />
       <Svg width="100%" height="100%" style={StyleSheet.absoluteFill}>
         <Defs>
-          <RadialGradient id="haloHaut" cx="15%" cy="0%" r="70%">
-            <Stop offset="0" stopColor="#6a55c8" stopOpacity={0.32} />
-            <Stop offset="1" stopColor="#6a55c8" stopOpacity={0} />
+          <RadialGradient id="haloHaut" cx="20%" cy="0%" r="75%">
+            <Stop offset="0" stopColor="#7058d8" stopOpacity={0.34} />
+            <Stop offset="1" stopColor="#7058d8" stopOpacity={0} />
           </RadialGradient>
-          <RadialGradient id="haloBas" cx="100%" cy="100%" r="60%">
-            <Stop offset="0" stopColor={couleurs.accent} stopOpacity={0.07} />
+          <RadialGradient id="haloOr" cx="95%" cy="8%" r="45%">
+            <Stop offset="0" stopColor={couleurs.accent} stopOpacity={0.08} />
             <Stop offset="1" stopColor={couleurs.accent} stopOpacity={0} />
+          </RadialGradient>
+          <RadialGradient id="haloBas" cx="0%" cy="100%" r="65%">
+            <Stop offset="0" stopColor="#2f6fa8" stopOpacity={0.12} />
+            <Stop offset="1" stopColor="#2f6fa8" stopOpacity={0} />
           </RadialGradient>
         </Defs>
         <Rect width="100%" height="100%" fill="url(#haloHaut)" />
+        <Rect width="100%" height="100%" fill="url(#haloOr)" />
         <Rect width="100%" height="100%" fill="url(#haloBas)" />
       </Svg>
     </View>
@@ -340,11 +345,8 @@ const styles = StyleSheet.create({
     backgroundColor: couleurs.surfaceElevee,
   },
   carte: {
-    backgroundColor: couleurs.carte,
+    ...surface,
     borderRadius: rayon.lg,
-    borderWidth: 1,
-    borderColor: couleurs.liseret,
-    borderTopColor: 'rgba(255,255,255,0.11)',
     padding: esp.lg,
   },
   boutonPrincipal: {
