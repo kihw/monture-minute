@@ -95,28 +95,124 @@ function notesTexte(info) {
   return String(notes ?? '').replace(/<[^>]+>/g, '').trim();
 }
 
+// ── Mises à jour (docs/PLAN-MAJ.md) ────────────────────────────────────────────
+// Au démarrage (ou sur demande depuis les réglages) : téléchargement avec progression, puis
+// installation silencieuse et relance, sans clic. En cours d'utilisation : téléchargement
+// silencieux, installation à la fermeture. Au-delà de 3 essais ratés pour une même version,
+// on arrête et on propose le téléchargement manuel.
+
+const PAGE_RELEASES = 'https://github.com/kihw/monture-minute/releases/latest';
+const ESSAIS_MAX = 3;
+// Laisse le temps de lire « Installation… » avant que la fenêtre se ferme.
+const DELAI_INSTALLATION_MS = 1500;
+const FICHIER_MAJ = () => path.join(app.getPath('userData'), 'mise-a-jour.json');
+
+/** Dernier état envoyé : relu par l'interface à son chargement (événements émis avant). */
+let etatMaj = { etat: 'inactive' };
+/** Vrai pendant une vérification qui doit installer tout de suite (démarrage, demande). */
+let immediate = false;
+let enCours = null;
+/** Version installée depuis le dernier lancement (bandeau « Quoi de neuf »), lue une fois par l'interface. */
+let installee = null;
+
+function lireSuivi() {
+  try {
+    return JSON.parse(fs.readFileSync(FICHIER_MAJ(), 'utf8'));
+  } catch {
+    return {};
+  }
+}
+
+function ecrireSuivi(suivi) {
+  fs.writeFileSync(FICHIER_MAJ(), JSON.stringify(suivi));
+}
+
+function publierEtat(etat) {
+  etatMaj = etat;
+  envoyer('bureau:maj', etat);
+}
+
+/** Tentatives d'installation déjà faites pour cette version (remis à zéro une fois installée). */
+function tentatives(version) {
+  const suivi = lireSuivi();
+  return suivi.version === version ? (suivi.tentatives ?? 0) : 0;
+}
+
+/** Au lancement : la version attendue est-elle arrivée ? Sinon, l'essai a échoué. */
+function bilanDernierEssai() {
+  const suivi = lireSuivi();
+  if (!suivi.version) return;
+  if (suivi.version === app.getVersion()) {
+    ecrireSuivi({});
+    installee = { version: suivi.version, notes: suivi.notes ?? '' };
+  }
+}
+
+function installer(info) {
+  const essais = tentatives(info.version) + 1;
+  ecrireSuivi({ version: info.version, notes: notesTexte(info), tentatives: essais });
+  publierEtat({ etat: 'installation', version: info.version, notes: notesTexte(info) });
+  // Silencieux (pas d'assistant NSIS) et relance automatique une fois installé.
+  setTimeout(() => autoUpdater.quitAndInstall(true, true), DELAI_INSTALLATION_MS);
+}
+
+function verifierMaj(installerTout) {
+  if (!app.isPackaged) {
+    publierEtat({ etat: 'a-jour' });
+    return Promise.resolve();
+  }
+  if (enCours) {
+    // Une demande explicite pendant une vérification de fond la rend immédiate.
+    immediate = immediate || installerTout;
+    return enCours;
+  }
+  immediate = installerTout;
+  if (immediate) publierEtat({ etat: 'verification' });
+  enCours = autoUpdater
+    .checkForUpdates()
+    .catch(() => {})
+    .finally(() => (enCours = null));
+  return enCours;
+}
+
 function configurerMisesAJour() {
   autoUpdater.autoDownload = true;
   autoUpdater.autoInstallOnAppQuit = true;
-  autoUpdater.on('update-available', (info) => envoyer('bureau:maj', { etat: 'disponible', version: info.version, notes: notesTexte(info) }));
-  autoUpdater.on('update-downloaded', (info) => envoyer('bureau:maj', { etat: 'telechargee', version: info.version, notes: notesTexte(info) }));
-  autoUpdater.on('update-not-available', () => envoyer('bureau:maj', { etat: 'a-jour' }));
-  autoUpdater.on('error', (erreur) => envoyer('bureau:maj', { etat: 'erreur', message: String(erreur?.message ?? erreur) }));
-  // Pas de vérification en développement (`npm start`) : il n'y a pas de release installée.
-  if (!app.isPackaged) return;
-  const verifier = () => autoUpdater.checkForUpdates().catch(() => {});
-  verifier();
-  setInterval(verifier, INTERVALLE_MAJ_MS);
+  autoUpdater.on('update-available', (info) => {
+    if (tentatives(info.version) >= ESSAIS_MAX) {
+      // Déjà 3 essais ratés : plus d'installation automatique de cette version.
+      autoUpdater.autoInstallOnAppQuit = false;
+      publierEtat({ etat: 'echec', version: info.version, urlPage: PAGE_RELEASES });
+      return;
+    }
+    if (immediate) publierEtat({ etat: 'telechargement', version: info.version, notes: notesTexte(info), pourcentage: 0 });
+  });
+  autoUpdater.on('download-progress', (p) => {
+    if (immediate && etatMaj.etat === 'telechargement') publierEtat({ ...etatMaj, pourcentage: Math.round(p.percent) });
+  });
+  autoUpdater.on('update-downloaded', (info) => {
+    if (tentatives(info.version) >= ESSAIS_MAX) return;
+    if (immediate) installer(info);
+    else publierEtat({ etat: 'prete', version: info.version, notes: notesTexte(info) });
+  });
+  autoUpdater.on('update-not-available', () => publierEtat({ etat: 'a-jour' }));
+  autoUpdater.on('error', (erreur) => {
+    // Hors ligne ou GitHub indisponible : on ne dérange que si le joueur attendait l'installation.
+    if (immediate) publierEtat({ etat: 'erreur', message: String(erreur?.message ?? erreur) });
+  });
+  bilanDernierEssai();
+  verifierMaj(true);
+  setInterval(() => verifierMaj(false), INTERVALLE_MAJ_MS);
 }
 
-ipcMain.handle('bureau:verifier', async () => {
-  if (!app.isPackaged) {
-    envoyer('bureau:maj', { etat: 'a-jour' });
-    return;
-  }
-  await autoUpdater.checkForUpdates();
+ipcMain.handle('bureau:verifier', () => verifierMaj(true));
+ipcMain.handle('bureau:etat-maj', () => etatMaj);
+ipcMain.handle('bureau:maj-installee', () => {
+  const v = installee;
+  installee = null;
+  return v;
 });
-ipcMain.on('bureau:installer', () => autoUpdater.quitAndInstall());
+ipcMain.on('bureau:ouvrir-releases', () => shell.openExternal(PAGE_RELEASES));
 ipcMain.on('bureau:premier-plan', (_e, actif) => fenetre?.setAlwaysOnTop(Boolean(actif), 'floating'));
 ipcMain.on('bureau:notifier', (_e, { id, titre, corps, quand, url }) => {
   clearTimeout(minuteries.get(id));

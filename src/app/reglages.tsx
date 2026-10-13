@@ -22,6 +22,7 @@ export default function Reglages() {
   const reinitialiserTout = useEleveurStore((s) => s.reinitialiserTout);
   const [popup, setPopup] = useState<'reset' | 'remplissage' | 'mode' | 'seuil' | 'anticipation' | null>(null);
   const verification = useMiseAJour((s) => s.verification);
+  const etatBureau = useMiseAJour((s) => s.bureau);
   const bureau = pontBureau();
   const fermer = () => setPopup(null);
 
@@ -155,7 +156,9 @@ export default function Reglages() {
           couleur={couleurs.accent}
           titre="Rechercher une mise à jour"
           sousTitre={`Version installée ${VERSION_APP} · ${
-            verification === 'en-cours'
+            etatBureau?.etat === 'prete'
+              ? `${etatBureau.version} prête, installée à la fermeture`
+              : verification === 'en-cours'
               ? 'recherche…'
               : verification === 'a-jour'
                 ? 'à jour'

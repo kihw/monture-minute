@@ -10,7 +10,9 @@ function ecouter(canal, rappel) {
 
 contextBridge.exposeInMainWorld('dodindeBureau', {
   verifierMiseAJour: () => ipcRenderer.invoke('bureau:verifier'),
-  installerMiseAJour: () => ipcRenderer.send('bureau:installer'),
+  etatMiseAJour: () => ipcRenderer.invoke('bureau:etat-maj'),
+  miseAJourInstallee: () => ipcRenderer.invoke('bureau:maj-installee'),
+  ouvrirReleases: () => ipcRenderer.send('bureau:ouvrir-releases'),
   onMiseAJour: (rappel) => ecouter('bureau:maj', rappel),
   notifier: (notification) => ipcRenderer.send('bureau:notifier', notification),
   annulerNotification: (id) => ipcRenderer.send('bureau:annuler', id),

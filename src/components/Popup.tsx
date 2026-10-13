@@ -29,6 +29,7 @@ export default function Popup({
   onFermer,
   children,
   pied,
+  fermable = true,
 }: {
   visible: boolean;
   titre: string;
@@ -36,7 +37,10 @@ export default function Popup({
   children: ReactNode;
   /** Boutons fixés en bas de la popup. */
   pied?: ReactNode;
+  /** Faux : ni croix, ni fermeture par le fond ou le retour (opération en cours). */
+  fermable?: boolean;
 }) {
+  const fermer = fermable ? onFermer : () => {};
   const insets = useSafeAreaInsets();
   const { width, height } = useWindowDimensions();
   const centree = width >= LARGEUR_CENTREE;
@@ -50,9 +54,9 @@ export default function Popup({
 
   // Pas d'animation native : sur le web, le fondu de Modal peut rester bloqué à mi-opacité.
   return (
-    <Modal visible={visible} transparent animationType="none" onRequestClose={onFermer} statusBarTranslucent>
+    <Modal visible={visible} transparent animationType="none" onRequestClose={fermer} statusBarTranslucent>
       <View style={[styles.racine, centree ? styles.racineCentree : styles.racineBas]}>
-        <Pressable style={StyleSheet.absoluteFill} onPress={onFermer} accessibilityLabel="Fermer">
+        <Pressable style={StyleSheet.absoluteFill} onPress={fermer} accessible={fermable} accessibilityLabel="Fermer">
           <View style={styles.voile} />
         </Pressable>
         <Animated.View
@@ -71,9 +75,11 @@ export default function Popup({
           <Bandeau
             titre={titre}
             droite={
-              <Pressable onPress={onFermer} hitSlop={10} accessibilityLabel="Fermer" style={styles.fermer}>
-                <MaterialCommunityIcons name="close" size={s(14)} color={couleurs.texteAttenue} />
-              </Pressable>
+              fermable && (
+                <Pressable onPress={onFermer} hitSlop={10} accessibilityLabel="Fermer" style={styles.fermer}>
+                  <MaterialCommunityIcons name="close" size={s(14)} color={couleurs.texteAttenue} />
+                </Pressable>
+              )
             }
           />
           <ScrollView contentContainerStyle={styles.corps} keyboardShouldPersistTaps="handled">
