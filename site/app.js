@@ -16,7 +16,8 @@ async function chargerVersions() {
       headers: { Accept: 'application/vnd.github+json' },
     });
     if (!reponse.ok) throw new Error(String(reponse.status));
-    const releases = (await reponse.json()).filter((r) => !r.draft);
+    // Les préversions (vX.Y.Z-rc.N) servent aux essais : la vitrine ne montre que les versions publiées.
+    const releases = (await reponse.json()).filter((r) => !r.draft && !r.prerelease);
     liste.replaceChildren();
     if (releases.length === 0) {
       etiquette.textContent = 'Première version en préparation.';

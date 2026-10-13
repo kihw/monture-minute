@@ -14,16 +14,22 @@ npm run publier -- patch    # ou minor / major
    est comparé à celui de l'APK publié (`scripts/signature-android.sha256`, sinon l'APK de la
    dernière release) : s'ils diffèrent, rien n'est envoyé ;
 4. envoi de `main` et du tag ;
-5. release GitHub créée tout de suite avec l'APK et les notes de `docs/notes/vX.Y.Z.md` (sinon des
-   notes générées). Le tag lance ensuite `.github/workflows/release.yml`, qui compile
-   l'installateur Windows et l'ajoute à la même release.
+5. release GitHub créée **en brouillon** avec l'APK et les notes de `docs/notes/vX.Y.Z.md` (sinon
+   des notes générées). Le tag lance ensuite `.github/workflows/release.yml`, qui compile
+   l'installateur Windows, contrôle le certificat de l'APK (`scripts/signature-android.sha256`),
+   génère le manifeste `maj.json` (`scripts/manifeste-maj.mjs`), vérifie que les 5 fichiers sont là
+   et **publie** la release. Les apps ne voient donc jamais une version incomplète.
 
 Si la compilation échoue, la version reste locale ; le script indique comment l'annuler
 (`git tag -d vX.Y.Z` puis `git reset --hard HEAD~1`).
 
 **Repli sans la clé en local** : `npm version patch` puis `git push <distant> main --follow-tags`.
-La release ne contient alors pas d'APK, et le workflow le compile sur GitHub (environ 30 min)
-avant de créer la release avec les notes de `docs/notes/vX.Y.Z.md`.
+La release ne contient alors pas d'APK, et le workflow le compile sur GitHub (environ 15 min)
+avant de créer la release, toujours en brouillon puis publiée une fois complète.
+
+**Préversion d'essai** : un tag avec suffixe (`v3.1.0-rc.1`, version identique dans `package.json`)
+donne une release marquée « préversion ». Les apps installées et la vitrine l'ignorent : elle sert à
+tester le circuit sans toucher les joueurs.
 
 Préalables sur le PC : SDK Android (`ANDROID_HOME`, sinon `%LOCALAPPDATA%\Android\Sdk`), Java 17,
 GitHub CLI connectée (`gh auth login`) et la clé de signature (ci-dessous).
@@ -57,6 +63,10 @@ contient :
 | `MontureMinute-Android.apk` | APK signé, compilé en local, proposé par l'app Android |
 | `MontureMinute-Setup.exe` | Installateur Windows (GitHub Actions) |
 | `latest.yml`, `MontureMinute-Setup.exe.blockmap` | Métadonnées lues par `electron-updater` |
+| `maj.json` | Manifeste lu par l'app : version, notes, empreintes et certificat (`docs/PLAN-MAJ.md`) |
+
+Il est servi à une adresse fixe, sans passer par l'API GitHub :
+`https://github.com/kihw/monture-minute/releases/latest/download/maj.json`.
 
 ## Mises à jour côté utilisateurs
 

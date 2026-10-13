@@ -1,7 +1,9 @@
 # Release, déclenchée par un tag vX.Y.Z (voir docs/RELEASE.md) : vérifications → installateur
-# Windows → ajout à la release GitHub. L'APK Android est normalement compilé et signé en local
-# par `npm run publier`, qui crée la release avec l'APK : il n'est alors pas recompilé ici. Si la
-# release n'a pas d'APK (tag poussé à la main), il est compilé ici en repli (~30 min).
+# Windows → contrôle du certificat → manifeste maj.json → publication. L'APK Android est
+# normalement compilé et signé en local par `npm run publier`, qui crée la release en brouillon
+# avec l'APK : il n'est alors pas recompilé ici. Si la release n'a pas d'APK (tag poussé à la
+# main), il est compilé ici en repli (~30 min). La release n'est publiée qu'une fois complète.
+# Un tag avec suffixe (v3.1.0-rc.1) donne une préversion, ignorée par les apps installées.
 # Lancé à la main (workflow_dispatch), il compile seulement (Windows et un APK de contrôle),
 # sans rien publier ; sans clé de signature, l'APK de test est signé avec la clé de débogage.
 name: Release
@@ -144,29 +146,78 @@ jobs:
     needs: [apk-local, windows, android]
     if: ${{ always() && startsWith(github.ref, 'refs/tags/') && needs.windows.result == 'success' && contains(fromJSON('["success","skipped"]'), needs.android.result) }}
     runs-on: ubuntu-latest
+    # La release reste en brouillon tant qu'elle n'est pas complète : les apps ne voient une version
+    # (« latest ») qu'une fois ses 5 fichiers présents (docs/PLAN-MAJ.md, § 6.4).
+    env:
+      GH_TOKEN: ${{ github.token }}
+      TAG: ${{ github.ref_name }}
     steps:
       - uses: actions/checkout@v4
-      # Release créée ici (repli) : ses notes viennent de docs/notes/vX.Y.Z.md s'il existe.
-      - name: Notes de version
-        run: |
-          f="docs/notes/${GITHUB_REF_NAME}.md"
-          if [ -f "$f" ]; then cp "$f" notes.md; else : > notes.md; fi
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
       - uses: actions/download-artifact@v4
         with:
           path: fichiers
           merge-multiple: true
-      - uses: softprops/action-gh-release@v2
-        with:
-          # La release existe déjà (créée par `npm run publier` avec l'APK et les notes) : on n'y
-          # ajoute que les fichiers Windows, sans toucher aux notes. Sinon, elle est créée ici.
-          name: Monture Minute ${{ github.ref_name }}
-          # Notes reprises seulement si la release est créée ici, pour ne pas écraser celles de `npm run publier`.
-          body_path: ${{ needs.apk-local.outputs.present != 'true' && 'notes.md' || '' }}
-          generate_release_notes: true
-          # L'APK n'est là qu'en cas de compilation de repli.
-          fail_on_unmatched_files: false
-          files: |
-            fichiers/MontureMinute-Android.apk
-            fichiers/MontureMinute-Setup.exe
-            fichiers/MontureMinute-Setup.exe.blockmap
-            fichiers/latest.yml
+      - name: Release en brouillon
+        run: |
+          # Créée par `npm run publier` avec l'APK compilé en local, ou ici en repli.
+          if ! gh release view "$TAG" --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1; then
+            f="docs/notes/$TAG.md"
+            if [ -f "$f" ]; then notes=(--notes-file "$f"); else notes=(--generate-notes); fi
+            if [[ "$TAG" == *-* ]]; then pre=(--prerelease); else pre=(); fi
+            gh release create "$TAG" --repo "$GITHUB_REPOSITORY" --draft --verify-tag \
+              --title "Monture Minute $TAG" "${notes[@]}" "${pre[@]}"
+          fi
+          # APK compilé en local : déjà dans la release, récupéré pour le contrôler et l'empreinte.
+          if [ ! -f fichiers/MontureMinute-Android.apk ]; then
+            gh release download "$TAG" --repo "$GITHUB_REPOSITORY" --pattern MontureMinute-Android.apk --dir fichiers
+            echo "APK_LOCAL=true" >> "$GITHUB_ENV"
+          fi
+      - name: Certificat de signature
+        run: |
+          # Le même que l'app publiée, sinon Android refuserait la mise à jour sur tous les téléphones.
+          outils=$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)
+          certificat=$("$outils/apksigner" verify --print-certs fichiers/MontureMinute-Android.apk \
+            | sed -n 's/.*SHA-256 digest: *//p' | head -1 | tr 'A-F' 'a-f')
+          attendu=$(tr -d '[:space:]' < scripts/signature-android.sha256)
+          if [ "$certificat" != "$attendu" ]; then
+            echo "::error::Certificat de l'APK ($certificat) différent de celui de l'app publiée ($attendu)"
+            exit 1
+          fi
+          echo "CERTIFICAT=$certificat" >> "$GITHUB_ENV"
+      - name: Manifeste maj.json
+        run: |
+          gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json body --jq .body > notes.md
+          node scripts/manifeste-maj.mjs "$TAG" fichiers notes.md "$CERTIFICAT" > fichiers/maj.json
+          cat fichiers/maj.json
+      - name: Envoi des fichiers
+        run: |
+          envoi=(fichiers/MontureMinute-Setup.exe fichiers/MontureMinute-Setup.exe.blockmap fichiers/latest.yml fichiers/maj.json)
+          if [ "$APK_LOCAL" != "true" ]; then envoi+=(fichiers/MontureMinute-Android.apk); fi
+          gh release upload "$TAG" --repo "$GITHUB_REPOSITORY" --clobber "${envoi[@]}"
+      - name: Contrôle et publication
+        run: |
+          presents=$(gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json assets --jq '.assets[].name')
+          for f in MontureMinute-Android.apk MontureMinute-Setup.exe MontureMinute-Setup.exe.blockmap latest.yml maj.json; do
+            if ! grep -qx "$f" <<< "$presents"; then
+              echo "::error::$f absent de la release : elle reste en brouillon"
+              exit 1
+            fi
+          done
+          if [[ "$TAG" == *-* ]]; then
+            gh release edit "$TAG" --repo "$GITHUB_REPOSITORY" --draft=false --prerelease
+          else
+            gh release edit "$TAG" --repo "$GITHUB_REPOSITORY" --draft=false --latest
+          fi
+      - name: Manifeste servi à l'adresse fixe
+        if: ${{ !contains(github.ref_name, '-') }}
+        run: |
+          sleep 10
+          servie=$(curl -sfL "https://github.com/$GITHUB_REPOSITORY/releases/latest/download/maj.json" | node -p "JSON.parse(require('fs').readFileSync(0)).version")
+          if [ "v$servie" != "$TAG" ]; then
+            echo "::error::releases/latest/download/maj.json annonce $servie au lieu de $TAG"
+            exit 1
+          fi
+          echo "maj.json $servie servi à l'adresse fixe."

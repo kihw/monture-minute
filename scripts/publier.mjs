@@ -8,8 +8,8 @@
 // 2. nouvelle version : commit + tag (npm version) ;
 // 3. APK release signé, compilé localement (arm64-v8a et armeabi-v7a) dans dist/ ;
 // 4. envoi de main et du tag ;
-// 5. release GitHub créée tout de suite avec l'APK et les notes ; GitHub y ajoute ensuite
-//    l'installateur Windows (.github/workflows/release.yml).
+// 5. release GitHub créée en brouillon avec l'APK et les notes ; GitHub y ajoute l'installateur
+//    Windows et le manifeste maj.json, puis la publie (.github/workflows/release.yml).
 //
 // La clé de signature reste sur ta machine : le script lit seulement les variables
 // d'environnement ANDROID_KEYSTORE_PATH, ANDROID_KEYSTORE_PASSWORD, ANDROID_KEY_ALIAS et
@@ -163,9 +163,10 @@ try {
 etape(`Envoi de main et de ${tag} vers ${distant}`);
 lancer('git', ['push', distant, 'main', '--follow-tags'], { cwd: RACINE });
 
-// ── 5. Release GitHub avec l'APK ──────────────────────────────────────────────
+// ── 5. Release GitHub avec l'APK, en brouillon ────────────────────────────────
 
-etape(`Release ${tag}`);
+// Invisible des apps tant que GitHub n'y a pas ajouté l'installateur Windows et maj.json.
+etape(`Release ${tag} (brouillon)`);
 const notes = join(RACINE, 'docs', 'notes', `${tag}.md`);
 lancer(
   'gh',
@@ -178,8 +179,11 @@ lancer(
     'kihw/monture-minute',
     '--title',
     `Monture Minute ${tag}`,
+    '--draft',
+    '--verify-tag',
+    ...(version.includes('-') ? ['--prerelease'] : []),
     ...(existsSync(notes) ? ['--notes-file', notes] : ['--generate-notes']),
   ],
   { cwd: RACINE }
 );
-console.log(`\n✔ ${tag} publiée avec l'APK. GitHub ajoute l'installateur Windows dans quelques minutes (onglet Actions).`);
+console.log(`\n✔ ${tag} créée en brouillon avec l'APK. GitHub y ajoute l'installateur Windows et maj.json, puis la publie (onglet Actions, ~5 min).`);
