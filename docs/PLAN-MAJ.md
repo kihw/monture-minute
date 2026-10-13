@@ -149,10 +149,15 @@ de `android/` (CNG).
 
 - Téléchargement en JS avec `expo-file-system` (progression affichée), dans le cache de l'app, puis
   suppression de l'APK après installation.
-- `app.config.ts` : `android.permissions` += `REQUEST_INSTALL_PACKAGES`, `UPDATE_PACKAGES_WITHOUT_USER_ACTION`.
-- Notification « touche pour rouvrir » : programmée juste avant `commit`, via `expo-notifications`.
-- Au premier lancement après mise à jour : reprogrammer les rappels d'étape (comme Windows le fait déjà
-  avec `replanifierNotifications`), par précaution.
+- Permissions `REQUEST_INSTALL_PACKAGES` et `UPDATE_PACKAGES_WITHOUT_USER_ACTION` déclarées dans le
+  manifeste du module (fusionné dans l'app à la génération), avec ses deux récepteurs.
+- Notification « touche pour rouvrir » : envoyée par la nouvelle version elle-même, sur
+  `MY_PACKAGE_REPLACED` (plus fiable qu'une notification programmée avant l'installation), et
+  retirée dès que l'app est rouverte.
+- Un essai est compté dès le début du téléchargement : une vérification qui échoue toujours ne
+  retélécharge pas 61 Mo à chaque lancement (3 essais, puis passage au manuel).
+- Rappels d'étape après mise à jour : `expo-notifications` écoute aussi `MY_PACKAGE_REPLACED` et les
+  reprogramme lui-même (vérifié dans le manifeste fusionné).
 
 ### 6.3 Windows : `electron-updater` en mode silencieux
 
