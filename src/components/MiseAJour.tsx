@@ -1,14 +1,23 @@
 // Mises à jour : vérification au démarrage, popup globale (docs/PLAN-MAJ.md).
 // Windows : electron-updater télécharge avec progression, installe en silence et relance l'app,
 // sans clic ; une version trouvée en cours d'utilisation s'installe à la fermeture.
-// Android (en attendant le lot 3) : la popup propose l'APK de la release GitHub.
+// Android : l'APK annoncé par maj.json est téléchargé, vérifié puis installé par l'app elle-même
+// (sans confirmation sur Android 12+) ; Android la ferme, une notification la rouvre.
 
 import { useEffect, useState } from 'react';
-import { Linking, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { AppState, Linking, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { create } from 'zustand';
 
 import { EtatMiseAJourBureau, pontBureau } from '../engine/bureau';
-import { Release, VERSION_APP, verifierMiseAJour } from '../engine/miseAJour';
+import {
+  bilanMiseAJour,
+  EtapeAndroid,
+  majAndroidDisponible,
+  mettreAJour,
+  ouvrirAutorisation,
+  supprimerTelechargements,
+} from '../engine/majAndroid';
+import { Manifeste, URL_RELEASES, verifierMiseAJour } from '../engine/miseAJour';
 import { couleurs } from '../theme';
 import Popup from './Popup';
 import { BoutonContour, BoutonPrincipal } from './ui';
@@ -18,20 +27,25 @@ import { s } from '../echelle';
 const INTERVALLE_MS = 6 * 60 * 60 * 1000;
 
 interface EtatMiseAJour {
-  /** Android : release plus récente trouvée sur GitHub. */
-  release: Release | null;
+  /** Android : version annoncée par maj.json et étape de son installation. */
+  manifeste: Manifeste | null;
+  android: EtapeAndroid | null;
   /** Windows : état remonté par electron-updater. */
   bureau: EtatMiseAJourBureau | null;
-  /** Version que l'utilisateur a repoussée (Android) ou dont il a fermé l'échec (Windows). */
+  /** Popup refermée par le joueur pour cette session (autorisation, erreur, échec). */
   ignoree: string | null;
   verification: 'inactive' | 'en-cours' | 'a-jour' | 'erreur';
+  /** Dernière vérification (Android : nouvelle vérification au retour dans l'app après 6 h). */
+  verifieeA: number;
 }
 
 export const useMiseAJour = create<EtatMiseAJour>(() => ({
-  release: null,
+  manifeste: null,
+  android: null,
   bureau: null,
   ignoree: null,
   verification: 'inactive',
+  verifieeA: 0,
 }));
 
 function suivreBureau(etat: EtatMiseAJourBureau) {
@@ -42,21 +56,32 @@ function suivreBureau(etat: EtatMiseAJourBureau) {
   });
 }
 
-/** Lance une vérification (automatique ou depuis les réglages). Sur Windows, installe dans la foulée. */
+const enCoursAndroid = (e: EtapeAndroid | null) =>
+  e?.etat === 'telechargement' || e?.etat === 'verification' || e?.etat === 'installation';
+
+/** Lance une vérification (démarrage, retour dans l'app, réglages) et installe dans la foulée. */
 export async function rechercherMiseAJour() {
   const bureau = pontBureau();
-  useMiseAJour.setState({ verification: 'en-cours', ignoree: null });
   if (bureau) {
+    useMiseAJour.setState({ verification: 'en-cours', ignoree: null });
     // La réponse arrive par l'abonnement onMiseAJour.
     await bureau.verifierMiseAJour().catch(() => useMiseAJour.setState({ verification: 'erreur' }));
     return;
   }
-  if (Platform.OS !== 'android') {
-    useMiseAJour.setState({ verification: 'inactive' });
+  if (Platform.OS !== 'android' || enCoursAndroid(useMiseAJour.getState().android)) return;
+  useMiseAJour.setState({ verification: 'en-cours', ignoree: null, verifieeA: Date.now() });
+  const manifeste = await verifierMiseAJour();
+  if (!manifeste) {
+    supprimerTelechargements();
+    useMiseAJour.setState({ manifeste: null, android: null, verification: 'a-jour' });
     return;
   }
-  const release = await verifierMiseAJour();
-  useMiseAJour.setState({ release, verification: release ? 'inactive' : 'a-jour' });
+  useMiseAJour.setState({ manifeste, verification: 'inactive' });
+  if (!majAndroidDisponible()) {
+    useMiseAJour.setState({ android: { etat: 'erreur', message: 'Installation intégrée indisponible.' } });
+    return;
+  }
+  await mettreAJour(manifeste, (etape) => useMiseAJour.setState({ android: etape }));
 }
 
 /** À monter une fois à la racine : abonnements, vérifications et popup. */
@@ -74,143 +99,205 @@ export default function MiseAJour() {
       bureau.miseAJourInstallee().then(setInstallee).catch(() => {});
       return desabonner;
     }
+    if (Platform.OS !== 'android') return;
+    bilanMiseAJour().then(setInstallee).catch(() => {});
     rechercherMiseAJour();
-    const t = setInterval(rechercherMiseAJour, INTERVALLE_MS);
-    return () => clearInterval(t);
+    // Sur téléphone, l'app est rarement relancée : un retour dans l'app compte comme un démarrage
+    // après 6 h, ou tout de suite si le joueur revient des réglages avec l'autorisation.
+    const abonnement = AppState.addEventListener('change', (etat) => {
+      if (etat !== 'active') return;
+      const { android, verifieeA } = useMiseAJour.getState();
+      if (android?.etat === 'autorisation' || Date.now() - verifieeA > INTERVALLE_MS) rechercherMiseAJour();
+    });
+    return () => abonnement.remove();
   }, []);
 
-  if (pont) return <PopupBureau installee={installee} onFermerInstallee={() => setInstallee(null)} />;
-  return <PopupAndroid />;
-}
-
-// ── Windows ──────────────────────────────────────────────────────────────────
-
-function PopupBureau({ installee, onFermerInstallee }: { installee: { version: string; notes: string } | null; onFermerInstallee: () => void }) {
-  const { bureau, ignoree } = useMiseAJour();
-  const pont = pontBureau();
-  const etat = bureau?.etat;
-
-  // Une version vient d'être installée : on montre ses notes une fois.
-  if (installee && etat !== 'telechargement' && etat !== 'installation') {
+  const fermerInstallee = () => setInstallee(null);
+  if (installee) {
     return (
       <Popup
         visible
         titre={`Monture Minute ${installee.version}`}
-        onFermer={onFermerInstallee}
-        pied={<BoutonPrincipal label="C’est parti" onPress={onFermerInstallee} />}
+        onFermer={fermerInstallee}
+        pied={<BoutonPrincipal label="C’est parti" onPress={fermerInstallee} />}
       >
         <Text style={styles.intro}>La mise à jour est installée. Tes enclos et ton parcours en cours sont conservés.</Text>
         <Notes notes={installee.notes} />
       </Popup>
     );
   }
+  return pont ? <PopupBureau /> : <PopupAndroid />;
+}
+
+// ── Windows ──────────────────────────────────────────────────────────────────
+
+function PopupBureau() {
+  const { bureau, ignoree } = useMiseAJour();
+  const pont = pontBureau();
 
   if (bureau?.etat === 'telechargement' || bureau?.etat === 'installation') {
     const installation = bureau.etat === 'installation';
-    const pourcentage = bureau.etat === 'telechargement' ? bureau.pourcentage : 100;
     return (
-      <Popup visible fermable={false} titre={`Mise à jour ${bureau.version}`} onFermer={() => {}}>
-        <Text style={styles.intro}>
-          {installation
+      <Progression
+        version={bureau.version}
+        notes={bureau.notes}
+        texte={
+          installation
             ? 'Installation… L’app va se fermer puis se rouvrir toute seule.'
-            : 'Téléchargement de la nouvelle version. L’app s’installera et se relancera toute seule.'}
-        </Text>
-        <View style={{ gap: s(4) }}>
-          <Avancement ratio={pourcentage / 100} epaisseur={s(7)} />
-          <Text style={styles.pourcentage}>{installation ? 'Installation…' : `${pourcentage} %`}</Text>
-        </View>
-        <Notes notes={bureau.notes} />
-      </Popup>
-    );
-  }
-
-  if (bureau?.etat === 'erreur' && ignoree !== 'erreur') {
-    const continuer = () => useMiseAJour.setState({ ignoree: 'erreur' });
-    return (
-      <Popup
-        visible
-        titre="Mise à jour impossible"
-        onFermer={continuer}
-        pied={
-          <Boutons
-            secondaire={{ label: 'Continuer', onPress: continuer }}
-            principal={{ label: 'Réessayer', onPress: () => rechercherMiseAJour() }}
-          />
+            : 'Téléchargement de la nouvelle version. L’app s’installera et se relancera toute seule.'
         }
-      >
-        <Text style={styles.intro}>
-          La nouvelle version n’a pas pu être téléchargée (connexion ou GitHub indisponible). Nouvel essai au prochain démarrage.
-        </Text>
-      </Popup>
+        pourcentage={installation ? null : bureau.pourcentage}
+        legende={installation ? 'Installation…' : undefined}
+      />
     );
   }
-
+  if (bureau?.etat === 'erreur' && ignoree !== 'erreur') return <Erreur />;
   if (bureau?.etat === 'echec' && ignoree !== bureau.version) {
-    const continuer = () => useMiseAJour.setState({ ignoree: bureau.version });
-    return (
-      <Popup
-        visible
-        titre={`Mise à jour ${bureau.version}`}
-        onFermer={continuer}
-        pied={
-          <Boutons
-            secondaire={{ label: 'Continuer', onPress: continuer }}
-            principal={{
-              label: 'Télécharger',
-              onPress: () => {
-                pont?.ouvrirReleases();
-                continuer();
-              },
-            }}
-          />
-        }
-      >
-        <Text style={styles.intro}>
-          L’installation automatique a échoué plusieurs fois. Télécharge l’installateur depuis GitHub et lance-le : tes données sont
-          conservées.
-        </Text>
-      </Popup>
-    );
+    return <Echec version={bureau.version} telecharger={() => pont?.ouvrirReleases()} />;
   }
-
   return null;
 }
 
 // ── Android ──────────────────────────────────────────────────────────────────
 
 function PopupAndroid() {
-  const { release, ignoree } = useMiseAJour();
-  const version = release?.version ?? null;
-  const visible = version !== null && version !== ignoree;
-  const plusTard = () => useMiseAJour.setState({ ignoree: version });
+  const { manifeste, android, ignoree } = useMiseAJour();
+  if (!manifeste || !android) return null;
+  const { version, notes } = manifeste;
 
+  switch (android.etat) {
+    case 'telechargement':
+      return (
+        <Progression
+          version={version}
+          notes={notes}
+          texte="Téléchargement de la nouvelle version. L’app s’installera toute seule."
+          pourcentage={android.pourcentage}
+        />
+      );
+    case 'verification':
+    case 'installation':
+      return (
+        <Progression
+          version={version}
+          notes={notes}
+          texte={
+            android.etat === 'verification'
+              ? 'Vérification du fichier téléchargé…'
+              : 'Installation… L’app va se fermer : touche la notification pour la rouvrir.'
+          }
+          pourcentage={null}
+          legende={android.etat === 'verification' ? 'Vérification…' : 'Installation…'}
+        />
+      );
+    case 'confirmation':
+      return (
+        <Popup visible titre={`Mise à jour ${version}`} onFermer={() => useMiseAJour.setState({ android: null })}>
+          <Text style={styles.intro}>Confirme la mise à jour dans la fenêtre d’Android. Tes données sont conservées.</Text>
+        </Popup>
+      );
+    case 'autorisation': {
+      if (ignoree === 'autorisation') return null;
+      const plusTard = () => useMiseAJour.setState({ ignoree: 'autorisation' });
+      return (
+        <Popup
+          visible
+          titre={`Mise à jour ${version}`}
+          onFermer={plusTard}
+          pied={
+            <Boutons secondaire={{ label: 'Plus tard', onPress: plusTard }} principal={{ label: 'Autoriser', onPress: ouvrirAutorisation }} />
+          }
+        >
+          <Text style={styles.intro}>
+            Pour se mettre à jour toute seule, l’app a besoin d’une autorisation, à donner une seule fois : active « Autoriser cette
+            source » puis reviens ici.
+          </Text>
+          <Notes notes={notes} />
+        </Popup>
+      );
+    }
+    case 'erreur':
+      return ignoree === 'erreur' ? null : <Erreur detail={android.message} />;
+    case 'echec':
+      return ignoree === version ? null : <Echec version={version} telecharger={() => Linking.openURL(URL_RELEASES)} />;
+  }
+}
+
+// ── Briques ──────────────────────────────────────────────────────────────────
+
+/** Popup non fermable : la mise à jour se fait, le joueur n'a rien à décider. */
+function Progression({
+  version,
+  notes,
+  texte,
+  pourcentage,
+  legende,
+}: {
+  version: string;
+  notes: string;
+  texte: string;
+  /** null : étape sans progression mesurable (barre pleine). */
+  pourcentage: number | null;
+  legende?: string;
+}) {
+  return (
+    <Popup visible fermable={false} titre={`Mise à jour ${version}`} onFermer={() => {}}>
+      <Text style={styles.intro}>{texte}</Text>
+      <View style={{ gap: s(4) }}>
+        <Avancement ratio={(pourcentage ?? 100) / 100} epaisseur={s(7)} />
+        <Text style={styles.pourcentage}>{legende ?? `${pourcentage ?? 100} %`}</Text>
+      </View>
+      <Notes notes={notes} />
+    </Popup>
+  );
+}
+
+function Erreur({ detail }: { detail?: string }) {
+  const continuer = () => useMiseAJour.setState({ ignoree: 'erreur' });
   return (
     <Popup
-      visible={visible}
-      titre={`Mise à jour ${version ?? ''}`}
-      onFermer={plusTard}
+      visible
+      titre="Mise à jour impossible"
+      onFermer={continuer}
+      pied={
+        <Boutons secondaire={{ label: 'Continuer', onPress: continuer }} principal={{ label: 'Réessayer', onPress: () => rechercherMiseAJour() }} />
+      }
+    >
+      <Text style={styles.intro}>
+        La nouvelle version n’a pas pu être installée{detail ? ` (${detail})` : ' (connexion ou GitHub indisponible)'}. Nouvel essai au
+        prochain démarrage.
+      </Text>
+    </Popup>
+  );
+}
+
+function Echec({ version, telecharger }: { version: string; telecharger: () => void }) {
+  const continuer = () => useMiseAJour.setState({ ignoree: version });
+  return (
+    <Popup
+      visible
+      titre={`Mise à jour ${version}`}
+      onFermer={continuer}
       pied={
         <Boutons
-          secondaire={{ label: 'Plus tard', onPress: plusTard }}
+          secondaire={{ label: 'Continuer', onPress: continuer }}
           principal={{
-            label: 'Télécharger l’APK',
+            label: 'Télécharger',
             onPress: () => {
-              if (release) Linking.openURL(release.urlApk ?? release.urlPage);
-              plusTard();
+              telecharger();
+              continuer();
             },
           }}
         />
       }
     >
       <Text style={styles.intro}>
-        Version installée : {VERSION_APP}. Installe l’APK téléchargé pour mettre à jour, tes données sont conservées.
+        L’installation automatique a échoué plusieurs fois. Télécharge la nouvelle version depuis GitHub et installe-la : tes données
+        sont conservées.
       </Text>
-      <Notes notes={release?.notes ?? ''} />
     </Popup>
   );
 }
-
-// ── Briques ──────────────────────────────────────────────────────────────────
 
 function Boutons({ secondaire, principal }: { secondaire: { label: string; onPress: () => void }; principal: { label: string; onPress: () => void } }) {
   return (
