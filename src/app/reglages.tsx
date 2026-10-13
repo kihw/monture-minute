@@ -9,6 +9,7 @@ import { BarreOnglets, EnTeteOnglet } from '../components/v2/onglets';
 import { TIERS_CARBURANT } from '../data/constants';
 import { pontBureau } from '../engine/bureau';
 import { palierPourNiveau, tierPourNiveau } from '../engine/carburant';
+import { resumeMaj } from '../engine/etatMaj';
 import { VERSION_APP } from '../engine/miseAJour';
 import { demanderPermission } from '../engine/notifications';
 import { useEleveurStore } from '../store/useStore';
@@ -21,8 +22,8 @@ export default function Reglages() {
   const modifier = useEleveurStore((s) => s.modifierReglages);
   const reinitialiserTout = useEleveurStore((s) => s.reinitialiserTout);
   const [popup, setPopup] = useState<'reset' | 'remplissage' | 'mode' | 'seuil' | 'anticipation' | null>(null);
-  const verification = useMiseAJour((s) => s.verification);
-  const etatBureau = useMiseAJour((s) => s.bureau);
+  const etatMaj = useMiseAJour((s) => s.etat);
+  const verifieeA = useMiseAJour((s) => s.verifieeA);
   const bureau = pontBureau();
   const fermer = () => setPopup(null);
 
@@ -155,17 +156,7 @@ export default function Reglages() {
           icone="update"
           couleur={couleurs.accent}
           titre="Rechercher une mise à jour"
-          sousTitre={`Version installée ${VERSION_APP} · ${
-            etatBureau?.etat === 'prete'
-              ? `${etatBureau.version} prête, installée à la fermeture`
-              : verification === 'en-cours'
-              ? 'recherche…'
-              : verification === 'a-jour'
-                ? 'à jour'
-                : verification === 'erreur'
-                  ? 'vérification impossible'
-                  : 'mises à jour via GitHub'
-          }`}
+          sousTitre={`Version ${VERSION_APP} · ${resumeMaj(etatMaj, verifieeA)}`}
           onPress={rechercherMiseAJour}
         />
         <LigneReglage

@@ -38,7 +38,8 @@ class RecepteurMiseAJour : BroadcastReceiver() {
       }
     val notification =
       (if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) Notification.Builder(context, CANAL) else @Suppress("DEPRECATION") Notification.Builder(context))
-        .setSmallIcon(context.applicationInfo.icon)
+        .setSmallIcon(icone(context))
+        .setColor(0xFFF2C94C.toInt())
         .setContentTitle(if (version != null) "Monture Minute $version installée" else "Mise à jour installée")
         .setContentText("Touche pour rouvrir l’app.")
         .setAutoCancel(true)
@@ -52,6 +53,12 @@ class RecepteurMiseAJour : BroadcastReceiver() {
         )
         .build()
     gestionnaire.notify(ID_NOTIFICATION, notification)
+  }
+
+  /** Icône blanche générée par le plugin expo-notifications, sinon celle de l'app. */
+  private fun icone(context: Context): Int {
+    val id = context.resources.getIdentifier("notification_icon", "drawable", context.packageName)
+    return if (id != 0) id else context.applicationInfo.icon
   }
 
   companion object {

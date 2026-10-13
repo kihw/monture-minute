@@ -38,5 +38,10 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     // Page unique : l'export web est embarqué tel quel dans l'app Windows (Electron).
     output: 'single',
   },
-  plugins: [['expo-router', { root: './src/app' }], 'expo-notifications', 'expo-font'],
+  plugins: [
+    ['expo-router', { root: './src/app' }],
+    // Icône des notifications : silhouette blanche (sinon Android affiche un carré blanc), teinte or.
+    ['expo-notifications', { icon: './assets/notification-icon.png', color: '#f2c94c' }],
+    'expo-font',
+  ],
 });
