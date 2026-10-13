@@ -7,7 +7,7 @@
 
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useEffect, useMemo, useState } from 'react';
-import { Animated, AppState, Linking, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Animated, AppState, Linking, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { create } from 'zustand';
 
@@ -20,6 +20,7 @@ import Popup from './Popup';
 import { BoutonContour, BoutonPrincipal } from './ui';
 import { Avancement } from './v2/base';
 import { s } from '../echelle';
+import { Text } from './Texte';
 
 const INTERVALLE_MS = 6 * 60 * 60 * 1000;
 /** Le bandeau « installée » s'efface seul au bout de ce délai. */

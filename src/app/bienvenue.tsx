@@ -1,10 +1,11 @@
 import { router } from 'expo-router';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 import Monture from '../components/Monture';
 import { BoutonPrincipal, Carte, Ecran, Pastille } from '../components/ui';
 import { couleurs, esp, police } from '../theme';
 import { s } from '../echelle';
+import { Text } from '../components/Texte';
 
 const ATOUTS = [
   { icone: 'source-branch', couleur: couleurs.accent, titre: '6 jauges', texte: 'Gère les bonnes combinaisons' },

@@ -1,5 +1,5 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 import { Ecran } from '../components/ui';
 import { Aide, Lien, P, Section } from '../components/v2/base';
@@ -9,6 +9,7 @@ import { useEleveurStore } from '../store/useStore';
 import { couleurs, grille, rayon, texte } from '../theme';
 import { router } from 'expo-router';
 import { s } from '../echelle';
+import { Text } from '../components/Texte';
 
 /** Onglet Alertes : ce qu'il faut faire maintenant, puis toutes les échéances à venir, dans l'ordre. */
 export default function Alertes() {

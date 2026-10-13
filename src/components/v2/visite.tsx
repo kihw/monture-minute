@@ -3,13 +3,14 @@
 // une bulle. Remplace la lecture d'un long guide avant de commencer.
 
 import { RefObject, useCallback, useEffect, useMemo, useState } from 'react';
-import { Animated, Easing, Modal, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { Animated, Easing, Modal, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 
 import { s } from '../../echelle';
 import { useMouvementReduit } from '../../hooks/useMouvementReduit';
 import { couleurs, duree, grille, rayon, texte } from '../../theme';
 import { BoutonPrincipal } from '../ui';
 import { Lien } from './base';
+import { Text } from '../Texte';
 
 export interface EtapeVisite {
   cible: RefObject<View | null>;
@@ -186,7 +187,7 @@ const styles = StyleSheet.create({
     borderRadius: rayon.xl,
     backgroundColor: couleurs.carteClaire,
     borderWidth: 1,
-    borderColor: 'rgba(242,201,76,0.45)',
+    borderColor: 'rgba(233,184,74,0.45)',
   },
   bulleTete: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   compteur: { color: couleurs.accent, fontSize: s(11.5), fontWeight: '700' },

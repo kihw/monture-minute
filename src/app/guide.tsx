@@ -208,7 +208,7 @@ function creerPages(): Page[] {
                   styles.palier,
                   {
                     flex: (t.plafond - t.seuil) / JAUGE_MAX,
-                    backgroundColor: `rgba(242,201,76,${0.22 + i * 0.22})`,
+                    backgroundColor: `rgba(233,184,74,${0.22 + i * 0.22})`,
                   },
                 ]}
               >

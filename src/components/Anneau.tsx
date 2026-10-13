@@ -1,9 +1,10 @@
 import { useEffect, useMemo } from 'react';
-import { Animated, StyleSheet, Text, View } from 'react-native';
+import { Animated, StyleSheet, View } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
 
 import { couleurs } from '../theme';
 import { s } from '../echelle';
+import { Text } from './Texte';
 
 const CercleAnime = Animated.createAnimatedComponent(Circle);
 

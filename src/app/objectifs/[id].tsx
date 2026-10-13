@@ -2,7 +2,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Redirect, router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useMemo } from 'react';
-import { Animated, StyleSheet, Text, View } from 'react-native';
+import { Animated, StyleSheet, View } from 'react-native';
 
 import Monture from '../../components/Monture';
 import { BoutonContour, BoutonPrincipal, Carte, Ecran } from '../../components/ui';
@@ -14,6 +14,7 @@ import { couleurs, degrades, esp, police } from '../../theme';
 import { CARACTERISTIQUES, INFO_SUIVI } from '../../types/domain';
 import { formatNombre } from '../../utils/format';
 import { s } from '../../echelle';
+import { Text } from '../../components/Texte';
 
 // Étincelles autour de l'illustration : position (en % du héros), taille, couleur.
 const ETINCELLES = [

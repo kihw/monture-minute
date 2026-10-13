@@ -5,7 +5,7 @@
 
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useEffect, useMemo, useRef } from 'react';
-import { Animated, Easing, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Animated, Easing, Pressable, StyleSheet, View } from 'react-native';
 
 import { JAUGE_MAX, TIERS_CARBURANT } from '../data/constants';
 import { s } from '../echelle';
@@ -13,6 +13,7 @@ import { EnCoursSimulable, EtatJauge, etatJauge, simulerEtape } from '../engine/
 import { couleurs, grille, rayon, surface } from '../theme';
 import { INFO_JAUGE, JaugeType } from '../types/domain';
 import { formatDureeClaire, formatHeure, formatPoints } from '../utils/format';
+import { Text } from './Texte';
 
 const GRADUATIONS = TIERS_CARBURANT.filter((t) => t.seuil > 0).map((t) => t.seuil / JAUGE_MAX);
 /** Variation (en part de la jauge) au-delà de laquelle on considère une recharge ou une correction. */
@@ -195,7 +196,7 @@ const styles = StyleSheet.create({
   piste: { borderRadius: s(3), backgroundColor: couleurs.piste, overflow: 'hidden' },
   remplissage: { height: '100%', borderRadius: s(3), overflow: 'hidden' },
   reflet: { position: 'absolute', top: 0, bottom: 0, width: '35%', backgroundColor: 'rgba(255,255,255,0.35)' },
-  graduation: { position: 'absolute', top: 0, bottom: 0, width: s(1.5), backgroundColor: 'rgba(8,7,15,0.7)' },
+  graduation: { position: 'absolute', top: 0, bottom: 0, width: s(1.5), backgroundColor: 'rgba(15,12,8,0.7)' },
   paliers: { flexDirection: 'row' },
   palier: { color: couleurs.texteFaible, fontSize: s(10.5), fontWeight: '600', textAlign: 'center' },
   pied: { flexDirection: 'row', alignItems: 'center', gap: s(4) },

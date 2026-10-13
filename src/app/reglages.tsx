@@ -1,6 +1,6 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Linking, StyleSheet, Text } from 'react-native';
+import { Linking, StyleSheet } from 'react-native';
 
 import { rechercherMiseAJour, useMiseAJour } from '../components/MiseAJour';
 import { Confirmation, PopupChoix } from '../components/Popup';
@@ -16,6 +16,7 @@ import { useEleveurStore } from '../store/useStore';
 import { couleurs, esp } from '../theme';
 import { formatNombre } from '../utils/format';
 import { s } from '../echelle';
+import { Text } from '../components/Texte';
 
 export default function Reglages() {
   const reglages = useEleveurStore((s) => s.reglages);

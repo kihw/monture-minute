@@ -1,4 +1,11 @@
-import { Fraunces_600SemiBold, Fraunces_700Bold, Fraunces_800ExtraBold, useFonts } from '@expo-google-fonts/fraunces';
+import {
+  Nunito_500Medium,
+  Nunito_600SemiBold,
+  Nunito_700Bold,
+  Nunito_800ExtraBold,
+  Nunito_900Black,
+  useFonts,
+} from '@expo-google-fonts/nunito';
 import { router, Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
@@ -26,8 +33,14 @@ if (Platform.OS === 'web') {
 
 export default function RootLayout() {
   const hydrate = useHydrate();
-  // Police des titres ; en cas d'échec de chargement, l'app s'affiche avec la police système.
-  const [policesPretes, erreurPolices] = useFonts({ Fraunces_600SemiBold, Fraunces_700Bold, Fraunces_800ExtraBold });
+  // Police de l'app (Nunito, une famille par graisse) ; en cas d'échec de chargement, l'app s'affiche avec la police système.
+  const [policesPretes, erreurPolices] = useFonts({
+    Nunito_500Medium,
+    Nunito_600SemiBold,
+    Nunito_700Bold,
+    Nunito_800ExtraBold,
+    Nunito_900Black,
+  });
 
   // App Windows : ses minuteries de notification ne survivent pas à un redémarrage,
   // on les reprogramme une fois l'état rechargé, et on réapplique « premier plan ».

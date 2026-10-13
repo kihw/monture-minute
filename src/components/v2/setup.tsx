@@ -3,7 +3,7 @@
 // durée qui suit en direct, et un seul bouton « jauges activées » pour lancer le minuteur.
 
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
 import { JAUGE_MAX, TIERS_CARBURANT } from '../../data/constants';
 import { s } from '../../echelle';
@@ -11,6 +11,7 @@ import { couleurs, grille, rayon } from '../../theme';
 import { Carburant, INFO_JAUGE, JaugeType } from '../../types/domain';
 import { formatPoints } from '../../utils/format';
 import { Aide, P } from './base';
+import { Text } from '../Texte';
 
 function nomTier(niveau: number): string {
   return TIERS_CARBURANT.find((t) => niveau > t.seuil && niveau <= t.plafond)?.nom ?? 'Vide';
@@ -138,7 +139,7 @@ const styles = StyleSheet.create({
     paddingVertical: s(6),
     paddingHorizontal: grille.x2,
     borderRadius: rayon.lg,
-    backgroundColor: 'rgba(8,7,15,0.45)',
+    backgroundColor: 'rgba(15,12,8,0.45)',
     borderWidth: 1,
     borderColor: couleurs.liseret,
   },

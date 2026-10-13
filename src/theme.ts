@@ -1,34 +1,35 @@
 import { s } from './echelle';
-// Système de design « Nuit d'Amakna » : app ultra compacte, fond indigo très sombre,
-// or chaud de DOFUS pour tout ce qui est actif, couleurs des jauges reprises du jeu.
+// Système de design « Chaleureux » : app ultra compacte, fond brun-noir uni (comme un cuir
+// patiné), or chaud de DOFUS pour tout ce qui est actif, couleurs des jauges reprises du jeu.
+// Une seule police, Nunito, aux formes arrondies (voir components/Texte.tsx).
 
 export const couleurs = {
-  fond: '#0c0a17',
-  fondHaut: '#151229',
-  carte: '#1a1731',
-  carteClaire: '#252141',
-  colonne: 'rgba(255,255,255,0.045)',
-  bandeau: '#2a2745',
-  piste: '#07060d',
+  fond: '#17130e',
+  fondHaut: '#1d1812',
+  carte: '#221c15',
+  carteClaire: '#2d251c',
+  colonne: 'rgba(255,240,220,0.045)',
+  bandeau: '#3a3024',
+  piste: '#0f0c08',
 
-  surface: 'rgba(255,255,255,0.04)',
-  surfaceElevee: 'rgba(255,255,255,0.07)',
-  liseret: 'rgba(255,255,255,0.07)',
-  liseretVif: 'rgba(255,255,255,0.14)',
+  surface: 'rgba(255,240,220,0.045)',
+  surfaceElevee: 'rgba(255,240,220,0.08)',
+  liseret: 'rgba(255,240,220,0.08)',
+  liseretVif: 'rgba(255,240,220,0.15)',
   // Arête haute des cartes, un peu plus claire : la lumière vient d'en haut.
-  liseretHaut: 'rgba(255,255,255,0.12)',
+  liseretHaut: 'rgba(255,240,220,0.12)',
 
-  texte: '#f3f1fb',
-  texteAttenue: '#9d99bd',
-  // Éclairci pour un contraste ≥ 4,5:1 sur le fond (WCAG AA).
-  texteFaible: '#8a86ad',
+  texte: '#f4ece0',
+  texteAttenue: '#b3a48c',
+  // Contraste ≥ 4,5:1 sur le fond et sur les cartes (WCAG AA).
+  texteFaible: '#9a8b74',
 
   // Or de DOFUS : contour des jauges activées, actions principales.
-  accent: '#f2c94c',
-  accentClair: '#f7d76a',
-  accentFonce: '#e9bb33',
-  accentDoux: 'rgba(242,201,76,0.14)',
-  surAccent: '#241c03',
+  accent: '#e9b84a',
+  accentClair: '#f0c866',
+  accentFonce: '#d9a535',
+  accentDoux: 'rgba(233,184,74,0.14)',
+  surAccent: '#2a1d06',
 
   // Couleurs des 6 jauges, comme dans le panneau « Enclos ».
   sereniteMoins: '#c35be0',
@@ -44,20 +45,34 @@ export const couleurs = {
 };
 
 export const degrades = {
-  accent: ['#f7d76a', '#e9bb33'] as const,
-  ecran: ['#13102a', '#0c0a17', '#0a0913'] as const,
-  bandeau: ['#5a5779', '#423f60'] as const,
-  carte: ['rgba(255,255,255,0.05)', 'rgba(255,255,255,0.02)'] as const,
+  accent: ['#f0c866', '#e3ae3c'] as const,
+  bandeau: ['#4a3d2e', '#3a3024'] as const,
+  carte: ['rgba(255,240,220,0.05)', 'rgba(255,240,220,0.02)'] as const,
+};
+
+/** Familles Nunito chargées au démarrage (_layout), une par graisse. */
+const NUNITO: Record<string, string> = {
+  '500': 'Nunito_500Medium',
+  '600': 'Nunito_600SemiBold',
+  '700': 'Nunito_700Bold',
+  '800': 'Nunito_800ExtraBold',
+  '900': 'Nunito_900Black',
 };
 
 /**
- * Police des titres : Fraunces, un empattement chaleureux (chargée au démarrage dans _layout).
- * La graisse passe par la famille, jamais par fontWeight (sinon le navigateur la simule).
+ * Famille Nunito pour une graisse de style. Le texte courant passe en Medium : le Regular de
+ * Nunito est trop fin sur fond sombre.
  */
+export function familleNunito(graisse?: string | number): string {
+  const g = graisse === 'bold' ? '700' : String(graisse ?? '500');
+  return NUNITO[g] ?? (Number(g) > 900 ? NUNITO['900'] : NUNITO['500']);
+}
+
+/** Police des titres : Nunito dans ses graisses fortes. */
 export const police = {
-  titre: 'Fraunces_700Bold',
-  titreFort: 'Fraunces_800ExtraBold',
-  titreDoux: 'Fraunces_600SemiBold',
+  titre: NUNITO['800'],
+  titreFort: NUNITO['900'],
+  titreDoux: NUNITO['700'],
 };
 
 export const esp = { xs: s(4), sm: s(6), md: s(8), lg: s(10), xl: s(14), xxl: s(20) };
@@ -65,7 +80,7 @@ export const esp = { xs: s(4), sm: s(6), md: s(8), lg: s(10), xl: s(14), xxl: s(
 export const rayon = { sm: s(7), md: s(10), lg: s(12), xl: s(16), pill: 999 };
 
 export const typo = {
-  grandTitre: { fontSize: s(26), fontFamily: police.titreFort, color: couleurs.texte, letterSpacing: s(-0.3) },
+  grandTitre: { fontSize: s(26), fontFamily: police.titreFort, color: couleurs.texte, letterSpacing: s(-0.2) },
   titre: { fontSize: s(18), fontFamily: police.titre, color: couleurs.texte },
   sousTitre: { fontSize: s(13), fontWeight: '500' as const, color: couleurs.texteAttenue },
   section: { fontSize: s(13), fontWeight: '700' as const, color: couleurs.texte },
@@ -114,7 +129,7 @@ export const surface = {
 export type Ton = 'action' | 'ok' | 'attention' | 'bloque' | 'neutre';
 
 export const tons: Record<Ton, { couleur: string; fond: string; liseret: string }> = {
-  action: { couleur: couleurs.accent, fond: 'rgba(242,201,76,0.10)', liseret: 'rgba(242,201,76,0.45)' },
+  action: { couleur: couleurs.accent, fond: 'rgba(233,184,74,0.10)', liseret: 'rgba(233,184,74,0.45)' },
   ok: { couleur: couleurs.succes, fond: 'rgba(127,216,90,0.08)', liseret: 'rgba(127,216,90,0.35)' },
   attention: { couleur: couleurs.attention, fond: 'rgba(245,161,66,0.10)', liseret: 'rgba(245,161,66,0.45)' },
   bloque: { couleur: couleurs.danger, fond: 'rgba(239,90,90,0.10)', liseret: 'rgba(239,90,90,0.5)' },
@@ -123,8 +138,8 @@ export const tons: Record<Ton, { couleur: string; fond: string; liseret: string 
 
 /** Échelle typographique V2 : 5 niveaux, le gras réservé aux titres et aux chiffres clés. */
 export const texte = {
-  affiche: { fontSize: s(26), fontWeight: '700' as const, color: couleurs.texte, letterSpacing: s(-0.6), fontVariant: ['tabular-nums' as const] },
-  titre: { fontSize: s(16.5), fontFamily: police.titre, color: couleurs.texte, letterSpacing: s(-0.1) },
+  affiche: { fontSize: s(26), fontWeight: '800' as const, color: couleurs.texte, letterSpacing: s(-0.4), fontVariant: ['tabular-nums' as const] },
+  titre: { fontSize: s(16.5), fontFamily: police.titre, color: couleurs.texte },
   corps: { fontSize: s(13), fontWeight: '500' as const, color: couleurs.texte, lineHeight: s(18) },
   legende: { fontSize: s(11.5), fontWeight: '500' as const, color: couleurs.texteAttenue, lineHeight: s(16) },
   etiquette: { fontSize: s(10.5), fontWeight: '600' as const, color: couleurs.texteFaible, letterSpacing: s(0.3) },

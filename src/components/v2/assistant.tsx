@@ -4,7 +4,7 @@
 
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { ReactNode, useEffect, useMemo, useState } from 'react';
-import { Animated, Easing, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Animated, Easing, Pressable, StyleSheet, View } from 'react-native';
 
 import { SERENITE_MAX, SERENITE_MIN } from '../../data/constants';
 import { NIVEAU_MAX_MONTURE } from '../../data/xpTable';
@@ -19,6 +19,7 @@ import Curseur from '../Curseur';
 import Monture, { nomRobe, ROBES } from '../Monture';
 import { BoutonContour, BoutonPrincipal, Ecran, retour } from '../ui';
 import { phraseSerenite, RegleSerenite } from './enclos';
+import { Text } from '../Texte';
 
 const ETAPES = ['Monture', 'Sérénité', 'Niveaux'] as const;
 

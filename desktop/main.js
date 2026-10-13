@@ -60,7 +60,7 @@ function creerFenetre() {
     minWidth: 360,
     minHeight: 480,
     title: 'Monture Minute',
-    backgroundColor: '#0b0a14',
+    backgroundColor: '#17130e',
     autoHideMenuBar: true,
     icon: ICONE,
     webPreferences: {

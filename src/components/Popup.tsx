@@ -4,21 +4,13 @@
 
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { ReactNode, useEffect, useMemo } from 'react';
-import {
-  Animated,
-  Modal,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  useWindowDimensions,
-  View,
-} from 'react-native';
+import { Animated, Modal, Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { couleurs, esp, rayon } from '../theme';
 import { Bandeau, BoutonContour, BoutonPrincipal, Icone } from './ui';
 import { s } from '../echelle';
+import { Text } from './Texte';
 
 // Jamais centrée : l'app est une fenêtre compacte, la popup reste dans sa colonne.
 const LARGEUR_CENTREE = Infinity;
@@ -231,7 +223,7 @@ const styles = StyleSheet.create({
   racine: { flex: 1 },
   racineBas: { justifyContent: 'flex-end', paddingHorizontal: s(8) },
   racineCentree: { justifyContent: 'center', alignItems: 'center', padding: esp.xl },
-  voile: { flex: 1, backgroundColor: 'rgba(6,5,12,0.72)' },
+  voile: { flex: 1, backgroundColor: 'rgba(10,8,5,0.72)' },
   poignee: { alignSelf: 'center', width: s(32), height: s(4), borderRadius: s(2), marginTop: s(6), backgroundColor: couleurs.liseretVif },
   feuille: {
     backgroundColor: couleurs.carte,

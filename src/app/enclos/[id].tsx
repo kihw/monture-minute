@@ -1,6 +1,6 @@
 import { router, Redirect, useLocalSearchParams } from 'expo-router';
 import { ReactNode, useRef, useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 
 import PopupCarburant from '../../components/ChoixCarburant';
 import { Confirmation, MenuActions } from '../../components/Popup';
@@ -29,6 +29,7 @@ import { couleurs, texte } from '../../theme';
 import { CARACTERISTIQUES, INFO_JAUGE, INFO_SUIVI, JaugeType } from '../../types/domain';
 import { formatDureeClaire, formatHeure, formatPoints, formatSerenite, titreClair } from '../../utils/format';
 import { s } from '../../echelle';
+import { Text } from '../../components/Texte';
 
 type PopupOuverte = 'menu' | 'ajustement' | 'suppression' | 'terminer' | null;
 
@@ -459,8 +460,6 @@ export default function DetailEnclos() {
           fermer();
         }}
       />
-
-
 
       <VisiteGuidee
         visible={!visiteVue && popup === null && recharge === null && saisie === null && selection === null}

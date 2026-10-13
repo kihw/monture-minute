@@ -1,8 +1,9 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
 import { couleurs, rayon } from '../theme';
 import { s } from '../echelle';
+import { Text } from './Texte';
 
 export interface SegmentedTabOption {
   value: string;

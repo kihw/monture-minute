@@ -4,7 +4,7 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { CARACTERISTIQUE_MAX, SERENITE_MAX, SERENITE_MIN } from '../../data/constants';
 import { s } from '../../echelle';
@@ -15,6 +15,7 @@ import { Caracteristique, CARACTERISTIQUES, Enclos, Etape, EtapeValidee, EtatLot
 import { formatDureeClaire, formatPoints, formatSerenite, titreClair } from '../../utils/format';
 import { AvatarAnneau } from '../Compact';
 import { Lien, P } from './base';
+import { Text } from '../Texte';
 
 const ETENDUE = SERENITE_MAX - SERENITE_MIN;
 const position = (v: number) => `${((Math.max(SERENITE_MIN, Math.min(SERENITE_MAX, v)) - SERENITE_MIN) / ETENDUE) * 100}%` as const;
@@ -375,7 +376,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'transparent',
   },
-  piluleActive: { borderColor: 'rgba(242,201,76,0.5)', backgroundColor: couleurs.accentDoux },
+  piluleActive: { borderColor: 'rgba(233,184,74,0.5)', backgroundColor: couleurs.accentDoux },
   piluleAjout: { borderColor: couleurs.liseretVif, backgroundColor: 'transparent' },
   piluleNom: { color: couleurs.texteAttenue, fontSize: s(12), fontWeight: '600' },
   piluleEtat: { fontSize: s(11.5), fontWeight: '600', fontVariant: ['tabular-nums'] },

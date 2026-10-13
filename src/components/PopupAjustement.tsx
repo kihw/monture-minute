@@ -1,7 +1,7 @@
 // Popup de recalage du lot sur ce qui est observé en jeu (annule l'étape en cours).
 
 import { useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 import { CARACTERISTIQUE_MAX, SERENITE_MAX, SERENITE_MIN } from '../data/constants';
 import { NIVEAU_MAX_MONTURE, xpPourNiveau } from '../data/xpTable';
@@ -14,6 +14,7 @@ import Popup from './Popup';
 import SegmentedTabs from './SegmentedTabs';
 import { BoutonContour, BoutonPrincipal, Carte, Titre } from './ui';
 import { s } from '../echelle';
+import { Text } from './Texte';
 
 type ProprietesAjustement = {
   visible: boolean;

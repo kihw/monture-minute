@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 import Anneau from '../components/Anneau';
 import { Carte, Ecran, EnTete, Titre } from '../components/ui';
@@ -10,6 +10,7 @@ import { couleurs, esp, typo } from '../theme';
 import { CARACTERISTIQUES, INFO_SUIVI } from '../types/domain';
 import { formatDateHeure, formatDureeClaire } from '../utils/format';
 import { s } from '../echelle';
+import { Text } from '../components/Texte';
 
 export default function Stats() {
   const liste = useListeEnclos();

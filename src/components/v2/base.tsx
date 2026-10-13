@@ -2,15 +2,15 @@
 // bulle d'aide « ? » qui explique une notion sur place.
 
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
 import { ReactNode, useEffect, useMemo, useState } from 'react';
-import { Animated, Easing, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Animated, Easing, Pressable, StyleSheet, View } from 'react-native';
 
 import { s } from '../../echelle';
 import { useMouvementReduit } from '../../hooks/useMouvementReduit';
 import { couleurs, duree, grille, police, rayon, surface, texte, Ton, tons } from '../../theme';
 import Popup from '../Popup';
 import { BoutonPrincipal, Icone } from '../ui';
+import { Text } from '../Texte';
 
 /** Carte héros : l'état de l'enclos en une phrase, sa couleur de sens, et ce qu'il faut faire. */
 export function Heros({
@@ -48,15 +48,6 @@ export function Heros({
         { opacity: apparition, transform: [{ translateY: apparition.interpolate({ inputRange: [0, 1], outputRange: [s(6), 0] }) }] },
       ]}
     >
-      {/* Lumière de la couleur de sens, plus vive en haut à gauche. */}
-      <LinearGradient
-        colors={[`${t.couleur}2a`, `${t.couleur}0a`, `${t.couleur}00`]}
-        locations={[0, 0.55, 1]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 0.8, y: 1 }}
-        style={styles.herosLumiere}
-        pointerEvents="none"
-      />
       <View style={[styles.herosFilet, { backgroundColor: t.couleur }]} />
       <View style={[styles.herosEtat, { backgroundColor: `${t.couleur}1f`, borderColor: `${t.couleur}40` }]}>
         <MaterialCommunityIcons name={icone} size={s(13)} color={t.couleur} />
@@ -234,7 +225,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.18,
     shadowRadius: s(18),
   },
-  herosLumiere: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, borderRadius: rayon.xl },
   herosFilet: { position: 'absolute', top: 0, left: grille.x4, right: grille.x4, height: s(2), borderBottomLeftRadius: s(2), borderBottomRightRadius: s(2), opacity: 0.8 },
   liens: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', columnGap: grille.x4 },
   herosEtat: {

@@ -4,7 +4,7 @@
 
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import Svg, { Circle, Line, Path, Rect } from 'react-native-svg';
 
 import { JAUGE_MAX, TIERS_CARBURANT } from '../data/constants';
@@ -17,6 +17,7 @@ import Popup from './Popup';
 import { BarreCarburant, NomsPaliers, texteEcheance } from './Reservoirs';
 import { BoutonContour, BoutonPrincipal } from './ui';
 import { Lien } from './v2/base';
+import { Text } from './Texte';
 
 const LARGEUR = 300;
 const HAUTEUR = 64;
@@ -36,7 +37,7 @@ export function CourbeCarburant({ enCours, jauge, maintenant }: { enCours: EnCou
     <View style={styles.courbe}>
       <Svg width="100%" height={s(HAUTEUR)} viewBox={`0 0 ${LARGEUR} ${HAUTEUR}`} preserveAspectRatio="none">
         {TIERS_CARBURANT.map((t, i) => (
-          <Rect key={t.nom} x={0} width={LARGEUR} y={y(t.plafond)} height={y(t.seuil) - y(t.plafond)} fill={`rgba(242,201,76,${0.03 + i * 0.03})`} />
+          <Rect key={t.nom} x={0} width={LARGEUR} y={y(t.plafond)} height={y(t.seuil) - y(t.plafond)} fill={`rgba(233,184,74,${0.03 + i * 0.03})`} />
         ))}
         {TIERS_CARBURANT.filter((t) => t.seuil > 0).map((t) => (
           <Line key={t.seuil} x1={0} x2={LARGEUR} y1={y(t.seuil)} y2={y(t.seuil)} stroke="rgba(255,255,255,0.08)" strokeWidth={1} />
@@ -251,7 +252,7 @@ const styles = StyleSheet.create({
     borderColor: couleurs.liseret,
     backgroundColor: couleurs.carte,
   },
-  optionConseillee: { borderColor: 'rgba(242,201,76,0.6)', backgroundColor: couleurs.accentDoux },
+  optionConseillee: { borderColor: 'rgba(233,184,74,0.6)', backgroundColor: couleurs.accentDoux },
   optionTete: { flexDirection: 'row', alignItems: 'center', gap: s(6) },
   optionTitre: { flex: 1, color: couleurs.texte, fontSize: s(14), fontWeight: '700' },
   badge: { paddingHorizontal: s(7), paddingVertical: s(2), borderRadius: rayon.pill, backgroundColor: couleurs.accent },

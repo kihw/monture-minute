@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 import Monture from '../../components/Monture';
 import { BoutonPrincipal, Ecran } from '../../components/ui';
@@ -8,6 +8,7 @@ import { VueEnclos } from '../../engine/statut';
 import { useTableau } from '../../hooks/useTableau';
 import { couleurs, grille, texte } from '../../theme';
 import { s } from '../../echelle';
+import { Text } from '../../components/Texte';
 
 // Groupes d'affichage : ce qui demande une action d'abord.
 const GROUPES = [

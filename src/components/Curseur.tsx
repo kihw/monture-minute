@@ -1,9 +1,10 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { LayoutChangeEvent, PanResponder, StyleSheet, Text, View } from 'react-native';
+import { LayoutChangeEvent, PanResponder, StyleSheet, View } from 'react-native';
 
 import { couleurs, degrades } from '../theme';
 import { s } from '../echelle';
+import { Text } from './Texte';
 
 const POUCE = s(22);
 

@@ -5,44 +5,16 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { ReactNode, RefObject } from 'react';
-import { NativeScrollEvent, NativeSyntheticEvent, Pressable, ScrollView, StyleProp, StyleSheet, Switch, Text, View, ViewStyle } from 'react-native';
+import { NativeScrollEvent, NativeSyntheticEvent, Pressable, ScrollView, StyleProp, StyleSheet, Switch, View, ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Svg, { Defs, RadialGradient, Rect, Stop } from 'react-native-svg';
 
 import { couleurs, degrades, esp, ombre, police, rayon, surface, typo } from '../theme';
 import { INFO_JAUGE, JaugeType } from '../types/domain';
 import AnimatedPressable from './AnimatedPressable';
 import { s } from '../echelle';
+import { Text } from './Texte';
 
 export type Icone = keyof typeof MaterialCommunityIcons.glyphMap;
-
-/** Fond d'écran : dégradé sombre éclairé par deux halos diffus (violet en haut, doré en bas). */
-function FondEcran() {
-  return (
-    <View style={StyleSheet.absoluteFill} pointerEvents="none">
-      <LinearGradient colors={degrades.ecran} style={StyleSheet.absoluteFill} />
-      <Svg width="100%" height="100%" style={StyleSheet.absoluteFill}>
-        <Defs>
-          <RadialGradient id="haloHaut" cx="20%" cy="0%" r="75%">
-            <Stop offset="0" stopColor="#7058d8" stopOpacity={0.34} />
-            <Stop offset="1" stopColor="#7058d8" stopOpacity={0} />
-          </RadialGradient>
-          <RadialGradient id="haloOr" cx="95%" cy="8%" r="45%">
-            <Stop offset="0" stopColor={couleurs.accent} stopOpacity={0.08} />
-            <Stop offset="1" stopColor={couleurs.accent} stopOpacity={0} />
-          </RadialGradient>
-          <RadialGradient id="haloBas" cx="0%" cy="100%" r="65%">
-            <Stop offset="0" stopColor="#2f6fa8" stopOpacity={0.12} />
-            <Stop offset="1" stopColor="#2f6fa8" stopOpacity={0} />
-          </RadialGradient>
-        </Defs>
-        <Rect width="100%" height="100%" fill="url(#haloHaut)" />
-        <Rect width="100%" height="100%" fill="url(#haloOr)" />
-        <Rect width="100%" height="100%" fill="url(#haloBas)" />
-      </Svg>
-    </View>
-  );
-}
 
 /**
  * Écran de l'app : une colonne étroite (fenêtre compacte de 440 px au plus),
@@ -67,7 +39,6 @@ export function Ecran({
   const padBas = basDePage ? 0 : Math.max(insets.bottom, esp.lg);
   return (
     <View style={styles.ecran}>
-      <FondEcran />
       <View style={[styles.colonne, { paddingTop: entete ? insets.top : 0 }]}>
         {entete}
         <ScrollView
@@ -193,7 +164,7 @@ export function BoutonContour({
   return (
     <AnimatedPressable
       onPress={onPress}
-      style={[styles.boutonContour, accent && { borderColor: 'rgba(242,201,76,0.5)', backgroundColor: couleurs.accentDoux }]}
+      style={[styles.boutonContour, accent && { borderColor: 'rgba(233,184,74,0.5)', backgroundColor: couleurs.accentDoux }]}
     >
       {icone && <MaterialCommunityIcons name={icone} size={s(20)} color={accent ? couleurs.accent : couleur} />}
       <Text style={[styles.boutonContourTexte, { color: couleur }]}>{label}</Text>
@@ -372,7 +343,7 @@ const styles = StyleSheet.create({
     alignSelf: 'stretch',
   },
   boutonContourTexte: { fontSize: s(12.5), fontWeight: '700' },
-  pastille: { alignItems: 'center', justifyContent: 'center', borderWidth: 1.5, backgroundColor: '#13121f' },
+  pastille: { alignItems: 'center', justifyContent: 'center', borderWidth: 1.5, backgroundColor: '#1a150f' },
   pastilleTexte: { fontWeight: '900', letterSpacing: s(-0.5) },
   bandeau: {
     minHeight: s(40),

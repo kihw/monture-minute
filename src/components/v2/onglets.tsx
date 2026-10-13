@@ -2,10 +2,9 @@
 // écrans principaux, et carte d'enclos de l'accueil (état en clair, frise d'étapes, temps restant).
 
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { ReactNode } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
 import { s } from '../../echelle';
 import { Alerte, TypeAlerte } from '../../engine/alertes';
@@ -15,8 +14,9 @@ import { couleurs, grille, police, rayon, surface, texte, Ton, tons } from '../.
 import { Enclos, FAMILLES, INFO_JAUGE } from '../../types/domain';
 import { formatDureeClaire, formatHeure, titreClair } from '../../utils/format';
 import { AvatarAnneau } from '../Compact';
-import { nomRobe, robe } from '../Monture';
+import { nomRobe } from '../Monture';
 import { Icone } from '../ui';
+import { Text } from '../Texte';
 
 export type Onglet = 'enclos' | 'alertes' | 'reglages';
 
@@ -176,7 +176,6 @@ export function CarteEnclos({
   const enCours = vue.statut === 'en_cours';
   const famille = enclos.depart.famille ?? 'dragodinde';
   const indexRobe = enclos.depart.robe ?? index;
-  const teinte = robe(indexRobe).couleur;
   const action = appelAction(vue, etat.ton);
   return (
     <Pressable
@@ -185,14 +184,6 @@ export function CarteEnclos({
       accessibilityRole="button"
       accessibilityLabel={`${enclos.nom}. ${etat.texte}.`}
     >
-      {/* Lueur de la robe de la monture, partant de l'avatar. */}
-      <LinearGradient
-        colors={[`${teinte}24`, `${teinte}00`]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 0.6, y: 0.7 }}
-        style={styles.teinte}
-        pointerEvents="none"
-      />
       <View style={styles.carteHaut}>
         <AvatarAnneau
           famille={famille}
@@ -249,10 +240,11 @@ export function CarteEnclos({
       </View>
 
       {action && (
-        <View style={[styles.action, { backgroundColor: t.fond, borderColor: t.liseret }]}>
-          <MaterialCommunityIcons name={etat.icone} size={s(15)} color={t.couleur} />
-          <Text style={[styles.actionTexte, { color: t.couleur }]}>{action}</Text>
-          <MaterialCommunityIcons name="arrow-right" size={s(16)} color={t.couleur} />
+        // Action à faire : bouton or plein ; problème (attention, bloqué) : bandeau teinté.
+        <View style={[styles.action, etat.ton === 'action' ? styles.actionPleine : { backgroundColor: t.fond, borderColor: t.liseret }]}>
+          <MaterialCommunityIcons name={etat.icone} size={s(15)} color={etat.ton === 'action' ? couleurs.surAccent : t.couleur} />
+          <Text style={[styles.actionTexte, { color: etat.ton === 'action' ? couleurs.surAccent : t.couleur }]}>{action}</Text>
+          <MaterialCommunityIcons name="arrow-right" size={s(16)} color={etat.ton === 'action' ? couleurs.surAccent : t.couleur} />
         </View>
       )}
     </Pressable>
@@ -316,7 +308,7 @@ const styles = StyleSheet.create({
     padding: s(5),
     borderRadius: rayon.xl + s(4),
     ...surface,
-    backgroundColor: 'rgba(28,25,52,0.96)',
+    backgroundColor: 'rgba(38,31,23,0.97)',
     borderColor: couleurs.liseretVif,
     borderTopColor: 'rgba(255,255,255,0.16)',
     shadowOpacity: 0.5,
@@ -324,7 +316,7 @@ const styles = StyleSheet.create({
   },
   onglet: { flex: 1, alignItems: 'center', gap: s(2), minHeight: s(48), justifyContent: 'center', borderRadius: rayon.xl },
   ongletIcone: { width: s(48), height: s(26), borderRadius: rayon.pill, alignItems: 'center', justifyContent: 'center' },
-  ongletIconeActif: { backgroundColor: 'rgba(242,201,76,0.16)', borderWidth: 1, borderColor: 'rgba(242,201,76,0.35)' },
+  ongletIconeActif: { backgroundColor: 'rgba(233,184,74,0.16)', borderWidth: 1, borderColor: 'rgba(233,184,74,0.35)' },
   ongletNom: { color: couleurs.texteFaible, fontSize: s(10.5), fontWeight: '600' },
   ongletNomActif: { color: couleurs.accent, fontWeight: '800' },
   pastille: {
@@ -337,7 +329,7 @@ const styles = StyleSheet.create({
     borderRadius: s(8),
     backgroundColor: couleurs.attention,
     borderWidth: s(1.5),
-    borderColor: '#1c1934',
+    borderColor: '#2d251c',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -364,7 +356,6 @@ const styles = StyleSheet.create({
     borderRadius: rayon.xl,
     ...surface,
   },
-  teinte: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, borderRadius: rayon.xl },
   carteHaut: { flexDirection: 'row', alignItems: 'center', gap: grille.x3 },
   nom: { color: couleurs.texte, fontSize: s(17.5), fontFamily: police.titre },
   monture: { color: couleurs.texteFaible, fontSize: s(11), fontWeight: '600' },
@@ -378,7 +369,7 @@ const styles = StyleSheet.create({
   friseCompte: { color: couleurs.texteFaible, fontSize: s(10.5), fontWeight: '700', fontVariant: ['tabular-nums'] },
   frise: { flexDirection: 'row', gap: s(4) },
   segment: { flex: 1, height: s(6), borderRadius: s(3), backgroundColor: couleurs.piste, overflow: 'hidden' },
-  segmentActuel: { borderWidth: 1, borderColor: 'rgba(242,201,76,0.45)' },
+  segmentActuel: { borderWidth: 1, borderColor: 'rgba(233,184,74,0.45)' },
   segmentRempli: { height: '100%', borderRadius: s(3), backgroundColor: couleurs.accent },
   action: {
     flexDirection: 'row',
@@ -389,6 +380,7 @@ const styles = StyleSheet.create({
     borderRadius: rayon.md,
     borderWidth: 1,
   },
+  actionPleine: { backgroundColor: couleurs.accent, borderColor: couleurs.accent },
   actionTexte: { flex: 1, fontSize: s(12.5), fontWeight: '800' },
   resume: { flexDirection: 'row', gap: s(6) },
   resumeTuile: {
@@ -418,8 +410,8 @@ const styles = StyleSheet.create({
     borderRadius: rayon.xl,
     borderWidth: 1,
     borderStyle: 'dashed',
-    borderColor: 'rgba(242,201,76,0.4)',
-    backgroundColor: 'rgba(242,201,76,0.04)',
+    borderColor: 'rgba(233,184,74,0.4)',
+    backgroundColor: 'rgba(233,184,74,0.04)',
   },
   nouvelIcone: { width: s(24), height: s(24), borderRadius: s(12), alignItems: 'center', justifyContent: 'center', backgroundColor: couleurs.accentDoux },
   nouvelTexte: { color: couleurs.accent, fontSize: s(13), fontWeight: '700' },

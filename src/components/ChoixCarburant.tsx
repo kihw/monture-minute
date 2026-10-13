@@ -4,7 +4,7 @@
 
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useState } from 'react';
-import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Pressable, StyleSheet, TextInput, View } from 'react-native';
 
 import { JAUGE_MAX, TIERS_CARBURANT } from '../data/constants';
 import { palierPourNiveau, tierPourNiveau } from '../engine/carburant';
@@ -14,6 +14,7 @@ import { formatPoints } from '../utils/format';
 import Popup from './Popup';
 import { BoutonContour, BoutonPrincipal, Icone } from './ui';
 import { s } from '../echelle';
+import { Text } from './Texte';
 
 // Les objets du plus rapide au plus lent, avec un pictogramme de fiole de plus en plus modeste.
 const OBJETS: { nom: string; plafond: number; palier: number; icone: Icone }[] = [...TIERS_CARBURANT].reverse().map((t, i) => ({
