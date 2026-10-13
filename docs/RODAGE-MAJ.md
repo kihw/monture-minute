@@ -12,10 +12,10 @@
 
 | Contrôle | 3.1.0 | 3.1.1 | 3.1.2 |
 |---|---|---|---|
-| Release en brouillon tant qu'incomplète, puis publiée | ✓ | | |
-| Certificat de l'APK identique à l'app publiée | ✓ | | |
-| 5 fichiers présents (APK, Setup.exe, blockmap, latest.yml, maj.json) | ✓ | | |
-| `releases/latest/download/maj.json` annonce la nouvelle version | ✓ | | |
+| Release en brouillon tant qu'incomplète, puis publiée | ✓ | ✓ | |
+| Certificat de l'APK identique à l'app publiée | ✓ | ✓ | |
+| 5 fichiers présents (APK, Setup.exe, blockmap, latest.yml, maj.json) | ✓ | ✓ | |
+| `releases/latest/download/maj.json` annonce la nouvelle version | ✓ | ✓ | |
 
 ## Windows
 
