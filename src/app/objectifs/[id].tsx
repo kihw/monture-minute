@@ -10,7 +10,7 @@ import { CARACTERISTIQUE_MAX } from '../../data/constants';
 import { contexteDepuis } from '../../engine/parcours';
 import { useCalcul } from '../../hooks/useElevage';
 import { useEleveurStore, useListeEnclos } from '../../store/useStore';
-import { couleurs, degrades, esp } from '../../theme';
+import { couleurs, degrades, esp, police } from '../../theme';
 import { CARACTERISTIQUES, INFO_SUIVI } from '../../types/domain';
 import { formatNombre } from '../../utils/format';
 import { s } from '../../echelle';
@@ -113,7 +113,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 0 },
     borderRadius: s(75),
   },
-  titre: { color: couleurs.texte, fontSize: s(24), fontWeight: '700', textAlign: 'center' },
+  titre: { color: couleurs.texte, fontSize: s(25), fontFamily: police.titreFort, textAlign: 'center' },
   sousTitre: { color: couleurs.texteAttenue, fontSize: s(13), textAlign: 'center' },
   critere: { flexDirection: 'row', alignItems: 'center', gap: esp.md, paddingVertical: s(12), paddingHorizontal: esp.xs },
   separe: { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: couleurs.liseretVif },

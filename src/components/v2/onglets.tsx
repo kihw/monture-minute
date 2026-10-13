@@ -11,7 +11,7 @@ import { s } from '../../echelle';
 import { Alerte, TypeAlerte } from '../../engine/alertes';
 import { Conseil } from '../../engine/descente';
 import { VueEnclos } from '../../engine/statut';
-import { couleurs, grille, rayon, surface, texte, Ton, tons } from '../../theme';
+import { couleurs, grille, police, rayon, surface, texte, Ton, tons } from '../../theme';
 import { Enclos, FAMILLES, INFO_JAUGE } from '../../types/domain';
 import { formatDureeClaire, formatHeure, titreClair } from '../../utils/format';
 import { AvatarAnneau } from '../Compact';
@@ -344,7 +344,7 @@ const styles = StyleSheet.create({
   pastilleTexte: { color: '#2a1603', fontSize: s(10.5), fontWeight: '800' },
   entete: { gap: grille.x3, marginBottom: grille.x1 },
   enteteLigne: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  enteteTitre: { color: couleurs.texte, fontSize: s(26), fontWeight: '800', letterSpacing: s(-0.6) },
+  enteteTitre: { color: couleurs.texte, fontSize: s(28), fontFamily: police.titreFort, letterSpacing: s(-0.4) },
   alerte: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -366,7 +366,7 @@ const styles = StyleSheet.create({
   },
   teinte: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, borderRadius: rayon.xl },
   carteHaut: { flexDirection: 'row', alignItems: 'center', gap: grille.x3 },
-  nom: { color: couleurs.texte, fontSize: s(16.5), fontWeight: '800', letterSpacing: s(-0.2) },
+  nom: { color: couleurs.texte, fontSize: s(17.5), fontFamily: police.titre },
   monture: { color: couleurs.texteFaible, fontSize: s(11), fontWeight: '600' },
   etatLigne: { flexDirection: 'row', alignItems: 'center', gap: s(5), marginTop: s(1) },
   etatPoint: { width: s(6), height: s(6), borderRadius: s(3) },

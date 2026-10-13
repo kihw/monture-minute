@@ -3,7 +3,7 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import Monture from '../components/Monture';
 import { BoutonPrincipal, Carte, Ecran, Pastille } from '../components/ui';
-import { couleurs, esp } from '../theme';
+import { couleurs, esp, police } from '../theme';
 import { s } from '../echelle';
 
 const ATOUTS = [
@@ -48,7 +48,7 @@ const styles = StyleSheet.create({
     shadowRadius: s(40),
     shadowOffset: { width: 0, height: 0 },
   },
-  titre: { color: couleurs.texte, fontSize: s(24), fontWeight: '600', letterSpacing: s(-0.3) },
+  titre: { color: couleurs.texte, fontSize: s(26), fontFamily: police.titreFort, letterSpacing: s(-0.3) },
   sousTitre: { color: couleurs.texteAttenue, fontSize: s(14) },
   accroche: { color: couleurs.texte, fontSize: s(15), textAlign: 'center', marginTop: esp.xxl, lineHeight: s(22) },
   atout: { flexDirection: 'row', alignItems: 'center', gap: esp.md },

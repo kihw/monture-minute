@@ -38,5 +38,5 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     // Page unique : l'export web est embarqué tel quel dans l'app Windows (Electron).
     output: 'single',
   },
-  plugins: [['expo-router', { root: './src/app' }], 'expo-notifications'],
+  plugins: [['expo-router', { root: './src/app' }], 'expo-notifications', 'expo-font'],
 });

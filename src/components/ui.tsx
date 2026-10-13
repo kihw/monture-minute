@@ -9,7 +9,7 @@ import { NativeScrollEvent, NativeSyntheticEvent, Pressable, ScrollView, StylePr
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Defs, RadialGradient, Rect, Stop } from 'react-native-svg';
 
-import { couleurs, degrades, esp, ombre, rayon, surface, typo } from '../theme';
+import { couleurs, degrades, esp, ombre, police, rayon, surface, typo } from '../theme';
 import { INFO_JAUGE, JaugeType } from '../types/domain';
 import AnimatedPressable from './AnimatedPressable';
 import { s } from '../echelle';
@@ -333,7 +333,7 @@ const styles = StyleSheet.create({
   entete: { gap: s(3), marginBottom: esp.sm },
   enteteLigne: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: esp.md },
   enteteTitre: { flexDirection: 'row', alignItems: 'center', gap: esp.md },
-  titre: { fontSize: s(20), fontWeight: '800', color: couleurs.texte, letterSpacing: s(-0.4), flexShrink: 1 },
+  titre: { fontSize: s(21), fontFamily: police.titreFort, color: couleurs.texte, letterSpacing: s(-0.3), flexShrink: 1 },
   sousTitre: { fontSize: s(12), color: couleurs.texteAttenue },
   iconeNue: { padding: s(2) },
   boutonRond: {
@@ -384,7 +384,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: couleurs.liseretVif,
   },
-  bandeauTitre: { flex: 1, color: couleurs.texte, fontSize: s(13.5), fontWeight: '800' },
+  bandeauTitre: { flex: 1, color: couleurs.texte, fontSize: s(15), fontFamily: police.titre },
   tuile: { width: s(26), height: s(26), borderRadius: rayon.sm, alignItems: 'center', justifyContent: 'center' },
   puce: {
     flex: 1,

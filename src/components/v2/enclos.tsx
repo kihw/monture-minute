@@ -10,7 +10,7 @@ import { CARACTERISTIQUE_MAX, SERENITE_MAX, SERENITE_MIN } from '../../data/cons
 import { s } from '../../echelle';
 import { ContexteCalcul, niveauLot } from '../../engine/parcours';
 import { VueEnclos } from '../../engine/statut';
-import { couleurs, grille, rayon, surface, texte } from '../../theme';
+import { couleurs, grille, police, rayon, surface, texte } from '../../theme';
 import { Caracteristique, CARACTERISTIQUES, Enclos, Etape, EtapeValidee, EtatLot, INFO_SUIVI, ZONE_CARACTERISTIQUE } from '../../types/domain';
 import { formatDureeClaire, formatPoints, formatSerenite, titreClair } from '../../utils/format';
 import { AvatarAnneau } from '../Compact';
@@ -351,7 +351,7 @@ const styles = StyleSheet.create({
   },
   barreBouton: { flexDirection: 'row', alignItems: 'center', gap: s(2), minHeight: s(32) },
   barreIdentite: { flex: 1, minWidth: 0, flexDirection: 'row', alignItems: 'center', gap: s(8) },
-  barreNom: { color: couleurs.texte, fontSize: s(14), fontWeight: '700' },
+  barreNom: { color: couleurs.texte, fontSize: s(15.5), fontFamily: police.titre },
   barreEtape: { color: couleurs.texteAttenue, fontSize: s(11), fontWeight: '500' },
   barreTexte: { color: couleurs.texteAttenue, fontSize: s(13), fontWeight: '600' },
   options: {

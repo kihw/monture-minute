@@ -8,7 +8,7 @@ import { Animated, Easing, Pressable, StyleSheet, Text, View } from 'react-nativ
 
 import { s } from '../../echelle';
 import { useMouvementReduit } from '../../hooks/useMouvementReduit';
-import { couleurs, duree, grille, rayon, surface, texte, Ton, tons } from '../../theme';
+import { couleurs, duree, grille, police, rayon, surface, texte, Ton, tons } from '../../theme';
 import Popup from '../Popup';
 import { BoutonPrincipal, Icone } from '../ui';
 
@@ -248,13 +248,13 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   herosSurtitre: { fontSize: s(11.5), fontWeight: '800' },
-  herosTitre: { ...texte.titre, fontSize: s(18), fontWeight: '800', lineHeight: s(23), letterSpacing: s(-0.3) },
+  herosTitre: { ...texte.titre, fontSize: s(19), lineHeight: s(24) },
   actions: { gap: grille.x2, marginTop: grille.x1 },
   lien: { alignSelf: 'center', paddingVertical: s(4) },
   lienTexte: { fontSize: s(12), fontWeight: '600', textDecorationLine: 'underline' },
   section: { gap: s(6), marginTop: grille.x1 },
   sectionTete: { flexDirection: 'row', alignItems: 'center', gap: s(6) },
-  sectionTitre: { color: couleurs.texte, fontSize: s(13), fontWeight: '700' },
+  sectionTitre: { color: couleurs.texte, fontSize: s(14), fontFamily: police.titreDoux },
   onglets: { flexDirection: 'row', gap: s(4), padding: s(3), borderRadius: rayon.pill, backgroundColor: couleurs.surface },
   onglet: { paddingHorizontal: s(12), paddingVertical: s(5), borderRadius: rayon.pill },
   ongletActif: { backgroundColor: couleurs.carteClaire },

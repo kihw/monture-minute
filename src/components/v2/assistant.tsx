@@ -12,7 +12,7 @@ import { s } from '../../echelle';
 import { contexteDepuis, genererParcours } from '../../engine/parcours';
 import { useCalcul } from '../../hooks/useElevage';
 import { useMouvementReduit } from '../../hooks/useMouvementReduit';
-import { couleurs, duree, grille, rayon, surface, texte } from '../../theme';
+import { couleurs, duree, grille, police, rayon, surface, texte } from '../../theme';
 import { DepartEnclos, FAMILLE_LISTE, FAMILLES, lotInitial } from '../../types/domain';
 import { formatDureeClaire, formatSerenite, titreClair } from '../../utils/format';
 import Curseur from '../Curseur';
@@ -304,7 +304,7 @@ const styles = StyleSheet.create({
   entete: { paddingHorizontal: grille.x3, paddingTop: grille.x2, paddingBottom: grille.x2, gap: grille.x2 },
   enteteLigne: { flexDirection: 'row', alignItems: 'center', gap: grille.x2 },
   fermer: { padding: s(2) },
-  titre: { flex: 1, color: couleurs.texte, fontSize: s(15), fontWeight: '700' },
+  titre: { flex: 1, color: couleurs.texte, fontSize: s(16), fontFamily: police.titre },
   progression: { flexDirection: 'row', gap: s(6) },
   progressionItem: { flex: 1, gap: s(4) },
   progressionBarre: { height: s(4), borderRadius: s(2), backgroundColor: couleurs.piste },

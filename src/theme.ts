@@ -50,13 +50,23 @@ export const degrades = {
   carte: ['rgba(255,255,255,0.05)', 'rgba(255,255,255,0.02)'] as const,
 };
 
+/**
+ * Police des titres : Fraunces, un empattement chaleureux (chargée au démarrage dans _layout).
+ * La graisse passe par la famille, jamais par fontWeight (sinon le navigateur la simule).
+ */
+export const police = {
+  titre: 'Fraunces_700Bold',
+  titreFort: 'Fraunces_800ExtraBold',
+  titreDoux: 'Fraunces_600SemiBold',
+};
+
 export const esp = { xs: s(4), sm: s(6), md: s(8), lg: s(10), xl: s(14), xxl: s(20) };
 
 export const rayon = { sm: s(7), md: s(10), lg: s(12), xl: s(16), pill: 999 };
 
 export const typo = {
-  grandTitre: { fontSize: s(26), fontWeight: '800' as const, color: couleurs.texte, letterSpacing: s(-0.4) },
-  titre: { fontSize: s(18), fontWeight: '700' as const, color: couleurs.texte },
+  grandTitre: { fontSize: s(26), fontFamily: police.titreFort, color: couleurs.texte, letterSpacing: s(-0.3) },
+  titre: { fontSize: s(18), fontFamily: police.titre, color: couleurs.texte },
   sousTitre: { fontSize: s(13), fontWeight: '500' as const, color: couleurs.texteAttenue },
   section: { fontSize: s(13), fontWeight: '700' as const, color: couleurs.texte },
   corps: { fontSize: s(14), color: couleurs.texte },
@@ -114,7 +124,7 @@ export const tons: Record<Ton, { couleur: string; fond: string; liseret: string 
 /** Échelle typographique V2 : 5 niveaux, le gras réservé aux titres et aux chiffres clés. */
 export const texte = {
   affiche: { fontSize: s(26), fontWeight: '700' as const, color: couleurs.texte, letterSpacing: s(-0.6), fontVariant: ['tabular-nums' as const] },
-  titre: { fontSize: s(16), fontWeight: '700' as const, color: couleurs.texte, letterSpacing: s(-0.2) },
+  titre: { fontSize: s(16.5), fontFamily: police.titre, color: couleurs.texte, letterSpacing: s(-0.1) },
   corps: { fontSize: s(13), fontWeight: '500' as const, color: couleurs.texte, lineHeight: s(18) },
   legende: { fontSize: s(11.5), fontWeight: '500' as const, color: couleurs.texteAttenue, lineHeight: s(16) },
   etiquette: { fontSize: s(10.5), fontWeight: '600' as const, color: couleurs.texteFaible, letterSpacing: s(0.3) },
