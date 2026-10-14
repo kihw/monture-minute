@@ -110,9 +110,10 @@ jobs:
           ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
-        # Deux architectures (quasiment tous les téléphones), comme l'APK compilé en local : deux fois moins long.
+        # 64 bits seulement (tous les téléphones récents), comme l'APK compilé en local : C++ compilé une
+        # seule fois et APK plus léger.
         # Mémoire, cache de build et lint : réglés par plugins/compilation-android.js.
-        run: ./gradlew assembleRelease --no-daemon -PreactNativeArchitectures=arm64-v8a,armeabi-v7a
+        run: ./gradlew assembleRelease --no-daemon -PreactNativeArchitectures=arm64-v8a
       - run: cp android/app/build/outputs/apk/release/app-release.apk MontureMinute-Android.apk
       - uses: actions/upload-artifact@v6
         with:

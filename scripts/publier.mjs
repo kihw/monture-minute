@@ -6,7 +6,7 @@
 //
 // 1. vérifications (lint, types, tests) ;
 // 2. nouvelle version : commit + tag (npm version) ;
-// 3. APK release signé, compilé localement (arm64-v8a et armeabi-v7a) dans dist/ ;
+// 3. APK release signé, compilé localement (arm64-v8a, 64 bits) dans dist/ ;
 // 4. envoi de main et du tag ;
 // 5. release GitHub créée en brouillon avec l'APK et les notes ; GitHub y ajoute l'installateur
 //    Windows et le manifeste maj.json, puis la publie (.github/workflows/release.yml).
@@ -23,7 +23,8 @@ import { execFileSync, spawnSync } from 'node:child_process';
 
 const RACINE = resolve(import.meta.dirname, '..');
 const WINDOWS = process.platform === 'win32';
-const ARCHITECTURES = 'arm64-v8a,armeabi-v7a';
+// 64 bits seulement : tous les téléphones récents ; les 32 bits (avant ~2019) ne sont plus pris en charge.
+const ARCHITECTURES = 'arm64-v8a';
 const SIGNATURE = ['ANDROID_KEYSTORE_PATH', 'ANDROID_KEYSTORE_PASSWORD', 'ANDROID_KEY_ALIAS', 'ANDROID_KEY_PASSWORD'];
 // Empreinte SHA-256 du certificat de l'app publiée (information publique), retenue après une
 // première comparaison avec l'APK de la dernière release.
