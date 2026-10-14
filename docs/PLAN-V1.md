@@ -36,7 +36,22 @@ Ordre de publication : **3.1.3** → laisser les appareils la prendre (un démar
   `expo-doctor`, actions GitHub encore en Node 20.
 - **Site et notes de lancement** : vitrine mise à jour, notes « Monture Minute 1.0 ».
 
-## 4. À décider plus tard : les anciens tags v1.1.x et v1.2.x
+## 4. État et marche à suivre
+
+Fait (sur `main`, non publié) : passerelle (`version-code.js`, comparaison par `versionCode` dans
+l'app et sur Windows, génération 1), revue de finition, nettoyage (dépendances, `expo-doctor`,
+actions Node 24, code mort), site, notes `v3.1.3` et `v1.0.0`.
+
+1. **Publier 3.1.3** (passerelle) : `npm version patch`, puis envoi de `main` et du tag. Attendre
+   qu'elle soit en ligne et que les appareils l'aient prise (un démarrage).
+2. **Publier 1.0.0** :
+   - dans `package.json`, passer `"generation"` à `2` ;
+   - `npm version 1.0.0` (recopie version et génération dans `desktop/package.json`) ;
+   - envoi de `main` et du tag `v1.0.0`.
+3. Vérifier : `maj.json` annonce 1.0.0 avec `versionCode` 210000 ; Windows et Android en 3.1.3
+   passent en 1.0.0 sans clic.
+
+## 5. À décider plus tard : les anciens tags v1.1.x et v1.2.x
 
 L'ancienne app a publié `v1.1.0` à `v1.2.4`. La ligne 1.0.x ne les touche pas, mais une future
 **1.1.0** entrerait en collision avec un tag existant. Avant la 1.1.0, il faudra soit renommer les
