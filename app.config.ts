@@ -44,5 +44,6 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     // Icône des notifications : silhouette blanche (sinon Android affiche un carré blanc), teinte or.
     ['expo-notifications', { icon: './assets/notification-icon.png', color: '#f2c94c' }],
     'expo-font',
+    './plugins/compilation-android.js',
   ],
 });
