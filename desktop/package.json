@@ -2,6 +2,7 @@
   "name": "monture-minute-desktop",
   "productName": "Monture Minute",
   "version": "3.1.2",
+  "generation": 1,
   "description": "Assistant d'élevage de montures pour DOFUS — version Windows",
   "author": "kihw",
   "license": "MIT",

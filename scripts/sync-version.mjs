@@ -3,11 +3,13 @@
 
 import { readFileSync, writeFileSync } from 'node:fs';
 
-const { version } = JSON.parse(readFileSync('package.json', 'utf8'));
+const { version, generation } = JSON.parse(readFileSync('package.json', 'utf8'));
 const chemin = 'desktop/package.json';
 const bureau = JSON.parse(readFileSync(chemin, 'utf8'));
-if (bureau.version !== version) {
+// La génération sert au versionCode (version-code.js), relu par desktop/main.js.
+if (bureau.version !== version || bureau.generation !== generation) {
   bureau.version = version;
+  bureau.generation = generation;
   writeFileSync(chemin, `${JSON.stringify(bureau, null, 2)}\n`);
 }
 console.log(`Version ${version} synchronisée dans ${chemin}`);

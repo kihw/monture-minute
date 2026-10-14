@@ -2,10 +2,13 @@
 // dernière release, à une adresse fixe qui ne passe pas par l'API (pas de limite d'appels) ;
 // Windows délègue à electron-updater (voir bureau.ts et desktop/main.js).
 
-import { version as versionInstallee } from '../../package.json';
+import paquet from '../../package.json';
+import { codeVersion } from '../../version-code';
 
 export const DEPOT = 'kihw/monture-minute';
-export const VERSION_APP: string = versionInstallee;
+export const VERSION_APP: string = paquet.version;
+/** versionCode de l'app installée : c'est lui qu'on compare (la version peut repartir à 1.0.0). */
+export const CODE_APP = codeVersion(paquet.version, (paquet as { generation?: number }).generation);
 export const URL_MANIFESTE = `https://github.com/${DEPOT}/releases/latest/download/maj.json`;
 export const URL_RELEASES = `https://github.com/${DEPOT}/releases/latest`;
 /** Au-delà, l'installation automatique d'une même version est abandonnée (passage au manuel). */
@@ -74,10 +77,13 @@ export async function chercherManifeste(): Promise<Manifeste | null> {
   }
 }
 
-/** Le manifeste de la dernière release s'il annonce une version plus récente que celle installée. */
-export async function verifierMiseAJour(versionActuelle = VERSION_APP): Promise<Manifeste | null> {
+/**
+ * Le manifeste de la dernière release s'il annonce une version plus récente que celle installée.
+ * On compare les versionCode, pas les numéros : 1.0.0 (210000) succède à 3.1.3 (130103).
+ */
+export async function verifierMiseAJour(codeActuel = CODE_APP): Promise<Manifeste | null> {
   const manifeste = await chercherManifeste();
-  return manifeste && comparerVersions(manifeste.version, versionActuelle) > 0 ? manifeste : null;
+  return manifeste && manifeste.versionCode > codeActuel ? manifeste : null;
 }
 
 /** Suivi des essais d'installation, par version (remis à zéro quand la version change). */

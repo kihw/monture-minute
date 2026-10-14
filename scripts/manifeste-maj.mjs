@@ -7,6 +7,7 @@
 // Écrit le JSON sur la sortie standard ; échoue si un fichier manque ou si une valeur est incohérente.
 
 import { createHash } from 'node:crypto';
+import { createRequire } from 'node:module';
 import { existsSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 
@@ -29,7 +30,6 @@ if (!tag || !dossier || !fichierNotes || !certificat) {
 const version = tag.replace(/^v/, '');
 const morceaux = version.match(/^(\d+)\.(\d+)\.(\d+)(?:-[0-9A-Za-z.-]+)?$/);
 if (!morceaux) arreter(`Tag invalide : ${tag} (attendu vX.Y.Z ou vX.Y.Z-suffixe)`);
-const [majeur, mineur, correctif] = morceaux.slice(1).map(Number);
 if (!/^[0-9a-f]{64}$/.test(certificat)) arreter(`Empreinte de certificat invalide : ${certificat}`);
 
 const chemin = (nom) => {
@@ -39,8 +39,11 @@ const chemin = (nom) => {
 };
 
 const apk = chemin(APK);
-// Même calcul que app.config.ts.
-const versionCode = majeur * 10000 + mineur * 100 + correctif;
+// Même calcul que app.config.ts (version-code.js), avec la génération du package.json publié.
+const { codeVersion } = createRequire(import.meta.url)('../version-code.js');
+const paquet = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8'));
+if (paquet.version !== version) arreter(`package.json est en ${paquet.version}, pas ${version}`);
+const versionCode = codeVersion(version, paquet.generation);
 
 // Empreinte et taille de l'installateur Windows, reprises de latest.yml (electron-updater).
 const latest = readFileSync(chemin('latest.yml'), 'utf8');

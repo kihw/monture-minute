@@ -1,10 +1,11 @@
 import type { ConfigContext, ExpoConfig } from 'expo/config';
 
-// Source unique de version : package.json. Le versionCode Android en dérive
-// (majeur × 10000 + mineur × 100 + correctif) pour croître à chaque release.
+// Source unique de version : package.json. Le versionCode Android en dérive avec la génération
+// (voir version-code.js) pour croître à chaque release, y compris au retour à 1.0.0.
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const { version } = require('./package.json') as { version: string };
-const [majeur, mineur, correctif] = version.split('.').map((n) => parseInt(n, 10) || 0);
+const { version, generation } = require('./package.json') as { version: string; generation?: number };
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { codeVersion } = require('./version-code.js') as typeof import('./version-code');
 
 // APP_VARIANT=test : build de test installable à côté de la version publiée.
 const test = process.env.APP_VARIANT === 'test';
@@ -23,7 +24,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   },
   android: {
     package: test ? 'com.community.dofusbreedingtool.test' : 'com.community.dofusbreedingtool',
-    versionCode: majeur * 10000 + mineur * 100 + correctif,
+    versionCode: codeVersion(version, generation),
     adaptiveIcon: {
       backgroundColor: '#0b0a14',
       foregroundImage: './assets/android-icon-foreground.png',

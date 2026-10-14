@@ -102,6 +102,31 @@ function notesTexte(info) {
 // on arrête et on propose le téléchargement manuel.
 
 const PAGE_RELEASES = 'https://github.com/kihw/monture-minute/releases/latest';
+const URL_MANIFESTE = 'https://github.com/kihw/monture-minute/releases/latest/download/maj.json';
+
+/** Copie de version-code.js (la coquille est empaquetée seule) : doit rester identique. */
+function codeVersion(version, generation) {
+  const [majeur, mineur, correctif] = String(version)
+    .replace(/^v/, '')
+    .split(/[.-]/)
+    .map((n) => parseInt(n, 10) || 0);
+  return (generation || 0) * 100000 + majeur * 10000 + mineur * 100 + correctif;
+}
+const CODE_APP = codeVersion(app.getVersion(), require('./package.json').generation);
+
+/**
+ * La version peut repartir à 1.0.0 (docs/PLAN-V1.md) : electron-updater ignore un numéro inférieur,
+ * sauf si on l'y autorise. On l'autorise seulement quand maj.json annonce un versionCode plus grand.
+ */
+async function autoriserNouvelleGeneration() {
+  try {
+    const reponse = await net.fetch(URL_MANIFESTE, { cache: 'no-cache' });
+    const manifeste = reponse.ok ? await reponse.json() : null;
+    autoUpdater.allowDowngrade = Number(manifeste?.versionCode) > CODE_APP;
+  } catch {
+    autoUpdater.allowDowngrade = false;
+  }
+}
 const ESSAIS_MAX = 3;
 // Laisse le temps de lire « Installation… » avant que la fenêtre se ferme.
 const DELAI_INSTALLATION_MS = 1500;
@@ -168,8 +193,8 @@ function verifierMaj(installerTout) {
   }
   immediate = installerTout;
   if (immediate) publierEtat({ etat: 'verification' });
-  enCours = autoUpdater
-    .checkForUpdates()
+  enCours = autoriserNouvelleGeneration()
+    .then(() => autoUpdater.checkForUpdates())
     .catch(() => {})
     .finally(() => (enCours = null));
   return enCours;

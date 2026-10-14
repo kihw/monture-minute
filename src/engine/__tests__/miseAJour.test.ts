@@ -1,9 +1,10 @@
+import { codeVersion } from '../../../version-code';
 import { comparerVersions, essaisPour, lireManifeste, nouvelEssai, URL_MANIFESTE, verifierMiseAJour } from '../miseAJour';
 
 const HEX = 'a'.repeat(64);
-const manifeste = (version: string, surcharge: Record<string, unknown> = {}) => ({
+const manifeste = (version: string, surcharge: Record<string, unknown> = {}, generation = 1) => ({
   version,
-  versionCode: 30100,
+  versionCode: codeVersion(version, generation),
   publieeLe: '2026-11-02T18:00:00Z',
   notes: '## Monture Minute\n- Nouveautés ',
   versionMinimale: '3.0.0',
@@ -55,20 +56,45 @@ describe('verifierMiseAJour', () => {
 
   afterEach(() => jest.restoreAllMocks());
 
-  it('lit le manifeste à l’adresse fixe et le renvoie quand la version est plus récente', async () => {
-    const espion = jest.spyOn(globalThis, 'fetch').mockImplementation(() => reponse(manifeste('1.3.0')));
-    const m = await verifierMiseAJour('1.2.0');
-    expect(m?.version).toBe('1.3.0');
+  it('lit le manifeste à l’adresse fixe et le renvoie quand son versionCode est plus grand', async () => {
+    const espion = jest.spyOn(globalThis, 'fetch').mockImplementation(() => reponse(manifeste('3.1.4')));
+    const m = await verifierMiseAJour(codeVersion('3.1.3', 1));
+    expect(m?.version).toBe('3.1.4');
     expect(espion.mock.calls[0][0]).toBe(URL_MANIFESTE);
   });
 
+  it('propose 1.0.0 à la passerelle 3.1.3 : le versionCode compte, pas le numéro', async () => {
+    jest.spyOn(globalThis, 'fetch').mockImplementation(() => reponse(manifeste('1.0.0', {}, 2)));
+    expect((await verifierMiseAJour(codeVersion('3.1.3', 1)))?.version).toBe('1.0.0');
+    // Une fois en 1.0.0, la même release n'est plus proposée.
+    expect(await verifierMiseAJour(codeVersion('1.0.0', 2))).toBeNull();
+  });
+
   it('ne renvoie rien quand l’app est à jour, hors ligne ou sans manifeste', async () => {
-    jest.spyOn(globalThis, 'fetch').mockImplementation(() => reponse(manifeste('1.2.0')));
-    expect(await verifierMiseAJour('1.2.0')).toBeNull();
+    const code = codeVersion('3.1.3', 1);
+    jest.spyOn(globalThis, 'fetch').mockImplementation(() => reponse(manifeste('3.1.3')));
+    expect(await verifierMiseAJour(code)).toBeNull();
     jest.spyOn(globalThis, 'fetch').mockImplementation(() => Promise.reject(new Error('hors ligne')));
-    expect(await verifierMiseAJour('1.2.0')).toBeNull();
+    expect(await verifierMiseAJour(code)).toBeNull();
     jest.spyOn(globalThis, 'fetch').mockImplementation(() => reponse({}, false));
-    expect(await verifierMiseAJour('1.2.0')).toBeNull();
+    expect(await verifierMiseAJour(code)).toBeNull();
+  });
+});
+
+describe('codeVersion', () => {
+  it('croît toujours, y compris au retour à 1.0.0', () => {
+    const suite = [codeVersion('3.1.2'), codeVersion('3.1.3', 1), codeVersion('1.0.0', 2), codeVersion('1.0.1', 2)];
+    expect(suite).toEqual([30102, 130103, 210000, 210001]);
+    expect([...suite].sort((a, b) => a - b)).toEqual(suite);
+  });
+
+  it('la copie de desktop/main.js calcule pareil', () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const source: string = require('fs').readFileSync(require('path').join(__dirname, '../../../desktop/main.js'), 'utf8');
+    const copie = new Function(`${source.match(/function codeVersion[\s\S]*?\n}/)?.[0]}; return codeVersion;`)() as typeof codeVersion;
+    for (const [v, g] of [['3.1.2'], ['3.1.3', 1], ['1.0.0', 2], ['1.4.7', 2]] as const) {
+      expect(copie(v, g)).toBe(codeVersion(v, g));
+    }
   });
 });
 
