@@ -119,6 +119,8 @@ export interface EtapeEnCours {
   segments?: Segment[];
   /** Notifications programmées (fin d'étape, changements de palier, jauge vide). */
   notificationIds?: string[];
+  /** Le joueur a replié le conseil de recharge facultatif de cette étape. */
+  conseilReplie?: boolean;
 }
 
 /** Les trois familles de montures élevées en enclos (mêmes jauges et mêmes règles). */

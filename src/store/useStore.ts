@@ -53,6 +53,8 @@ interface EleveurState {
   validerEtLancer: (id: string, carburant: Partial<Record<JaugeType, number>>) => void;
   /** « Plus tard » sur la notification : nouveau rappel dans 30 min. */
   reporterRappel: (id: string) => void;
+  /** Replie (ou rouvre) le conseil de recharge facultatif de l'étape en cours. */
+  replierConseil: (id: string, replie: boolean) => void;
   /** « Jauges activées » d'une notification de fin d'étape : valide et lance la suite avec le carburant habituel. */
   lancerSuiteHabituelle: (id: string) => void;
   /** « Nouveau cycle » : relance l'enclos terminé avec les mêmes réglages. */
@@ -372,6 +374,9 @@ export const useEleveurStore = create<EleveurState>()(
           majEnclos(id, (x) => (x.enCours ? { ...x, enCours: { ...x.enCours, notificationIds: [] } } : x));
           planifierNotifications(id, Date.now() + DELAI_RAPPEL_MS, false);
         },
+
+        replierConseil: (id, replie) =>
+          majEnclos(id, (x) => (x.enCours ? { ...x, enCours: { ...x.enCours, conseilReplie: replie } } : x)),
 
         validerEtape: (id, anticipee) => {
           const e = get().enclos[id];

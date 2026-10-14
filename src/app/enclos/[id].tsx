@@ -1,7 +1,7 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { router, Redirect, useLocalSearchParams } from 'expo-router';
 import { ReactNode, useRef, useState } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import PopupCarburant from '../../components/ChoixCarburant';
 import { Confirmation, MenuActions } from '../../components/Popup';
@@ -249,7 +249,22 @@ export default function DetailEnclos() {
               <Text style={[styles.tempsEtiquette, { color: couleurs.succes }]}>{Math.round(ratioEtape * 100)} %</Text>
             </View>
           </View>
-          {suggestion ? (
+          {suggestion && enCours.conseilReplie ? (
+            // Replié par le joueur : une ligne discrète, touchée pour rouvrir.
+            <Pressable
+              onPress={() => store.replierConseil(id, false)}
+              hitSlop={6}
+              style={({ pressed }) => [styles.astuce, styles.astuceLigne, pressed && { opacity: 0.6 }]}
+              accessibilityRole="button"
+              accessibilityLabel="Afficher le conseil de recharge"
+            >
+              <MaterialCommunityIcons name="flask-outline" size={s(14)} color={couleurs.texteFaible} />
+              <Text style={[styles.astuceTexte, { flex: 1 }]}>
+                Recharge facultative · {formatDureeClaire(suggestion.sc.gainMs! / 1000)} gagnées
+              </Text>
+              <MaterialCommunityIcons name="chevron-down" size={s(18)} color={couleurs.texteFaible} />
+            </Pressable>
+          ) : suggestion ? (
             <View style={styles.astuce}>
               <View style={styles.astuceLigne}>
                 <MaterialCommunityIcons name="flask-outline" size={s(15)} color={couleurs.accent} />
@@ -261,6 +276,14 @@ export default function DetailEnclos() {
                     Fin à {formatHeure(suggestion.sc.finAt!)} au lieu de {fin} · {formatDureeClaire(suggestion.sc.gainMs! / 1000)} gagnées
                   </Text>
                 </View>
+                <Pressable
+                  onPress={() => store.replierConseil(id, true)}
+                  hitSlop={10}
+                  accessibilityRole="button"
+                  accessibilityLabel="Replier le conseil de recharge"
+                >
+                  <MaterialCommunityIcons name="chevron-up" size={s(18)} color={couleurs.texteFaible} />
+                </Pressable>
               </View>
               <View style={styles.astuceLiens}>
                 <Lien
@@ -269,6 +292,7 @@ export default function DetailEnclos() {
                   onPress={() => store.rechargerJauge(id, suggestion.j, suggestion.sc.recharge!.niveau)}
                 />
                 <Lien label="Autres options" onPress={() => setRecharge(suggestion.j)} />
+                <Lien label="Masquer" onPress={() => store.replierConseil(id, true)} />
               </View>
             </View>
           ) : (
@@ -523,7 +547,7 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: couleurs.liseret,
   },
-  astuceLigne: { flexDirection: 'row', alignItems: 'flex-start', gap: s(8) },
+  astuceLigne: { flexDirection: 'row', alignItems: 'center', gap: s(8) },
   astuceTitre: { color: couleurs.texte, fontSize: s(12.5), fontWeight: '700' },
   astuceTexte: { color: couleurs.texteAttenue, fontSize: s(11.5), fontWeight: '600' },
   astuceLiens: { flexDirection: 'row', justifyContent: 'flex-start', gap: s(16), paddingLeft: s(23) },
