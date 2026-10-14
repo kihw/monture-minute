@@ -1,7 +1,7 @@
 {
   "name": "monture-minute",
   "version": "3.1.4",
-  "generation": 1,
+  "generation": 2,
   "main": "expo-router/entry",
   "dependencies": {
     "@expo-google-fonts/nunito": "^0.4.2",
