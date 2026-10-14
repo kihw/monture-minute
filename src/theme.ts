@@ -5,11 +5,8 @@ import { s } from './echelle';
 
 export const couleurs = {
   fond: '#17130e',
-  fondHaut: '#1d1812',
   carte: '#221c15',
   carteClaire: '#2d251c',
-  colonne: 'rgba(255,240,220,0.045)',
-  bandeau: '#3a3024',
   piste: '#0f0c08',
 
   surface: 'rgba(255,240,220,0.045)',
@@ -26,7 +23,6 @@ export const couleurs = {
 
   // Or de DOFUS : contour des jauges activées, actions principales.
   accent: '#e9b84a',
-  accentClair: '#f0c866',
   accentFonce: '#d9a535',
   accentDoux: 'rgba(233,184,74,0.14)',
   surAccent: '#2a1d06',
@@ -46,8 +42,6 @@ export const couleurs = {
 
 export const degrades = {
   accent: ['#f0c866', '#e3ae3c'] as const,
-  bandeau: ['#4a3d2e', '#3a3024'] as const,
-  carte: ['rgba(255,240,220,0.05)', 'rgba(255,240,220,0.02)'] as const,
 };
 
 /** Familles Nunito chargées au démarrage (_layout), une par graisse. */
@@ -80,10 +74,6 @@ export const esp = { xs: s(4), sm: s(6), md: s(8), lg: s(10), xl: s(14), xxl: s(
 export const rayon = { sm: s(7), md: s(10), lg: s(12), xl: s(16), pill: 999 };
 
 export const typo = {
-  grandTitre: { fontSize: s(26), fontFamily: police.titreFort, color: couleurs.texte, letterSpacing: s(-0.2) },
-  titre: { fontSize: s(18), fontFamily: police.titre, color: couleurs.texte },
-  sousTitre: { fontSize: s(13), fontWeight: '500' as const, color: couleurs.texteAttenue },
-  section: { fontSize: s(13), fontWeight: '700' as const, color: couleurs.texte },
   corps: { fontSize: s(14), color: couleurs.texte },
   petit: { fontSize: s(12), color: couleurs.texteAttenue },
   micro: { fontSize: s(10.5), color: couleurs.texteFaible, fontWeight: '600' as const },

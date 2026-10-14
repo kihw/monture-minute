@@ -108,14 +108,6 @@ export function IconeNue({ icone, onPress, couleur }: { icone: Icone; onPress: (
   );
 }
 
-export function BoutonRond({ icone, onPress }: { icone: Icone; onPress: () => void }) {
-  return (
-    <AnimatedPressable onPress={onPress} echelleAppui={0.88} style={styles.boutonRond}>
-      <MaterialCommunityIcons name={icone} size={s(18)} color={couleurs.texteAttenue} />
-    </AnimatedPressable>
-  );
-}
-
 export function Carte({ children, style }: { children: ReactNode; style?: StyleProp<ViewStyle> }) {
   return <View style={[styles.carte, style]}>{children}</View>;
 }
@@ -218,27 +210,6 @@ export function Tuile({ icone, couleur }: { icone: Icone; couleur: string }) {
   );
 }
 
-export function PuceJauge({ type }: { type: JaugeType }) {
-  const info = INFO_JAUGE[type];
-  return (
-    <View style={styles.puce}>
-      <IconeJauge type={type} taille={s(34)} />
-      <Text style={styles.puceNom} numberOfLines={1}>
-        {info.nom}
-      </Text>
-    </View>
-  );
-}
-
-export function Badge({ label, couleur = couleurs.accent }: { label: string; couleur?: string }) {
-  return (
-    <View style={[styles.badge, { backgroundColor: `${couleur}1c` }]}>
-      <View style={[styles.badgePoint, { backgroundColor: couleur }]} />
-      <Text style={[styles.badgeTexte, { color: couleur }]}>{label}</Text>
-    </View>
-  );
-}
-
 export function Interrupteur({ actif, onChange }: { actif: boolean; onChange: (v: boolean) => void }) {
   return (
     <Switch
@@ -307,14 +278,6 @@ const styles = StyleSheet.create({
   titre: { fontSize: s(21), fontFamily: police.titreFort, color: couleurs.texte, letterSpacing: s(-0.3), flexShrink: 1 },
   sousTitre: { fontSize: s(12), color: couleurs.texteAttenue },
   iconeNue: { padding: s(2) },
-  boutonRond: {
-    width: s(28),
-    height: s(28),
-    borderRadius: rayon.sm,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: couleurs.surfaceElevee,
-  },
   carte: {
     ...surface,
     borderRadius: rayon.lg,
@@ -357,29 +320,6 @@ const styles = StyleSheet.create({
   },
   bandeauTitre: { flex: 1, color: couleurs.texte, fontSize: s(15), fontFamily: police.titre },
   tuile: { width: s(26), height: s(26), borderRadius: rayon.sm, alignItems: 'center', justifyContent: 'center' },
-  puce: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: esp.sm,
-    padding: s(6),
-    paddingRight: esp.md,
-    borderRadius: rayon.md,
-    backgroundColor: couleurs.carteClaire,
-    borderWidth: 1,
-    borderColor: couleurs.liseret,
-  },
-  puceNom: { color: couleurs.texte, fontSize: s(13) },
-  badge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: s(5),
-    paddingHorizontal: s(9),
-    paddingVertical: s(4),
-    borderRadius: rayon.pill,
-  },
-  badgePoint: { width: s(6), height: s(6), borderRadius: s(3) },
-  badgeTexte: { fontSize: s(11), fontWeight: '700' },
   ligne: {
     flexDirection: 'row',
     alignItems: 'center',
