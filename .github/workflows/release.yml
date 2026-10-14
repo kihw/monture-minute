@@ -108,7 +108,8 @@ jobs:
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         # Deux architectures (quasiment tous les téléphones), comme l'APK compilé en local : deux fois moins long.
-        run: ./gradlew assembleRelease --no-daemon -PreactNativeArchitectures=arm64-v8a,armeabi-v7a
+        # 4 Go pour Gradle : avec 2 Go (valeur générée par Expo), la fusion du code (D8) manquait de mémoire.
+        run: ./gradlew assembleRelease --no-daemon -PreactNativeArchitectures=arm64-v8a,armeabi-v7a "-Dorg.gradle.jvmargs=-Xmx4g -XX:MaxMetaspaceSize=1g"
       - run: cp android/app/build/outputs/apk/release/app-release.apk MontureMinute-Android.apk
       - uses: actions/upload-artifact@v6
         with:

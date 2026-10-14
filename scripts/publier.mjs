@@ -124,7 +124,13 @@ try {
   const env = { ...process.env, ANDROID_HOME: sdk, APP_VARIANT: '' };
   lancer('npx', ['expo', 'prebuild', '--platform', 'android', '--clean', '--no-install'], { cwd: dossier, env });
   lancer('node', ['scripts/signer-android.mjs'], { cwd: dossier, env });
-  lancer(WINDOWS ? 'gradlew.bat' : './gradlew', ['assembleRelease', '--no-daemon', `-PreactNativeArchitectures=${ARCHITECTURES}`], {
+  lancer(WINDOWS ? 'gradlew.bat' : './gradlew', [
+    'assembleRelease',
+    '--no-daemon',
+    `-PreactNativeArchitectures=${ARCHITECTURES}`,
+    // 4 Go pour Gradle : avec les 2 Go générés par Expo, la fusion du code (D8) peut manquer de mémoire.
+    '-Dorg.gradle.jvmargs=-Xmx4g -XX:MaxMetaspaceSize=1g',
+  ], {
     cwd: join(dossier, 'android'),
     env,
   });
