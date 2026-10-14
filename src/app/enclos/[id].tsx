@@ -1,3 +1,4 @@
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { router, Redirect, useLocalSearchParams } from 'expo-router';
 import { ReactNode, useRef, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
@@ -144,7 +145,7 @@ export default function DetailEnclos() {
 
   const nomJ = (j: JaugeType) => INFO_JAUGE[j].nom;
   const nomMin = (j: JaugeType) => (j === 'xp' ? 'l’XP' : `la jauge ${INFO_JAUGE[j].nom}`);
-  const ratioEtape = vue.statut === 'en_cours' && etape ? 1 - vue.restantSec / Math.max(1, etape.dureeSec) : 1;
+  const ratioEtape = vue.statut === 'en_cours' && etape ? Math.max(0, Math.min(1, 1 - vue.restantSec / Math.max(1, etape.dureeSec))) : 1;
 
   // La carte héros : l'état de l'enclos en une phrase, et la seule chose à faire.
   let heros: ReactNode;
@@ -205,38 +206,30 @@ export default function DetailEnclos() {
   } else if (vue.statut === 'en_cours' && etape && enCours) {
     const fin = formatHeure(enCours.finAt);
     const sc = conseil?.scenario;
-    if (conseil && conseil.jauge && sc?.recharge && (conseil.niveau === 'recharger' || conseil.niveau === 'vide')) {
-      const j = conseil.jauge;
-      const faire = { label: 'C’est rechargé', onPress: () => store.rechargerJauge(id, j, sc.recharge!.niveau) };
-      const autres = { label: 'Autres options', onPress: () => setRecharge(j) };
-      heros =
-        conseil.niveau === 'vide' ? (
-          <Heros
-            cle={`vide-${j}`}
-            ton="attention"
-            icone="alert-outline"
-            surtitre={`${nomJ(j)} sera vide à ${formatHeure(conseil.videA!)}`}
-            titre={`Remplis ${nomMin(j)} à ${formatPoints(sc.recharge.niveau)}`}
-            detail={`${sc.finAt ? `Sans recharge, l’étape s’arrêtera. Avec, elle finit à ${formatHeure(sc.finAt)}.` : 'Sans recharge, l’étape s’arrêtera.'} Fais-le en jeu, puis confirme ici.`}
-          >
-            <ActionsHeros label={faire.label} onPress={faire.onPress} secondaire={autres} />
-          </Heros>
-        ) : (
-          <Heros
-            cle={`recharger-${j}`}
-            ton="action"
-            icone="flask-outline"
-            surtitre="Recharge conseillée"
-            titre={`Remplis ${nomMin(j)} à ${formatPoints(sc.recharge.niveau)}`}
-            detail={`Tu finis à ${formatHeure(sc.finAt!)} au lieu de ${fin}. Fais-le en jeu, puis confirme ici.`}
-          >
-            <Text style={styles.gain}>{formatDureeClaire(sc.gainMs! / 1000)} gagnées</Text>
-            <ActionsHeros label={faire.label} onPress={faire.onPress} secondaire={autres} />
-          </Heros>
-        );
-    } else {
+    const j = conseil?.jauge;
+    if (conseil && j && sc?.recharge && conseil.niveau === 'vide') {
+      // Jauge bientôt vide : l'étape s'arrêtera sans recharge, c'est la chose à faire.
       heros = (
-        <Heros cle="roule" ton="ok" icone="check-circle-outline" surtitre="Tout roule, rien à faire">
+        <Heros
+          cle={`vide-${j}`}
+          ton="attention"
+          icone="alert-outline"
+          surtitre={`${nomJ(j)} sera vide à ${formatHeure(conseil.videA!)}`}
+          titre={`Remplis ${nomMin(j)} à ${formatPoints(sc.recharge.niveau)}`}
+          detail={`${sc.finAt ? `Sans recharge, l’étape s’arrêtera. Avec, elle finit à ${formatHeure(sc.finAt)}.` : 'Sans recharge, l’étape s’arrêtera.'} Fais-le en jeu, puis confirme ici.`}
+        >
+          <ActionsHeros
+            label="C’est rechargé"
+            onPress={() => store.rechargerJauge(id, j, sc.recharge!.niveau)}
+            secondaire={{ label: 'Autres options', onPress: () => setRecharge(j) }}
+          />
+        </Heros>
+      );
+    } else {
+      // Recharge seulement conseillée : facultative, elle reste un encart discret sous le compte à rebours.
+      const suggestion = conseil?.niveau === 'recharger' && j && sc?.recharge && sc.finAt && sc.gainMs ? { j, sc } : null;
+      heros = (
+        <Heros cle="roule" ton="ok" icone="check-circle-outline" surtitre={suggestion ? 'Tout roule, rien d’obligatoire' : 'Tout roule, rien à faire'}>
           <View style={styles.ligneTemps}>
             <View style={{ gap: s(1) }}>
               <Text style={styles.tempsEtiquette}>Temps restant</Text>
@@ -256,7 +249,31 @@ export default function DetailEnclos() {
               <Text style={[styles.tempsEtiquette, { color: couleurs.succes }]}>{Math.round(ratioEtape * 100)} %</Text>
             </View>
           </View>
-          {!!sc?.gainMs && <Text style={texte.legende}>Recharger ne ferait gagner que {formatDureeClaire(sc.gainMs / 1000)}.</Text>}
+          {suggestion ? (
+            <View style={styles.astuce}>
+              <View style={styles.astuceLigne}>
+                <MaterialCommunityIcons name="flask-outline" size={s(15)} color={couleurs.accent} />
+                <View style={{ flex: 1, gap: s(1) }}>
+                  <Text style={styles.astuceTitre}>
+                    Facultatif : remplis {nomMin(suggestion.j)} à {formatPoints(suggestion.sc.recharge!.niveau)}
+                  </Text>
+                  <Text style={styles.astuceTexte}>
+                    Fin à {formatHeure(suggestion.sc.finAt!)} au lieu de {fin} · {formatDureeClaire(suggestion.sc.gainMs! / 1000)} gagnées
+                  </Text>
+                </View>
+              </View>
+              <View style={styles.astuceLiens}>
+                <Lien
+                  label="C’est rechargé"
+                  couleur={couleurs.accent}
+                  onPress={() => store.rechargerJauge(id, suggestion.j, suggestion.sc.recharge!.niveau)}
+                />
+                <Lien label="Autres options" onPress={() => setRecharge(suggestion.j)} />
+              </View>
+            </View>
+          ) : (
+            !!sc?.gainMs && <Text style={texte.legende}>Recharger ne ferait gagner que {formatDureeClaire(sc.gainMs / 1000)}.</Text>
+          )}
         </Heros>
       );
     }
@@ -499,7 +516,17 @@ export default function DetailEnclos() {
 }
 
 const styles = StyleSheet.create({
-  gain: { color: couleurs.succes, fontSize: s(14), fontWeight: '700' },
+  astuce: {
+    gap: s(6),
+    marginTop: s(2),
+    paddingTop: s(10),
+    borderTopWidth: 1,
+    borderTopColor: couleurs.liseret,
+  },
+  astuceLigne: { flexDirection: 'row', alignItems: 'flex-start', gap: s(8) },
+  astuceTitre: { color: couleurs.texte, fontSize: s(12.5), fontWeight: '700' },
+  astuceTexte: { color: couleurs.texteAttenue, fontSize: s(11.5), fontWeight: '600' },
+  astuceLiens: { flexDirection: 'row', justifyContent: 'flex-start', gap: s(16), paddingLeft: s(23) },
   separateur: { height: 1, backgroundColor: couleurs.liseret, marginVertical: s(4) },
   ligneTemps: { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', gap: s(8) },
   tempsEtiquette: { color: couleurs.texteFaible, fontSize: s(11), fontWeight: '600', fontVariant: ['tabular-nums'] },

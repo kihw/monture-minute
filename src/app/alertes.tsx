@@ -15,7 +15,7 @@ import { Text } from '../components/Texte';
 export default function Alertes() {
   const { alertes, maintenant } = useTableau();
   const notifications = useEleveurStore((s) => s.reglages.notifications);
-  const { aFaire, aVenir } = alertes;
+  const { aFaire, conseils, aVenir } = alertes;
   const nbAFaire = new Set(aFaire.map((a) => a.enclosId)).size;
 
   return (
@@ -24,7 +24,8 @@ export default function Alertes() {
         titre="Alertes"
         droite={
           <Aide titre="Les alertes">
-            <P>« À faire maintenant » : une étape à lancer ou à valider, une jauge vide, une recharge qui fait gagner du temps.</P>
+            <P>« À faire maintenant » : une étape à lancer ou à valider, une jauge vide.</P>
+            <P>Conseils : une recharge qui ferait gagner du temps. C’est facultatif, l’étape avance très bien sans.</P>
             <P>« À venir » : quand une jauge ralentira, se videra, et quand chaque étape finira, pour tous tes enclos.</P>
             <P>Les notifications te préviennent un peu avant (réglable dans Réglages › Alertes), même app fermée sur Android.</P>
           </Aide>
@@ -56,6 +57,14 @@ export default function Alertes() {
         </Section>
       )}
 
+      {conseils.length > 0 && (
+        <Section titre="Conseils (facultatif)">
+          {conseils.map((a, i) => (
+            <LigneAlerte key={`c${i}`} alerte={a} maintenant={maintenant} />
+          ))}
+        </Section>
+      )}
+
       {aVenir.length > 0 && (
         <Section titre="À venir">
           {aVenir.map((a, i) => (
@@ -64,7 +73,7 @@ export default function Alertes() {
         </Section>
       )}
 
-      {aFaire.length === 0 && aVenir.length === 0 && (
+      {aFaire.length === 0 && conseils.length === 0 && aVenir.length === 0 && (
         <View style={styles.vide}>
           <MaterialCommunityIcons name="bell-sleep-outline" size={s(40)} color={couleurs.texteFaible} />
           <Text style={[texte.legende, { textAlign: 'center' }]}>

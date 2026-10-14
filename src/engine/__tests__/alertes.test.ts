@@ -38,4 +38,17 @@ describe('alertes de l’élevage', () => {
     expect([...instants].sort((x, y) => x - y)).toEqual(instants);
     expect(aVenir.find((a) => a.type === 'fin')!.quand).toBe(tourne.enCours.finAt);
   });
+
+  test('une recharge conseillée est un conseil facultatif, pas une action à faire', () => {
+    const tourne = enclos('b', 'Enclos 2');
+    const ctx = contexteDepuis(calcul, tourne.depart);
+    const etape = prochaineEtape(tourne.lot, ctx, { endurance: 100_000, xp: 200_000 })!;
+    tourne.enCours = { etape, demarreeAt: T0, finAt: T0 + etape.dureeSec * 1000, segments: [] };
+    const vues = [vueEnclos(tourne, calcul, T0 + 60_000)];
+    const conseil = { niveau: 'recharger', jauge: 'endurance', scenario: { gainMs: 3_600_000 } } as never;
+    const { aFaire, conseils } = alertesElevage([tourne], vues, T0 + 60_000, { b: conseil });
+
+    expect(aFaire).toEqual([]);
+    expect(conseils).toEqual([expect.objectContaining({ type: 'recharge', enclosId: 'b' })]);
+  });
 });

@@ -89,8 +89,8 @@ describe('codeVersion', () => {
   });
 
   it('la copie de desktop/main.js calcule pareil', () => {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
     // Jest tourne depuis la racine du projet.
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const source: string = require('fs').readFileSync('desktop/main.js', 'utf8');
     const copie = new Function(`${source.match(/function codeVersion[\s\S]*?\n}/)?.[0]}; return codeVersion;`)() as typeof codeVersion;
     for (const [v, g] of [['3.1.2'], ['3.1.3', 1], ['1.0.0', 2], ['1.4.7', 2]] as const) {

@@ -156,7 +156,8 @@ function appelAction(vue: VueEnclos, ton: Ton): string | null {
     case 'attente':
       return 'Lancer l’étape';
     default:
-      return 'Voir la recharge';
+      // En cours : seule une jauge bientôt vide mérite un bouton ; une recharge conseillée est facultative.
+      return ton === 'attention' ? 'Voir la recharge' : null;
   }
 }
 

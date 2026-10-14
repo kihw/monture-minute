@@ -1,6 +1,7 @@
 // Ce qui attend le joueur sur tout l'élevage : actions à faire maintenant (étape finie, étape à
-// lancer, jauge vide, recharge conseillée) et échéances à venir (paliers, jauges vides, fins
-// d'étape), triées dans l'ordre. Sert à l'accueil (résumé) et à l'onglet Alertes.
+// lancer, jauge vide), conseils facultatifs (recharge qui fait gagner du temps) et échéances à
+// venir (paliers, jauges vides, fins d'étape), triées dans l'ordre. Sert à l'accueil (résumé) et à
+// l'onglet Alertes. Seules les actions comptent dans « à faire » (compteur, pastille d'onglet).
 
 import { Enclos, INFO_JAUGE } from '../types/domain';
 import { Conseil, echeances } from './descente';
@@ -24,8 +25,9 @@ export function alertesElevage(
   vues: VueEnclos[],
   maintenant: number,
   conseils: Record<string, Conseil | null> = {}
-): { aFaire: Alerte[]; aVenir: Alerte[] } {
+): { aFaire: Alerte[]; conseils: Alerte[]; aVenir: Alerte[] } {
   const aFaire: Alerte[] = [];
+  const facultatifs: Alerte[] = [];
   const aVenir: Alerte[] = [];
   liste.forEach((e, i) => {
     const vue = vues[i];
@@ -40,7 +42,7 @@ export function alertesElevage(
     if (vue.statut !== 'en_cours' || !e.enCours) return;
     const c = conseils[e.id];
     if (c?.niveau === 'recharger' && c.jauge && c.scenario?.gainMs) {
-      aFaire.push({ ...base, type: 'recharge', quand: null, texte: `Recharge conseillée : ${nom(c.jauge)}` });
+      facultatifs.push({ ...base, type: 'recharge', quand: null, texte: `Recharge conseillée : ${nom(c.jauge)}` });
     }
     // Fin annoncée (majorée en mode prudent), comme le minuteur.
     aVenir.push({ ...base, type: 'fin', quand: e.enCours.finAt, texte: `Fin de l’étape ${vue.numeroEtape}` });
@@ -50,5 +52,5 @@ export function alertesElevage(
     }
   });
   aVenir.sort((a, b) => (a.quand ?? 0) - (b.quand ?? 0));
-  return { aFaire, aVenir };
+  return { aFaire, conseils: facultatifs, aVenir };
 }
