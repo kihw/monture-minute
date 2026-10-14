@@ -13,21 +13,21 @@
 | L'app Android (3.1.x) | numéro de version du manifeste | 1.0.0 < 3.1.2 : **jamais proposée** |
 | Windows (electron-updater) | numéro de version de `latest.yml` | version inférieure : **ignorée** |
 
-## 2. La solution : une version passerelle 3.1.3, puis 1.0.0
+## 2. La solution : une version passerelle 3.1.4, puis 1.0.0
 
 1. **`versionCode` par génération** : `génération × 100 000 + majeur × 10 000 + mineur × 100 + correctif`.
    La génération est dans `package.json` (`"generation"`).
    - 3.1.2 (avant) : 30102
-   - 3.1.3 (génération 1) : 130103
+   - 3.1.4 (génération 1) : 130104
    - 1.0.0 (génération 2) : 210000 → Android accepte la mise à jour, l'identifiant de l'app ne change pas.
-2. **3.1.3 compare les `versionCode`**, plus les numéros de version : elle voit 1.0.0 (210000) comme
-   plus récente qu'elle-même (130103).
-3. **Windows (3.1.3)** : avant chaque vérification, la coquille lit `maj.json` ; si son `versionCode` est
+2. **3.1.4 compare les `versionCode`**, plus les numéros de version : elle voit 1.0.0 (210000) comme
+   plus récente qu'elle-même (130104).
+3. **Windows (3.1.4)** : avant chaque vérification, la coquille lit `maj.json` ; si son `versionCode` est
    supérieur, elle autorise electron-updater à installer un numéro de version inférieur
    (`allowDowngrade`). Sinon, comportement normal.
-4. Les 3.1.2 passent en 3.1.3 automatiquement (3.1.3 > 3.1.2), puis en 1.0.0.
+4. Les 3.1.2 passent en 3.1.4 automatiquement (3.1.4 > 3.1.2), puis en 1.0.0.
 
-Ordre de publication : **3.1.3** → laisser les appareils la prendre (un démarrage suffit) → **1.0.0**.
+Ordre de publication : **3.1.4** → laisser les appareils la prendre (un démarrage suffit) → **1.0.0**.
 
 ## 3. Contenu de la 1.0.0
 
@@ -40,15 +40,15 @@ Ordre de publication : **3.1.3** → laisser les appareils la prendre (un démar
 
 Fait (sur `main`, non publié) : passerelle (`version-code.js`, comparaison par `versionCode` dans
 l'app et sur Windows, génération 1), revue de finition, nettoyage (dépendances, `expo-doctor`,
-actions Node 24, code mort), site, notes `v3.1.3` et `v1.0.0`.
+actions Node 24, code mort), site, notes `v3.1.4` et `v1.0.0`.
 
-1. **Publier 3.1.3** (passerelle) : `npm version patch`, puis envoi de `main` et du tag. Attendre
+1. **Publier 3.1.4** (passerelle ; le tag `v3.1.3` a échoué au typecheck de GitHub, sans release) : `npm version patch`, puis envoi de `main` et du tag. Attendre
    qu'elle soit en ligne et que les appareils l'aient prise (un démarrage).
 2. **Publier 1.0.0** :
    - dans `package.json`, passer `"generation"` à `2` ;
    - `npm version 1.0.0` (recopie version et génération dans `desktop/package.json`) ;
    - envoi de `main` et du tag `v1.0.0`.
-3. Vérifier : `maj.json` annonce 1.0.0 avec `versionCode` 210000 ; Windows et Android en 3.1.3
+3. Vérifier : `maj.json` annonce 1.0.0 avec `versionCode` 210000 ; Windows et Android en 3.1.4
    passent en 1.0.0 sans clic.
 
 ## 5. À décider plus tard : les anciens tags v1.1.x et v1.2.x
