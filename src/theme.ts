@@ -69,9 +69,9 @@ export const police = {
   titreDoux: NUNITO['700'],
 };
 
-export const esp = { xs: s(4), sm: s(6), md: s(8), lg: s(10), xl: s(14), xxl: s(20) };
+export const esp = { xs: s(4), sm: s(6), md: s(8), lg: s(10), xl: s(12), xxl: s(18) };
 
-export const rayon = { sm: s(7), md: s(10), lg: s(12), xl: s(16), pill: 999 };
+export const rayon = { sm: s(6), md: s(9), lg: s(11), xl: s(14), pill: 999 };
 
 export const typo = {
   corps: { fontSize: s(14), color: couleurs.texte },
@@ -136,6 +136,7 @@ export const texte = {
 };
 
 /** Grille de 8 (à l'échelle de l'écran). */
-export const grille = { x1: s(4), x2: s(8), x3: s(12), x4: s(16), x6: s(24) };
+// Compacte : l'app vit dans une petite fenêtre à côté du jeu, chaque pixel compte.
+export const grille = { x1: s(4), x2: s(7), x3: s(10), x4: s(14), x6: s(20) };
 
 export const duree = { rapide: 120, base: 220, lente: 360 };

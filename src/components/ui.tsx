@@ -284,7 +284,7 @@ const styles = StyleSheet.create({
     padding: esp.lg,
   },
   boutonPrincipal: {
-    height: s(38),
+    height: s(34),
     borderRadius: rayon.md,
     flexDirection: 'row',
     alignItems: 'center',
@@ -293,7 +293,7 @@ const styles = StyleSheet.create({
   },
   boutonPrincipalTexte: { color: couleurs.surAccent, fontSize: s(13), fontWeight: '800' },
   boutonContour: {
-    height: s(36),
+    height: s(32),
     borderRadius: rayon.md,
     borderWidth: 1,
     borderColor: couleurs.liseretVif,

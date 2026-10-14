@@ -554,9 +554,9 @@ const styles = StyleSheet.create({
   separateur: { height: 1, backgroundColor: couleurs.liseret, marginVertical: s(4) },
   ligneTemps: { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', gap: s(8) },
   tempsEtiquette: { color: couleurs.texteFaible, fontSize: s(11), fontWeight: '600', fontVariant: ['tabular-nums'] },
-  tempsGrand: { color: couleurs.texte, fontSize: s(34), fontWeight: '800', letterSpacing: s(-1), lineHeight: s(38), fontVariant: ['tabular-nums'] },
+  tempsGrand: { color: couleurs.texte, fontSize: s(28), fontWeight: '800', letterSpacing: s(-0.6), lineHeight: s(32), fontVariant: ['tabular-nums'] },
   finBloc: { alignItems: 'flex-end', gap: s(1), paddingBottom: s(3) },
-  finHeure: { color: couleurs.texte, fontSize: s(17), fontWeight: '700', fontVariant: ['tabular-nums'] },
+  finHeure: { color: couleurs.texte, fontSize: s(15), fontWeight: '700', fontVariant: ['tabular-nums'] },
   ligneAvancement: { flexDirection: 'row', justifyContent: 'space-between', gap: s(8) },
   prepare: { color: couleurs.texte, fontSize: s(14), fontWeight: '700' },
 });

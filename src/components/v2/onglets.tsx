@@ -190,7 +190,7 @@ export function CarteEnclos({
           famille={famille}
           robe={indexRobe}
           avancement={vue.avancement}
-          taille={s(58)}
+          taille={s(46)}
           couleur={etat.ton === 'ok' ? couleurs.accent : t.couleur}
         />
         <View style={{ flex: 1, minWidth: 0, gap: s(3) }}>
@@ -306,8 +306,8 @@ export function CarteNouvelEnclos({ onPress }: { onPress: () => void }) {
 const styles = StyleSheet.create({
   barre: {
     flexDirection: 'row',
-    padding: s(5),
-    borderRadius: rayon.xl + s(4),
+    padding: s(3),
+    borderRadius: rayon.xl + s(2),
     ...surface,
     backgroundColor: 'rgba(38,31,23,0.97)',
     borderColor: couleurs.liseretVif,
@@ -315,8 +315,8 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.5,
     shadowRadius: s(20),
   },
-  onglet: { flex: 1, alignItems: 'center', gap: s(2), minHeight: s(48), justifyContent: 'center', borderRadius: rayon.xl },
-  ongletIcone: { width: s(48), height: s(26), borderRadius: rayon.pill, alignItems: 'center', justifyContent: 'center' },
+  onglet: { flex: 1, alignItems: 'center', gap: s(1), minHeight: s(40), justifyContent: 'center', borderRadius: rayon.xl },
+  ongletIcone: { width: s(44), height: s(22), borderRadius: rayon.pill, alignItems: 'center', justifyContent: 'center' },
   ongletIconeActif: { backgroundColor: 'rgba(233,184,74,0.16)', borderWidth: 1, borderColor: 'rgba(233,184,74,0.35)' },
   ongletNom: { color: couleurs.texteFaible, fontSize: s(10.5), fontWeight: '600' },
   ongletNomActif: { color: couleurs.accent, fontWeight: '800' },
@@ -337,7 +337,7 @@ const styles = StyleSheet.create({
   pastilleTexte: { color: '#2a1603', fontSize: s(10.5), fontWeight: '800' },
   entete: { gap: grille.x3, marginBottom: grille.x1 },
   enteteLigne: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  enteteTitre: { color: couleurs.texte, fontSize: s(28), fontFamily: police.titreFort, letterSpacing: s(-0.4) },
+  enteteTitre: { color: couleurs.texte, fontSize: s(24), fontFamily: police.titreFort, letterSpacing: s(-0.4) },
   alerte: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -353,18 +353,17 @@ const styles = StyleSheet.create({
   carte: {
     gap: grille.x3,
     padding: grille.x3,
-    paddingTop: s(14),
     borderRadius: rayon.xl,
     ...surface,
   },
   carteHaut: { flexDirection: 'row', alignItems: 'center', gap: grille.x3 },
-  nom: { color: couleurs.texte, fontSize: s(17.5), fontFamily: police.titre },
+  nom: { color: couleurs.texte, fontSize: s(16), fontFamily: police.titre },
   monture: { color: couleurs.texteFaible, fontSize: s(11), fontWeight: '600' },
   etatLigne: { flexDirection: 'row', alignItems: 'center', gap: s(5), marginTop: s(1) },
   etatPoint: { width: s(6), height: s(6), borderRadius: s(3) },
   etatTexte: { flexShrink: 1, fontSize: s(11.5), fontWeight: '700' },
   tempsBloc: { alignItems: 'flex-end', alignSelf: 'flex-start', gap: s(1) },
-  temps: { color: couleurs.texte, fontSize: s(19), fontWeight: '800', letterSpacing: s(-0.3), fontVariant: ['tabular-nums'] },
+  temps: { color: couleurs.texte, fontSize: s(17), fontWeight: '800', letterSpacing: s(-0.3), fontVariant: ['tabular-nums'] },
   friseTete: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', gap: grille.x2 },
   friseEtape: { flex: 1, color: couleurs.texteAttenue, fontSize: s(11.5), fontWeight: '600' },
   friseCompte: { color: couleurs.texteFaible, fontSize: s(10.5), fontWeight: '700', fontVariant: ['tabular-nums'] },
@@ -377,7 +376,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: s(7),
     paddingHorizontal: grille.x3,
-    minHeight: s(36),
+    minHeight: s(32),
     borderRadius: rayon.md,
     borderWidth: 1,
   },
@@ -387,8 +386,8 @@ const styles = StyleSheet.create({
   resumeTuile: {
     flex: 1,
     gap: s(2),
-    paddingVertical: s(8),
-    paddingHorizontal: s(10),
+    paddingVertical: s(6),
+    paddingHorizontal: s(9),
     borderRadius: rayon.lg,
     backgroundColor: 'rgba(255,255,255,0.035)',
     borderWidth: 1,
@@ -396,7 +395,7 @@ const styles = StyleSheet.create({
   },
   resumeTete: { flexDirection: 'row', alignItems: 'center', gap: s(4) },
   resumeNom: { color: couleurs.texteFaible, fontSize: s(10.5), fontWeight: '600' },
-  resumeValeur: { color: couleurs.texte, fontSize: s(18), fontWeight: '800', letterSpacing: s(-0.3), fontVariant: ['tabular-nums'] },
+  resumeValeur: { color: couleurs.texte, fontSize: s(16), fontWeight: '800', letterSpacing: s(-0.3), fontVariant: ['tabular-nums'] },
   groupe: { flexDirection: 'row', alignItems: 'center', gap: s(6), marginTop: s(6) },
   groupeTitre: { fontSize: s(11), fontWeight: '800', letterSpacing: s(1), textTransform: 'uppercase' },
   groupeNombre: { color: couleurs.texteFaible, fontSize: s(11), fontWeight: '700', fontVariant: ['tabular-nums'] },
@@ -406,7 +405,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: s(8),
-    minHeight: s(50),
+    minHeight: s(40),
     marginTop: s(2),
     borderRadius: rayon.xl,
     borderWidth: 1,
