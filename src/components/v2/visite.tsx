@@ -2,7 +2,7 @@
 // étape amène son élément à l'écran, assombrit tout le reste, l'entoure d'or et l'explique dans
 // une bulle. Remplace la lecture d'un long guide avant de commencer.
 
-import { RefObject, useCallback, useEffect, useMemo, useState } from 'react';
+import { RefObject, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Animated, Easing, Modal, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 
 import { s } from '../../echelle';
@@ -59,8 +59,16 @@ export default function VisiteGuidee({
   const apparition = useMemo(() => new Animated.Value(0), []);
   const reduit = useMouvementReduit();
   const etape = etapes[index];
+  // L'écran d'enclos se redessine chaque seconde (compte à rebours) et recrée la liste d'étapes :
+  // on la lit dans une ref pour ne mesurer et animer qu'au changement d'étape, sinon la bulle et le
+  // cadre se remesurent et rejouent leur apparition toutes les secondes (clignotement).
+  const etapesRef = useRef(etapes);
+  useEffect(() => {
+    etapesRef.current = etapes;
+  });
 
   const placer = useCallback(async () => {
+    const etape = etapesRef.current[index];
     if (!etape) return;
     let c = await mesurer(etape.cible.current);
     // Hors champ (ou trop bas pour laisser la place à la bulle) : on fait défiler jusqu'à lui.
@@ -81,7 +89,7 @@ export default function VisiteGuidee({
     if (reduit) return apparition.setValue(1);
     apparition.setValue(0);
     Animated.timing(apparition, { toValue: 1, duration: duree.base, easing: Easing.out(Easing.cubic), useNativeDriver: true }).start();
-  }, [etape, height, scrollRef, decalage, apparition, reduit]);
+  }, [index, height, scrollRef, decalage, apparition, reduit]);
 
   useEffect(() => {
     if (!visible) return;

@@ -176,6 +176,8 @@ export interface Reglages {
   guideVu: boolean;
   /** La visite guidée de l'écran d'enclos a été faite (V2). */
   visiteVue?: boolean;
+  /** Réglages obligatoires du premier démarrage (carburant, alertes) remplis. */
+  preferencesFaites?: boolean;
   /** App Windows : fenêtre toujours au premier plan (par-dessus le jeu). */
   premierPlan: boolean;
   notifications: boolean;

@@ -4,7 +4,10 @@ Monture Minute calcule le meilleur parcours d’élevage de chaque enclos de **d
 volkornes** (DOFUS 3.7), du premier jour jusqu’aux montures fécondables, et te prévient au bon
 moment.
 
-Au premier enclos, une **visite guidée** de quatre bulles montre l’essentiel directement sur
+Au premier démarrage, un écran **Tes réglages** (obligatoire) demande d’abord ton remplissage
+habituel, le seuil de conseil de recharge, le mode de calcul et tes alertes (notifications, délai
+d’avance, son, premier plan sur Windows) ; tout reste modifiable dans Réglages. Puis, au premier
+enclos, une **visite guidée** de quatre bulles montre l’essentiel directement sur
 l’écran (la carte « quoi faire », les jauges, tes montures, la navigation) ; elle se rejoue depuis
 **Réglages › Revoir la visite guidée**. Les **« ? »** à côté des titres expliquent chaque notion sur
 place. Ce guide complet existe aussi dans l’app, en 10 pages illustrées : **Réglages › Guide

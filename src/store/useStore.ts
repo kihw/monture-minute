@@ -89,6 +89,7 @@ const REGLAGES_PAR_DEFAUT: Reglages = {
   seuilConseilMin: 15,
   anticipationMin: 5,
   guideVu: false,
+  preferencesFaites: false,
   premierPlan: false,
   notifications: true,
   son: true,
@@ -433,7 +434,8 @@ export const useEleveurStore = create<EleveurState>()(
       // v8 : option « premier plan » de l'app Windows.
       // v9 : recharges en cours d'étape, seuil de conseil et délai d'alerte des jauges.
       // v10 : famille (dragodinde, muldo, volkorne) et robe de chaque enclos ; guide vu ou non.
-      version: 10,
+      // v11 : réglages obligatoires du premier démarrage (déjà faits pour qui a l'app).
+      version: 11,
       migrate: (persiste, version) => {
         if (version < 3) {
           return { reglages: REGLAGES_PAR_DEFAUT, enclos: {}, ordre: [], journal: [] } as unknown as EleveurState;
@@ -489,6 +491,9 @@ export const useEleveurStore = create<EleveurState>()(
             if (e) e.depart = { ...e.depart, famille: 'dragodinde', robe: i % 7 };
           });
         }
+        // Une app déjà installée a ses réglages : on ne lui impose pas l'écran du premier démarrage,
+        // sauf si elle n'a jamais été configurée (premier enclos pas encore créé).
+        if (version < 11) etat.reglages = { ...etat.reglages, preferencesFaites: etat.reglages.configuree };
         return etat;
       },
     }

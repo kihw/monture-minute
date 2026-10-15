@@ -1,4 +1,4 @@
-import { router } from 'expo-router';
+import { Redirect, router } from 'expo-router';
 
 import AssistantDepart from '../components/v2/assistant';
 import { useEleveurStore } from '../store/useStore';
@@ -10,6 +10,8 @@ import { useEleveurStore } from '../store/useStore';
 export default function Configuration() {
   const reglages = useEleveurStore((s) => s.reglages);
   const configurer = useEleveurStore((s) => s.configurer);
+  // Les réglages du premier démarrage passent avant le premier enclos (et avant la visite guidée).
+  if (!reglages.preferencesFaites) return <Redirect href="/preferences" />;
   return (
     <AssistantDepart
       titre="Ton premier enclos"

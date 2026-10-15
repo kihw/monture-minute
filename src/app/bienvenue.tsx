@@ -15,7 +15,7 @@ const ATOUTS = [
 
 export default function Bienvenue() {
   return (
-    <Ecran basDePage={<BoutonPrincipal label="Commencer" icone="arrow-right" onPress={() => router.push('/configuration')} />}>
+    <Ecran basDePage={<BoutonPrincipal label="Commencer" icone="arrow-right" onPress={() => router.push('/preferences')} />}>
       <View style={styles.hero}>
         <View style={styles.halo}>
           <Monture famille="dragodinde" robe={2} taille={s(132)} />
