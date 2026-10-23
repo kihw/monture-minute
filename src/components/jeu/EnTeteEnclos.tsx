@@ -21,6 +21,7 @@ export default function EnTeteEnclos({
   surtitre,
   couleurSurtitre = couleurs.accent,
   onRenommer,
+  renommerAuDebut = false,
 }: {
   enclos: Enclos;
   /** « Étape 2/4 · Maturité et Amour ». */
@@ -34,8 +35,10 @@ export default function EnTeteEnclos({
   surtitre?: string;
   couleurSurtitre?: string;
   onRenommer: (nom: string) => void;
+  /** Ouvre directement le nom en saisie (enclos tout juste créé par « + »). */
+  renommerAuDebut?: boolean;
 }) {
-  const [saisie, setSaisie] = useState<string | null>(null);
+  const [saisie, setSaisie] = useState<string | null>(renommerAuDebut ? enclos.nom : null);
   const famille = enclos.depart.famille ?? 'dragodinde';
   const valider = () => {
     if (saisie !== null) onRenommer(saisie);
@@ -44,7 +47,7 @@ export default function EnTeteEnclos({
   return (
     <View style={styles.entete}>
       <View style={styles.monture}>
-        <Monture famille={famille} robe={enclos.depart.robe ?? 0} taille={s(96)} fond={false} />
+        <Monture famille={famille} robe={enclos.depart.robe ?? 0} taille={s(80)} fond={false} />
       </View>
       <View style={styles.texte}>
         {surtitre && <Text style={[styles.surtitre, { color: couleurSurtitre }]}>{surtitre}</Text>}
@@ -84,7 +87,7 @@ export default function EnTeteEnclos({
 
 const styles = StyleSheet.create({
   entete: { flexDirection: 'row', alignItems: 'center', gap: s(10) },
-  monture: { width: s(100), height: s(100), alignItems: 'center', justifyContent: 'center' },
+  monture: { width: s(84), height: s(84), alignItems: 'center', justifyContent: 'center' },
   texte: { flex: 1, minWidth: 0, gap: s(2) },
   surtitre: { fontSize: s(11.5), fontWeight: '800' },
   nomBouton: { flexDirection: 'row', alignItems: 'center', gap: s(6), alignSelf: 'flex-start', maxWidth: '100%', paddingVertical: s(2) },
@@ -102,6 +105,6 @@ const styles = StyleSheet.create({
   },
   etape: { color: couleurs.texteAttenue, fontSize: s(12), fontWeight: '600' },
   ligneTemps: { flexDirection: 'row', alignItems: 'baseline', gap: s(8), marginTop: s(3), flexWrap: 'wrap' },
-  temps: { color: couleurs.texte, fontSize: s(34), fontWeight: '900', letterSpacing: s(-1.2), fontVariant: ['tabular-nums'] },
+  temps: { color: couleurs.texte, fontSize: s(32), fontWeight: '900', letterSpacing: s(-1.2), fontVariant: ['tabular-nums'] },
   detail: { fontSize: s(12), fontWeight: '700' },
 });

@@ -161,7 +161,7 @@ export default function BlocMontures({
 }
 
 const styles = StyleSheet.create({
-  bloc: { backgroundColor: couleurs.carte, borderRadius: rayon.xl, paddingVertical: s(10), paddingHorizontal: s(12), gap: s(8) },
+  bloc: { backgroundColor: couleurs.carte, borderRadius: rayon.xl, paddingVertical: s(9), paddingHorizontal: s(12), gap: s(6) },
   tete: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: s(8) },
   titre: { color: couleurs.texte, fontSize: s(14.5), fontWeight: '900' },
   boutons: { flexDirection: 'row', gap: s(6) },
@@ -177,9 +177,9 @@ const styles = StyleSheet.create({
   rond: { width: s(30), height: s(30), borderRadius: s(15), borderWidth: 1, borderColor: couleurs.liseretVif, alignItems: 'center', justifyContent: 'center' },
   rondTexte: { color: couleurs.texte, fontSize: s(16), fontWeight: '800' },
   phrase: { color: couleurs.texte, fontSize: s(12), fontWeight: '600' },
-  grille: { flexDirection: 'row', flexWrap: 'wrap', columnGap: s(14), rowGap: s(8) },
-  case: { flexBasis: '45%', flexGrow: 1, gap: s(4) },
-  caseTete: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: s(4), minHeight: s(28) },
+  grille: { flexDirection: 'row', flexWrap: 'wrap', columnGap: s(14), rowGap: s(6) },
+  case: { flexBasis: '45%', flexGrow: 1, gap: s(3) },
+  caseTete: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: s(4), minHeight: s(22) },
   valeur: { color: couleurs.texte, fontSize: s(12.5), fontWeight: '800', fontVariant: ['tabular-nums'] },
   piste: { height: s(5), borderRadius: s(3), backgroundColor: couleurs.piste, overflow: 'hidden' },
   barre: { height: '100%', borderRadius: s(3) },

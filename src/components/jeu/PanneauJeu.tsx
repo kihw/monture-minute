@@ -138,12 +138,12 @@ export default function PanneauJeu({
 }
 
 const styles = StyleSheet.create({
-  panneau: { backgroundColor: '#1f1913', borderRadius: rayon.xl, paddingTop: s(8), paddingBottom: s(6), paddingHorizontal: s(4), gap: s(4) },
+  panneau: { backgroundColor: '#1f1913', borderRadius: rayon.xl, paddingTop: s(6), paddingBottom: s(4), paddingHorizontal: s(4), gap: s(4) },
   rangee: { flexDirection: 'row', justifyContent: 'space-between' },
-  colonne: { flex: 1, alignItems: 'center', gap: s(3), paddingVertical: s(3), borderRadius: rayon.md },
+  colonne: { flex: 1, alignItems: 'center', gap: s(2), paddingVertical: s(2), borderRadius: rayon.md },
   colonneChoisie: { backgroundColor: 'rgba(233,184,74,0.14)' },
   palier: { fontSize: s(10.5), fontWeight: '800', fontVariant: ['tabular-nums'] },
-  cadreTube: { width: s(16), height: s(64) },
+  cadreTube: { width: s(16), height: s(54) },
   tube: {
     flex: 1,
     borderRadius: s(8),

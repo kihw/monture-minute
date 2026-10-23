@@ -12,7 +12,9 @@ import { useEffect } from 'react';
 import { LogBox, Platform } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
+import BandeauAnnuler from '../components/jeu/BandeauAnnuler';
 import MiseAJour from '../components/MiseAJour';
+import { s } from '../echelle';
 import { pontBureau } from '../engine/bureau';
 import { configurerNotifications, ecouterReponses } from '../engine/notifications';
 import { useHydrate } from '../hooks/useElevage';
@@ -88,6 +90,7 @@ export default function RootLayout() {
         <Stack.Screen name="objectifs/[id]" options={{ animation: 'fade_from_bottom', gestureEnabled: false }} />
       </Stack>
       <MiseAJour />
+      <BandeauAnnuler bas={s(90)} />
     </SafeAreaProvider>
   );
 }

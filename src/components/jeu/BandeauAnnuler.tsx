@@ -1,42 +1,19 @@
 // Bandeau du bas (1.1) : confirme une action d'un mot et propose « Annuler » quelques secondes,
-// à la place des fenêtres de confirmation.
+// à la place des fenêtres de confirmation. L'état vit dans store/useBandeau (commun à l'app).
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo } from 'react';
 import { Animated, Easing, Pressable, StyleSheet } from 'react-native';
 
 import { s } from '../../echelle';
 import { useMouvementReduit } from '../../hooks/useMouvementReduit';
 import { couleurs, duree, rayon } from '../../theme';
+import { useBandeau } from '../../store/useBandeau';
 import { Text } from '../Texte';
 
-export const DUREE_BANDEAU_MS = 5000;
-
-interface Etat {
-  texte: string;
-  onAnnuler?: () => void;
-  cle: number;
-}
-
-/** État du bandeau : `montrer(texte, onAnnuler?)` l'affiche, il se cache seul après 5 s. */
-export function useBandeau() {
-  const [etat, setEtat] = useState<Etat | null>(null);
-  const minuterie = useRef<ReturnType<typeof setTimeout> | null>(null);
-  useEffect(() => () => {
-    if (minuterie.current) clearTimeout(minuterie.current);
-  }, []);
-  const cacher = useCallback(() => {
-    if (minuterie.current) clearTimeout(minuterie.current);
-    setEtat(null);
-  }, []);
-  const montrer = useCallback((texte: string, onAnnuler?: () => void) => {
-    if (minuterie.current) clearTimeout(minuterie.current);
-    setEtat({ texte, onAnnuler, cle: Date.now() });
-    minuterie.current = setTimeout(() => setEtat(null), DUREE_BANDEAU_MS);
-  }, []);
-  return { bandeau: etat, montrer, cacher };
-}
-
-export default function BandeauAnnuler({ bandeau, onFermer, bas = s(16) }: { bandeau: Etat | null; onFermer: () => void; bas?: number }) {
+/** Affiché une fois, dans la racine de l'app (_layout), au-dessus de tous les écrans. */
+export default function BandeauAnnuler({ bas = s(16) }: { bas?: number }) {
+  const bandeau = useBandeau((e) => e.bandeau);
+  const onFermer = useBandeau((e) => e.cacher);
   const reduit = useMouvementReduit();
   const apparition = useMemo(() => new Animated.Value(0), []);
   const cle = bandeau?.cle;
