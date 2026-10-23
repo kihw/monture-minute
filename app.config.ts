@@ -44,6 +44,8 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     // Icône des notifications : silhouette blanche (sinon Android affiche un carré blanc), teinte or.
     ['expo-notifications', { icon: './assets/notification-icon.png', color: '#f2c94c' }],
     'expo-font',
+    // Caméra : lecture des QR codes de transfert entre appareils (pas de micro).
+    ['expo-camera', { cameraPermission: 'Lire les QR codes de transfert de tes enclos.', recordAudioAndroid: false }],
     './plugins/compilation-android.js',
   ],
 });

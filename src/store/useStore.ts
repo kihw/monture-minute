@@ -7,7 +7,7 @@ import { NIVEAU_MAX_MONTURE, xpPourNiveau } from '../data/xpTable';
 import { appliquerEnCours, echeances, recalculerEnCours, scenarios } from '../engine/descente';
 import { messageFinEtape, messagePause, messageRalentit, messageVaSeVider } from '../engine/messages';
 import { contexteDepuis, prochaineEtape, remplissageHabituel } from '../engine/parcours';
-import { corrigerHorloge, DonneesSync, ECART_HORLOGE_MAX_MS, etatSyncInitial, EtatSync, fusionner, marquer, marquerTout, REGLAGES_SYNC, ReglagesSync } from '../engine/fusion';
+import { corrigerHorloge, DonneesSync, ECART_HORLOGE_MAX_MS, etatSyncInitial, EtatSync, fusionner, marquer, marquerTout, REGLAGES_SYNC, ReglagesSync, ResumeFusion, resumeFusion } from '../engine/fusion';
 import { carburantPropose } from '../engine/statut';
 import { annulerNotifications, DELAI_RAPPEL_MS, programmer } from '../engine/notifications';
 import {
@@ -44,6 +44,8 @@ interface EleveurState {
    * au-delà de 2 min, ses instants sont corrigés et `horlogeCorrigee` le signale.
    */
   appliquerSync: (distant: DonneesSync<Confirmation>, ecartMs?: number) => { horlogeCorrigee: boolean };
+  /** Ce que `appliquerSync` changerait ici, sans rien appliquer (aperçu avant fusion). */
+  apercuSync: (distant: DonneesSync<Confirmation>, ecartMs?: number) => ResumeFusion;
 
   /** Configuration initiale : crée le premier enclos avec cet état de départ. */
   configurer: (depart: DepartEnclos) => void;
@@ -313,9 +315,31 @@ export const useEleveurStore = create<EleveurState>()(
         appliquerSync: (distant, ecartMs = 0) => {
           const local = get().donneesSync();
           const recu = corrigerHorloge(distant, ecartMs);
-          const f = fusionner(local, recu, Date.now());
-          set((s) => ({ enclos: f.enclos, ordre: f.ordre, journal: f.journal, reglages: { ...s.reglages, ...f.reglages }, sync: f.sync }));
+          const maintenant = Date.now();
+          const f = fusionner(local, recu, maintenant);
+          // Notifications : celles d'une étape remplacée ou supprimée sont annulées ; les étapes reçues
+          // (sans notifications ici) sont reprogrammées.
+          for (const [id, e] of Object.entries(local.enclos)) {
+            const ids = e.enCours?.notificationIds;
+            if (ids?.length && f.enclos[id]?.enCours?.notificationIds !== ids) annulerNotifications(ids);
+          }
+          set((s) => ({
+            enclos: f.enclos,
+            ordre: f.ordre,
+            journal: f.journal,
+            // Un appareil neuf qui reçoit des enclos n'a plus besoin de créer le premier.
+            reglages: { ...s.reglages, ...f.reglages, configuree: s.reglages.configuree || f.ordre.length > 0 },
+            sync: f.sync,
+          }));
+          for (const [id, e] of Object.entries(f.enclos)) {
+            if (e.enCours && !e.enCours.notificationIds && e.enCours.finAt > maintenant) planifierNotifications(id, e.enCours.finAt, true);
+          }
           return { horlogeCorrigee: Math.abs(ecartMs) > ECART_HORLOGE_MAX_MS };
+        },
+
+        apercuSync: (distant, ecartMs = 0) => {
+          const local = get().donneesSync();
+          return resumeFusion(local, fusionner(local, corrigerHorloge(distant, ecartMs), Date.now()));
         },
 
         configurer: (depart) => {

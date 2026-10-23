@@ -270,3 +270,27 @@ export function corrigerHorloge<J extends EntreeJournal>(donnees: DonneesSync<J>
     },
   };
 }
+
+export interface ResumeFusion {
+  /** Enclos après la fusion. */
+  total: number;
+  /** Enclos qui arrivent de l'autre appareil. */
+  nouveaux: string[];
+  /** Enclos d'ici remplacés par une version plus récente de l'autre appareil. */
+  misAJour: string[];
+  /** Enclos d'ici supprimés sur l'autre appareil. */
+  supprimes: string[];
+}
+
+/** Ce que la fusion change ici, pour l'aperçu avant de l'appliquer. */
+export function resumeFusion(local: Pick<DonneesSync, 'enclos'>, resultat: Pick<DonneesSync, 'enclos' | 'ordre'>): ResumeFusion {
+  const nom = (id: string) => resultat.enclos[id]?.nom ?? local.enclos[id]?.nom ?? id;
+  return {
+    total: resultat.ordre.length,
+    nouveaux: resultat.ordre.filter((id) => !local.enclos[id]).map(nom),
+    misAJour: resultat.ordre.filter((id) => local.enclos[id] && !memeContenu(sansNotifications(local.enclos[id]), sansNotifications(resultat.enclos[id]))).map(nom),
+    supprimes: Object.keys(local.enclos)
+      .filter((id) => !resultat.enclos[id])
+      .map(nom),
+  };
+}

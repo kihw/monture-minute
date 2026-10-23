@@ -1,7 +1,11 @@
 import { Redirect, router } from 'expo-router';
+import { Pressable } from 'react-native';
 
 import PageEnclos from '../components/jeu/PageEnclos';
+import { Text } from '../components/Texte';
+import { s } from '../echelle';
 import { useEleveurStore } from '../store/useStore';
+import { couleurs } from '../theme';
 
 /**
  * Premier démarrage : après « Tes réglages », la page d'enclos (C4) crée le premier enclos. Les
@@ -19,6 +23,11 @@ export default function Configuration() {
       initial={reglages.depart}
       libelle="Créer l’enclos"
       fermable={false}
+      bas={
+        <Pressable onPress={() => router.push('/appareils')} hitSlop={6} style={{ alignSelf: 'center', paddingVertical: s(6) }} accessibilityRole="button">
+          <Text style={{ color: couleurs.accent, fontSize: s(13), fontWeight: '800', textDecorationLine: 'underline' }}>J’ai déjà l’app sur un autre appareil</Text>
+        </Pressable>
+      }
       onValider={(nom, depart) => {
         configurer(depart);
         const premier = useEleveurStore.getState().ordre[0];

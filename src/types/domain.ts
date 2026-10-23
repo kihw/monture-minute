@@ -184,6 +184,8 @@ export interface Reglages {
   preferencesFaites?: boolean;
   /** App Windows : fenêtre toujours au premier plan (par-dessus le jeu). */
   premierPlan: boolean;
+  /** Nom de cet appareil, montré aux autres appareils (synchronisation). */
+  nomAppareil?: string;
   notifications: boolean;
   son: boolean;
 }

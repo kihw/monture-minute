@@ -122,12 +122,23 @@ export default function Reglages() {
       </Carte>
 
       <Carte style={styles.groupe}>
+        <Titre>Mes appareils</Titre>
+        <LigneReglage
+          icone="cellphone-link"
+          couleur={couleurs.accent}
+          titre="Mes appareils"
+          sousTitre="Retrouver tes enclos sur ton PC et ton téléphone"
+          onPress={() => router.push('/appareils')}
+        />
+      </Carte>
+
+      <Carte style={styles.groupe}>
         <Titre>Aide</Titre>
         <LigneReglage
           icone="cursor-default-click-outline"
           couleur={couleurs.accent}
           titre="Revoir la visite guidée"
-          sousTitre="Quatre bulles sur l’écran d’un enclos : l’essentiel en une minute"
+          sousTitre="Deux bulles sur l’écran d’un enclos : l’essentiel en une minute"
           onPress={() => {
             modifier({ visiteVue: false });
             const premier = useEleveurStore.getState().ordre[0];

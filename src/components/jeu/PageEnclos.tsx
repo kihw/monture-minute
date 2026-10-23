@@ -2,7 +2,7 @@
 // recalculé en direct. Sert à créer un enclos, à le modifier et au nouveau cycle avec d'autres réglages.
 
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { useMemo, useState } from 'react';
+import { ReactNode, useMemo, useState } from 'react';
 import { Pressable, StyleSheet, TextInput, View } from 'react-native';
 
 import { SERENITE_MAX, SERENITE_MIN } from '../../data/constants';
@@ -49,6 +49,7 @@ export default function PageEnclos({
   libelle,
   avertissement,
   fermable = true,
+  bas,
   onValider,
 }: {
   titre: string;
@@ -59,6 +60,8 @@ export default function PageEnclos({
   avertissement?: (d: DepartEnclos) => string | undefined;
   /** Croix de fermeture (absente au premier démarrage). */
   fermable?: boolean;
+  /** Contenu ajouté sous le parcours prévu (lien du premier démarrage). */
+  bas?: ReactNode;
   onValider: (nom: string, depart: DepartEnclos) => void;
 }) {
   const [nom, setNom] = useState(nomInitial);
@@ -197,6 +200,7 @@ export default function PageEnclos({
           ))
         )}
       </View>
+      {bas}
     </Ecran>
   );
 }

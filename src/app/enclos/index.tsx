@@ -98,6 +98,9 @@ export default function MesEnclos() {
               <MaterialCommunityIcons name={organiser ? 'check' : 'swap-vertical'} size={s(20)} color={organiser ? couleurs.accent : couleurs.texteAttenue} />
             </Pressable>
           )}
+          <Pressable onPress={() => router.push('/appareils')} hitSlop={6} style={styles.icone} accessibilityRole="button" accessibilityLabel="Mes appareils">
+            <MaterialCommunityIcons name="cellphone-link" size={s(20)} color={couleurs.texteAttenue} />
+          </Pressable>
           <Pressable onPress={() => router.push('/reglages')} hitSlop={6} style={styles.icone} accessibilityRole="button" accessibilityLabel="Réglages">
             <MaterialCommunityIcons name="cog-outline" size={s(20)} color={couleurs.texteAttenue} />
           </Pressable>
