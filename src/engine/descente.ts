@@ -364,3 +364,14 @@ export function conseil(
   }
   return { niveau: 'inutile', jauge: meilleur?.jauge ?? null, scenario: meilleur, finSans, videA: null };
 }
+
+/** Recalcule durée, jauges vides et fin d'une étape en cours d'après ses recharges et corrections. */
+export function recalculerEnCours<T extends EnCoursSimulable & { finAt: number }>(enCours: T, prudent: boolean): T {
+  const sim = simulerEtape(enCours);
+  const dureeSec = dureeAnnonceeSec(sim.cycles, prudent);
+  return {
+    ...enCours,
+    etape: { ...enCours.etape, cycles: sim.cycles, vides: sim.vides, dureeSec },
+    finAt: enCours.demarreeAt + dureeSec * 1000,
+  };
+}

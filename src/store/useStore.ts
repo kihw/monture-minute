@@ -1,19 +1,19 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { create } from 'zustand';
+import { create, StateCreator } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
 import { CARACTERISTIQUE_MAX, JAUGE_MAX, SERENITE_MAX, SERENITE_MIN } from '../data/constants';
 import { NIVEAU_MAX_MONTURE, xpPourNiveau } from '../data/xpTable';
-import { appliquerEnCours, dureeAnnonceeSec, echeances, scenarios, simulerEtape } from '../engine/descente';
+import { appliquerEnCours, echeances, recalculerEnCours, scenarios } from '../engine/descente';
 import { messageFinEtape, messagePause, messageRalentit, messageVaSeVider } from '../engine/messages';
 import { contexteDepuis, prochaineEtape, remplissageHabituel } from '../engine/parcours';
+import { corrigerHorloge, DonneesSync, ECART_HORLOGE_MAX_MS, etatSyncInitial, EtatSync, fusionner, marquer, marquerTout, REGLAGES_SYNC, ReglagesSync } from '../engine/fusion';
 import { carburantPropose } from '../engine/statut';
 import { annulerNotifications, DELAI_RAPPEL_MS, programmer } from '../engine/notifications';
 import {
   carburantVide,
   DepartEnclos,
   Enclos,
-  EtapeEnCours,
   EtatLot,
   INFO_JAUGE,
   JaugeType,
@@ -34,6 +34,16 @@ interface EleveurState {
   enclos: Record<string, Enclos>;
   ordre: string[];
   journal: Confirmation[];
+  /** Versions des données partagées entre appareils (1.1, synchronisation). */
+  sync: EtatSync;
+
+  /** Données à envoyer à un autre appareil : enclos, ordre, journal, réglages de jeu et leurs versions. */
+  donneesSync: () => DonneesSync<Confirmation>;
+  /**
+   * Fusionne les données reçues d'un autre appareil. `ecartMs` : avance de son horloge sur la nôtre ;
+   * au-delà de 2 min, ses instants sont corrigés et `horlogeCorrigee` le signale.
+   */
+  appliquerSync: (distant: DonneesSync<Confirmation>, ecartMs?: number) => { horlogeCorrigee: boolean };
 
   /** Configuration initiale : crée le premier enclos avec cet état de départ. */
   configurer: (depart: DepartEnclos) => void;
@@ -153,17 +163,6 @@ function creerEnclos(nom: string, depart: DepartEnclos): Enclos {
 
 const ctxEnclos = (reglages: Reglages, e: Enclos) => contexteDepuis(reglages, e.depart);
 
-/** Recalcule durée, jauges vides et fin d'une étape en cours d'après ses recharges et corrections. */
-function recalculer(enCours: EtapeEnCours, prudent: boolean): EtapeEnCours {
-  const sim = simulerEtape(enCours);
-  const dureeSec = dureeAnnonceeSec(sim.cycles, prudent);
-  return {
-    ...enCours,
-    etape: { ...enCours.etape, cycles: sim.cycles, vides: sim.vides, dureeSec },
-    finAt: enCours.demarreeAt + dureeSec * 1000,
-  };
-}
-
 export function prochainNom(enclos: Record<string, Enclos>) {
   const pris = new Set(Object.values(enclos).map((e) => e.nom));
   let n = 1;
@@ -171,9 +170,36 @@ export function prochainNom(enclos: Record<string, Enclos>) {
   return `Enclos ${n}`;
 }
 
+/** Réglages partagés d'un jeu de réglages (les autres restent propres à l'appareil). */
+function reglagesSync(r: Reglages): ReglagesSync {
+  return Object.fromEntries(REGLAGES_SYNC.filter((c) => r[c] !== undefined).map((c) => [c, r[c]])) as ReglagesSync;
+}
+
+/**
+ * Pose les marques de version à chaque changement d'état (enclos, ordre, réglages partagés), quel
+ * que soit l'action qui le fait. Un changement qui fournit lui-même `sync` (fusion) n'est pas remarqué.
+ */
+const avecVersions =
+  (config: StateCreator<EleveurState>): StateCreator<EleveurState> =>
+  (set, get, api) => {
+    const setVersionne = ((partiel: Partial<EleveurState> | ((s: EleveurState) => Partial<EleveurState>), remplacer?: boolean) => {
+      const avant = get();
+      const suite = typeof partiel === 'function' ? partiel(avant) : partiel;
+      if (!suite || suite === avant || 'sync' in suite || !avant.sync) return (set as (p: unknown, r?: boolean) => void)(suite, remplacer);
+      const apres = { ...avant, ...suite };
+      const sync = marquer(
+        { enclos: avant.enclos, ordre: avant.ordre, reglages: reglagesSync(avant.reglages), sync: avant.sync },
+        { enclos: apres.enclos, ordre: apres.ordre, reglages: reglagesSync(apres.reglages) },
+        Date.now()
+      );
+      (set as (p: unknown, r?: boolean) => void)(sync ? { ...suite, sync } : suite, remplacer);
+    }) as typeof set;
+    return config(setVersionne, get, api);
+  };
+
 export const useEleveurStore = create<EleveurState>()(
   persist(
-    (set, get) => {
+    avecVersions((set, get) => {
       const majEnclos = (id: string, f: (e: Enclos) => Enclos) =>
         set((s) => (s.enclos[id] ? { enclos: { ...s.enclos, [id]: f(s.enclos[id]) } } : s));
 
@@ -264,7 +290,7 @@ export const useEleveurStore = create<EleveurState>()(
         if (!e?.enCours || !e.enCours.etape.jauges.includes(jauge)) return;
         annulerNotifications(e.enCours.notificationIds);
         const segment: Segment = { t: Date.now(), jauge, niveau: Math.round(niveau), source };
-        const enCours = recalculer(
+        const enCours = recalculerEnCours(
           { ...e.enCours, segments: [...(e.enCours.segments ?? []), segment], notificationIds: [] },
           reglages.prudent
         );
@@ -277,6 +303,20 @@ export const useEleveurStore = create<EleveurState>()(
         enclos: {},
         ordre: [],
         journal: [],
+        sync: etatSyncInitial(),
+
+        donneesSync: () => {
+          const { enclos, ordre, journal, reglages, sync } = get();
+          return { enclos, ordre, journal, reglages: reglagesSync(reglages), sync };
+        },
+
+        appliquerSync: (distant, ecartMs = 0) => {
+          const local = get().donneesSync();
+          const recu = corrigerHorloge(distant, ecartMs);
+          const f = fusionner(local, recu, Date.now());
+          set((s) => ({ enclos: f.enclos, ordre: f.ordre, journal: f.journal, reglages: { ...s.reglages, ...f.reglages }, sync: f.sync }));
+          return { horlogeCorrigee: Math.abs(ecartMs) > ECART_HORLOGE_MAX_MS };
+        },
 
         configurer: (depart) => {
           for (const e of Object.values(get().enclos)) annulerNotifications(e.enCours?.notificationIds);
@@ -306,6 +346,8 @@ export const useEleveurStore = create<EleveurState>()(
               enclos: {},
               ordre: [],
               journal: [],
+              // L'appareil repart comme neuf : pas de pierres tombales, ses autres appareils gardent leurs enclos.
+              sync: etatSyncInitial(),
             };
           }),
 
@@ -504,7 +546,7 @@ export const useEleveurStore = create<EleveurState>()(
         rechargerJauge: (id, jauge, niveau) => saisirJauge(id, jauge, niveau, 'recharge'),
         corrigerJauge: (id, jauge, niveau) => saisirJauge(id, jauge, niveau, 'correction'),
       };
-    },
+    }),
     {
       name: 'dodinde-eleveur-store',
       storage: createJSONStorage(() => AsyncStorage),
@@ -517,10 +559,11 @@ export const useEleveurStore = create<EleveurState>()(
       // v9 : recharges en cours d'étape, seuil de conseil et délai d'alerte des jauges.
       // v10 : famille (dragodinde, muldo, volkorne) et robe de chaque enclos ; guide vu ou non.
       // v11 : réglages obligatoires du premier démarrage (déjà faits pour qui a l'app).
-      version: 11,
+      // v12 : identifiant d'appareil et marques de version (synchronisation entre appareils).
+      version: 12,
       migrate: (persiste, version) => {
         if (version < 3) {
-          return { reglages: REGLAGES_PAR_DEFAUT, enclos: {}, ordre: [], journal: [] } as unknown as EleveurState;
+          return { reglages: REGLAGES_PAR_DEFAUT, enclos: {}, ordre: [], journal: [], sync: etatSyncInitial() } as unknown as EleveurState;
         }
         const etat = persiste as EleveurState;
         if (version < 4) {
@@ -576,6 +619,7 @@ export const useEleveurStore = create<EleveurState>()(
         // Une app déjà installée a ses réglages : on ne lui impose pas l'écran du premier démarrage,
         // sauf si elle n'a jamais été configurée (premier enclos pas encore créé).
         if (version < 11) etat.reglages = { ...etat.reglages, preferencesFaites: etat.reglages.configuree };
+        if (version < 12) etat.sync = marquerTout({ enclos: etat.enclos, reglages: reglagesSync(etat.reglages) }, etatSyncInitial(), Date.now());
         return etat;
       },
     }

@@ -262,3 +262,59 @@ describe('bilan de fin de cycle (1.1)', () => {
     expect(v.recharges).toBe(1);
   });
 });
+
+describe('synchronisation (1.1)', () => {
+  it('chaque action pose une marque de version sur ce qu’elle change', () => {
+    const { id } = enclosActif();
+    const avant = useEleveurStore.getState().sync;
+    expect(avant.enclos[id]).toBeDefined();
+    useEleveurStore.getState().renommerEnclos(id, 'Écurie');
+    const apres = useEleveurStore.getState().sync;
+    expect(apres.horloge).toBe(avant.horloge + 1);
+    expect(apres.enclos[id].h).toBe(apres.horloge);
+    useEleveurStore.getState().modifierReglages({ son: false });
+    expect(useEleveurStore.getState().sync.horloge).toBe(apres.horloge);
+    useEleveurStore.getState().modifierReglages({ seuilConseilMin: 10 });
+    expect(useEleveurStore.getState().sync.reglages.seuilConseilMin?.h).toBe(apres.horloge + 1);
+  });
+
+  it('supprimer laisse une pierre tombale ; « Annuler » la retire', () => {
+    const { id } = enclosActif();
+    useEleveurStore.getState().supprimerEnclos(id);
+    expect(useEleveurStore.getState().sync.supprimes[id]).toBeDefined();
+    useEleveurStore.getState().restaurerEnclos(id);
+    expect(useEleveurStore.getState().sync.supprimes[id]).toBeUndefined();
+    expect(useEleveurStore.getState().sync.enclos[id]).toBeDefined();
+  });
+
+  it('fusionne les données d’un autre appareil sans toucher aux réglages propres à celui-ci', () => {
+    const { id } = enclosActif();
+    const distant = useEleveurStore.getState().donneesSync();
+    const m = { h: distant.sync.horloge + 5, t: T0 + 60_000, par: 'tel' };
+    const autre = { ...distant.enclos[id], id: 'enclos-tel', nom: 'Du téléphone' };
+    useEleveurStore.getState().modifierReglages({ son: false });
+    const r = useEleveurStore.getState().appliquerSync({
+      ...distant,
+      enclos: { ...distant.enclos, 'enclos-tel': autre },
+      ordre: [...distant.ordre, 'enclos-tel'],
+      reglages: { ...distant.reglages, anticipationMin: 15 },
+      sync: { ...distant.sync, appareilId: 'tel', horloge: m.h, enclos: { ...distant.sync.enclos, 'enclos-tel': m }, ordre: m, reglages: { ...distant.sync.reglages, anticipationMin: m } },
+    });
+    const s = useEleveurStore.getState();
+    expect(r.horlogeCorrigee).toBe(false);
+    expect(s.ordre).toEqual([id, 'enclos-tel']);
+    expect(s.reglages.anticipationMin).toBe(15);
+    expect(s.reglages.son).toBe(false);
+    expect(s.sync.horloge).toBe(m.h);
+    expect(s.sync.appareilId).not.toBe('tel');
+  });
+
+  it('migration v11 → v12 : identifiant d’appareil et marques sur l’existant', () => {
+    const { enclos, ordre, reglages, journal } = useEleveurStore.getState();
+    const migrer = useEleveurStore.persist.getOptions().migrate!;
+    const etat = migrer({ enclos, ordre, reglages, journal }, 11) as ReturnType<typeof useEleveurStore.getState>;
+    expect(etat.sync.appareilId).toMatch(/^app-/);
+    expect(Object.keys(etat.sync.enclos)).toEqual(ordre);
+    expect(etat.sync.ordre).not.toBeNull();
+  });
+});
