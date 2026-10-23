@@ -181,3 +181,33 @@ export function assemblerQr(morceaux: MorceauQr[]): string | null {
   if (parIndex.size < total) return null;
   return Array.from({ length: total }, (_, i) => parIndex.get(i + 1)!).join('');
 }
+
+// ── Messages chiffrés (synchronisation locale) ────────────────────────────────
+
+export interface MessageScelle {
+  nonce: string;
+  chiffre: string;
+}
+
+/** Chiffre un objet avec une clé de 32 octets ; `contexte` est authentifié (sens, appareil). */
+export function sceller(cle: Uint8Array, contexte: string, objet: unknown, aleatoire: Aleatoire = aleatoireSysteme): MessageScelle {
+  const nonce = aleatoire(24);
+  const chiffre = xchacha20poly1305(cle, nonce, strToU8(contexte)).encrypt(deflateSync(strToU8(JSON.stringify(objet))));
+  return { nonce: versBase64(nonce), chiffre: versBase64(chiffre) };
+}
+
+/** Déchiffre un message scellé ; lève `ErreurTransfert('code')` si la clé ou le contexte ne vont pas. */
+export function ouvrir<T>(cle: Uint8Array, contexte: string, message: MessageScelle): T {
+  let clair: Uint8Array;
+  try {
+    clair = xchacha20poly1305(cle, depuisBase64(message.nonce), strToU8(contexte)).decrypt(depuisBase64(message.chiffre));
+  } catch {
+    throw new ErreurTransfert('code', 'Message illisible : clé ou code incorrect.');
+  }
+  return JSON.parse(strFromU8(inflateSync(clair)));
+}
+
+/** Clé dérivée d'un code court (association) : même coût que pour un fichier de transfert. */
+export const cleDepuisCode = (code: string, sel: string) => deriverCle(code, strToU8(sel));
+
+export const nouvelleCle = (aleatoire: Aleatoire = aleatoireSysteme) => aleatoire(32);

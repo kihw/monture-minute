@@ -3,6 +3,8 @@
 
 const { app, BrowserWindow, ipcMain, Notification, net, protocol, shell } = require('electron');
 const fs = require('node:fs');
+const http = require('node:http');
+const os = require('node:os');
 const path = require('node:path');
 const { pathToFileURL } = require('node:url');
 const { autoUpdater } = require('electron-updater');
@@ -266,6 +268,78 @@ ipcMain.on('bureau:notifier', (_e, { id, titre, corps, quand, url }) => {
 ipcMain.on('bureau:annuler', (_e, id) => {
   clearTimeout(minuteries.get(id));
   minuteries.delete(id);
+});
+
+// ── Synchronisation locale (docs/PLAN-1.1.md § B5) ─────────────────────────────
+// Petit serveur HTTP sur le réseau local, démarré à la demande (association, appareils associés).
+// Il ne fait que relayer : les messages sont chiffrés, vérifiés et fusionnés par l'app.
+
+const PORT_SYNC = Number(process.env.MONTURE_PORT_SYNC ?? 47811);
+// Essais locaux (MONTURE_SYNC_HOTE=127.0.0.1) : n'écoute que sur cette machine, sans pare-feu.
+const HOTE_SYNC = process.env.MONTURE_SYNC_HOTE ?? '0.0.0.0';
+const CHEMINS_SYNC = new Set(['/bonjour', '/associer', '/sync']);
+const TAILLE_MAX_SYNC = 4 * 1024 * 1024;
+let serveurSync = null;
+let etatServeurSync = { actif: false, erreur: null };
+const attentesSync = new Map();
+let numeroSync = 0;
+
+function adressesLocales() {
+  const adresses = [];
+  for (const interfaces of Object.values(os.networkInterfaces())) {
+    for (const i of interfaces ?? []) if (i.family === 'IPv4' && !i.internal) adresses.push(`${i.address}:${PORT_SYNC}`);
+  }
+  return adresses;
+}
+
+function demarrerServeurSync() {
+  if (serveurSync) return Promise.resolve();
+  return new Promise((ok) => {
+    const entetes = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'content-type', 'Access-Control-Allow-Methods': 'POST, OPTIONS' };
+    serveurSync = http.createServer((requete, reponse) => {
+      if (requete.method === 'OPTIONS') return reponse.writeHead(204, entetes).end();
+      const chemin = new URL(requete.url, 'http://local').pathname;
+      if (requete.method !== 'POST' || !CHEMINS_SYNC.has(chemin)) return reponse.writeHead(404, entetes).end();
+      const morceaux = [];
+      let taille = 0;
+      requete.on('data', (m) => {
+        taille += m.length;
+        if (taille > TAILLE_MAX_SYNC) return requete.destroy();
+        morceaux.push(m);
+      });
+      requete.on('end', () => {
+        if (!fenetre) return reponse.writeHead(503, entetes).end();
+        const id = ++numeroSync;
+        const minuterie = setTimeout(() => {
+          attentesSync.delete(id);
+          reponse.writeHead(504, entetes).end();
+        }, 20_000);
+        attentesSync.set(id, ({ statut, corps }) => {
+          clearTimeout(minuterie);
+          reponse.writeHead(statut, { ...entetes, 'Content-Type': 'application/json' }).end(corps ?? '');
+        });
+        envoyer('bureau:sync-requete', { id, chemin, corps: Buffer.concat(morceaux).toString('utf8') });
+      });
+    });
+    serveurSync.on('error', (erreur) => {
+      etatServeurSync = { actif: false, erreur: erreur.code ?? String(erreur) };
+      serveurSync = null;
+      ok();
+    });
+    serveurSync.listen(PORT_SYNC, HOTE_SYNC, () => {
+      etatServeurSync = { actif: true, erreur: null };
+      ok();
+    });
+  });
+}
+
+ipcMain.handle('bureau:sync-demarrer', async () => {
+  await demarrerServeurSync();
+  return { ...etatServeurSync, port: PORT_SYNC, adresses: adressesLocales() };
+});
+ipcMain.on('bureau:sync-reponse', (_e, { id, statut, corps }) => {
+  attentesSync.get(id)?.({ statut, corps });
+  attentesSync.delete(id);
 });
 
 // Une seule instance : relancer l'app ramène la fenêtre existante.

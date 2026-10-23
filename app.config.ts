@@ -47,5 +47,6 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     // Caméra : lecture des QR codes de transfert entre appareils (pas de micro).
     ['expo-camera', { cameraPermission: 'Lire les QR codes de transfert de tes enclos.', recordAudioAndroid: false }],
     './plugins/compilation-android.js',
+    './plugins/reseau-local.js',
   ],
 });

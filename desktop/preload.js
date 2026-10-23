@@ -18,4 +18,7 @@ contextBridge.exposeInMainWorld('dodindeBureau', {
   annulerNotification: (id) => ipcRenderer.send('bureau:annuler', id),
   onOuvrir: (rappel) => ecouter('bureau:ouvrir', rappel),
   definirPremierPlan: (actif) => ipcRenderer.send('bureau:premier-plan', actif),
+  demarrerSync: () => ipcRenderer.invoke('bureau:sync-demarrer'),
+  onSyncRequete: (rappel) => ecouter('bureau:sync-requete', rappel),
+  repondreSync: (reponse) => ipcRenderer.send('bureau:sync-reponse', reponse),
 });

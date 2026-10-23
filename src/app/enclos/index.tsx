@@ -10,12 +10,13 @@ import { etatEnClair } from '../../components/jeu/etat';
 import { s } from '../../echelle';
 import { JAUGE_MAX } from '../../data/constants';
 import { Alerte } from '../../engine/alertes';
+import { useSyncLocale } from '../../engine/syncLocale';
 import { useTableau } from '../../hooks/useTableau';
 import { useBandeau } from '../../store/useBandeau';
 import { useEleveurStore } from '../../store/useStore';
 import { couleurs, rayon, tons } from '../../theme';
 import { Enclos, INFO_JAUGE, JaugeType } from '../../types/domain';
-import { formatDureeClaire, formatHeure, formatPoints, titreClair } from '../../utils/format';
+import { formatDureeClaire, formatHeure, formatIlYa, formatPoints, titreClair } from '../../utils/format';
 
 // Couleur de chaque échéance à venir, selon son sens.
 const COULEUR_A_VENIR: Record<string, string> = { vide: couleurs.attention, palier: couleurs.accent, fin: couleurs.succes };
@@ -35,6 +36,21 @@ export default function MesEnclos() {
   const [organiser, setOrganiser] = useState(false);
   const store = useEleveurStore.getState();
   const nouvelEnclos = () => router.push('/depart?mode=ajout');
+  const appareils = useEleveurStore((s) => s.reglages.appareils) ?? [];
+  const etatsSync = useSyncLocale((s) => s.appareils);
+
+  // Ligne de synchronisation : le plus récent des appareils associés, ou une erreur.
+  const dernier = [...appareils].sort((a, b) => (b.derniereSync ?? 0) - (a.derniereSync ?? 0))[0];
+  const enErreur = appareils.find((a) => etatsSync[a.id]?.etat === 'erreur');
+  const ligneSync = !dernier
+    ? null
+    : enErreur
+      ? { texte: `« ${enErreur.nom} » injoignable`, couleur: couleurs.attention }
+      : appareils.some((a) => etatsSync[a.id]?.etat === 'encours')
+        ? { texte: 'Synchronisation…', couleur: couleurs.texteAttenue }
+        : dernier.derniereSync
+          ? { texte: `Synchronisé avec « ${dernier.nom} » ${formatIlYa(dernier.derniereSync, maintenant)}`, couleur: couleurs.texteAttenue }
+          : { texte: `Associé à « ${dernier.nom} »`, couleur: couleurs.texteAttenue };
 
   // ── À faire maintenant : une ligne par action, avec son bouton.
   const actions: ActionAFaire[] = [];
@@ -107,6 +123,14 @@ export default function MesEnclos() {
         </View>
       }
     >
+      {ligneSync && (
+        <Pressable onPress={() => router.push('/appareils')} style={styles.sync} accessibilityRole="button">
+          <MaterialCommunityIcons name={enErreur ? 'sync-alert' : 'sync'} size={s(14)} color={ligneSync.couleur} />
+          <Text style={[styles.legende, { color: ligneSync.couleur, flex: 1 }]} numberOfLines={1}>
+            {ligneSync.texte}
+          </Text>
+        </Pressable>
+      )}
       {liste.length === 0 ? (
         <View style={styles.vide}>
           <View style={styles.videMontures}>
@@ -234,6 +258,7 @@ export default function MesEnclos() {
 const styles = StyleSheet.create({
   barre: { flexDirection: 'row', alignItems: 'center', gap: s(4), paddingLeft: s(16), paddingRight: s(8), paddingVertical: s(8) },
   titre: { flex: 1, color: couleurs.texte, fontSize: s(22), fontWeight: '900', letterSpacing: s(-0.4) },
+  sync: { flexDirection: 'row', alignItems: 'center', gap: s(6), marginTop: -s(4) },
   icone: { width: s(36), height: s(36), borderRadius: s(18), alignItems: 'center', justifyContent: 'center' },
   liste: { backgroundColor: couleurs.carte, borderRadius: rayon.xl, paddingHorizontal: s(10) },
   ligne: { flexDirection: 'row', alignItems: 'center', gap: s(10), paddingVertical: s(8) },

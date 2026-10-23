@@ -186,8 +186,22 @@ export interface Reglages {
   premierPlan: boolean;
   /** Nom de cet appareil, montré aux autres appareils (synchronisation). */
   nomAppareil?: string;
+  /** Appareils associés pour la synchronisation locale (propres à cet appareil, jamais échangés). */
+  appareils?: AppareilAssocie[];
   notifications: boolean;
   son: boolean;
+}
+
+/** Appareil associé (synchronisation sur le réseau local). */
+export interface AppareilAssocie {
+  id: string;
+  nom: string;
+  /** Clé partagée des deux appareils (base64, 32 octets). */
+  cle: string;
+  /** Adresses où le joindre (ip:port) : seulement pour un appareil qui écoute (PC). */
+  adresses?: string[];
+  associeAt: number;
+  derniereSync?: number;
 }
 
 export function lotInitial(depart: Pick<DepartEnclos, 'unifiee' | 'serenite'>): EtatLot {

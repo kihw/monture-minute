@@ -87,3 +87,12 @@ export function formatDureeClaire(secondes: number): string {
 export function titreClair(titre: string): string {
   return titre.replace(/ & /g, ' et ');
 }
+
+/** « à l'instant », « il y a 3 min », « il y a 2 h », puis la date. */
+export function formatIlYa(horodatage: number, maintenant = Date.now()): string {
+  const s = Math.max(0, (maintenant - horodatage) / 1000);
+  if (s < 60) return 'à l’instant';
+  if (s < 3600) return `il y a ${Math.floor(s / 60)} min`;
+  if (s < 24 * 3600) return `il y a ${Math.floor(s / 3600)} h`;
+  return `le ${formatDateHeure(horodatage)}`;
+}

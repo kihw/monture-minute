@@ -29,6 +29,11 @@ export interface PontBureau {
   annulerNotification: (id: string) => void;
   onOuvrir: (rappel: (url: string) => void) => () => void;
   definirPremierPlan: (actif: boolean) => void;
+  /** Démarre (une fois) le serveur de synchronisation locale ; adresses ip:port de ce PC. */
+  demarrerSync: () => Promise<{ actif: boolean; erreur: string | null; port: number; adresses: string[] }>;
+  /** Requêtes reçues par le serveur, à traiter puis à renvoyer avec `repondreSync`. */
+  onSyncRequete: (rappel: (r: { id: number; chemin: string; corps: string }) => void) => () => void;
+  repondreSync: (r: { id: number; statut: number; corps: string }) => void;
 }
 
 export function pontBureau(): PontBureau | null {

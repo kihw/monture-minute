@@ -11,7 +11,16 @@ import { couleurs, rayon } from '../../theme';
 import { Text } from '../Texte';
 import { BoutonContour } from '../ui';
 
-export default function ScanQr({ onLu }: { onLu: (texte: string) => void }) {
+export default function ScanQr({
+  onLu,
+  surTexte,
+  consigne = 'Vise le QR code affiché sur ton autre appareil.',
+}: {
+  onLu?: (texte: string) => void;
+  /** Lecture libre (lien d'association) : renvoie true quand le QR code convient. */
+  surTexte?: (donnee: string) => boolean;
+  consigne?: string;
+}) {
   const [permission, demander] = useCameraPermissions();
   const morceaux = useRef(new Map<string, MorceauQr>());
   const [lus, setLus] = useState<{ n: number; total: number }>({ n: 0, total: 0 });
@@ -35,6 +44,10 @@ export default function ScanQr({ onLu }: { onLu: (texte: string) => void }) {
           facing="back"
           barcodeScannerSettings={{ barcodeTypes: ['qr'] }}
           onBarcodeScanned={({ data }) => {
+            if (surTexte) {
+              if (!fini.current && surTexte(data)) fini.current = true;
+              return;
+            }
             const m = lireMorceauQr(data);
             if (!m || fini.current) return;
             // Un nouveau transfert remplace les morceaux d'un ancien.
@@ -45,12 +58,12 @@ export default function ScanQr({ onLu }: { onLu: (texte: string) => void }) {
             const texte = assemblerQr([...morceaux.current.values()]);
             if (texte) {
               fini.current = true;
-              onLu(texte);
+              onLu?.(texte);
             }
           }}
         />
       </View>
-      <Text style={styles.texte}>{lus.total ? `${lus.n} / ${lus.total} QR codes lus` : 'Vise le QR code affiché sur ton autre appareil.'}</Text>
+      <Text style={styles.texte}>{lus.total ? `${lus.n} / ${lus.total} QR codes lus` : consigne}</Text>
     </View>
   );
 }

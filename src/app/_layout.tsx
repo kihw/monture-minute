@@ -17,6 +17,7 @@ import MiseAJour from '../components/MiseAJour';
 import { s } from '../echelle';
 import { pontBureau } from '../engine/bureau';
 import { configurerNotifications, ecouterReponses } from '../engine/notifications';
+import { demarrerSyncAuto } from '../engine/syncLocale';
 import { useHydrate } from '../hooks/useElevage';
 import { useEleveurStore } from '../store/useStore';
 import { couleurs } from '../theme';
@@ -53,6 +54,9 @@ export default function RootLayout() {
     replanifierNotifications();
     bureau.definirPremierPlan(reglages.premierPlan);
   }, [hydrate]);
+
+  // Synchronisation entre appareils (réseau local), une fois l'état rechargé.
+  useEffect(() => (hydrate ? demarrerSyncAuto() : undefined), [hydrate]);
 
   useEffect(() => {
     configurerNotifications();
