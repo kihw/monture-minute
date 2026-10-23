@@ -443,13 +443,8 @@ function Associer({ lienRecu, onFini }: { lienRecu: LienInvitation | null; onFin
     }
   }
 
-  useEffect(() => {
-    if (!lienRecu) return;
-    const minuterie = setTimeout(() => void rejoindre(lienRecu), 0);
-    return () => clearTimeout(minuterie);
-    // Une seule fois, pour le lien ouvert depuis l'appareil photo.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  // Lien ouvert depuis l'extérieur (appareil photo, page web) : rien n'est envoyé sans accord.
+  const [lienAConfirmer, setLienAConfirmer] = useState(lienRecu);
 
   async function confirmer(appareil: AppareilAssocie) {
     setOccupe(true);
@@ -555,6 +550,32 @@ function Associer({ lienRecu, onFini }: { lienRecu: LienInvitation | null; onFin
           }}
         />
         {attente}
+      </>
+    );
+  }
+
+  if (lienAConfirmer) {
+    return (
+      <>
+        <View style={styles.bloc}>
+          <Text style={styles.titreBloc}>Associer cet appareil à « {lienAConfirmer.nom} » ?</Text>
+          <Text style={styles.adresse}>{lienAConfirmer.adresses.join('  ·  ')}</Text>
+          <Text style={styles.texte}>Continue seulement si tu viens de scanner le QR code affiché sur ton PC.</Text>
+        </View>
+        {messageErreur}
+        {attente || (
+          <>
+            <BoutonPrincipal
+              label="Associer"
+              onPress={() => {
+                const lien = lienAConfirmer;
+                setLienAConfirmer(null);
+                void rejoindre(lien);
+              }}
+            />
+            <BoutonContour label="Non" onPress={() => setLienAConfirmer(null)} />
+          </>
+        )}
       </>
     );
   }

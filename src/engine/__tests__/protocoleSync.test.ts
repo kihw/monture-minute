@@ -96,6 +96,18 @@ describe('association', () => {
     expect(pc.etat.appareils).toHaveLength(0);
   });
 
+  it('une rafale de tentatives en même temps ferme l’invitation, le bon code n’y peut plus rien', async () => {
+    const pc = appareil('pc', 'PC');
+    const tel = appareil('tel', 'Tel');
+    const serveur = new ServeurSync(pc.hote);
+    const { code } = serveur.inviter();
+    const t = reseau(serveur);
+    const essais = Array.from({ length: 12 }, () => associer(tel.hote, t, { adresses: ['192.168.1.20:47811'], id: 'pc', code: 'AAAAAAAA' }).catch((e) => e.raison));
+    expect(new Set(await Promise.all(essais))).toEqual(new Set(['refuse', 'expire']));
+    await expect(associer(tel.hote, t, { adresses: ['192.168.1.20:47811'], id: 'pc', code })).rejects.toMatchObject({ raison: 'expire' });
+    expect(pc.etat.appareils).toHaveLength(0);
+  });
+
   it('refuse une invitation expirée', async () => {
     const pc = appareil('pc', 'PC');
     const tel = appareil('tel', 'Tel');

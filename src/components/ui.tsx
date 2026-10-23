@@ -8,7 +8,7 @@ import { ReactNode, RefObject } from 'react';
 import { NativeScrollEvent, NativeSyntheticEvent, Pressable, ScrollView, StyleProp, StyleSheet, Switch, View, ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { couleurs, degrades, esp, ombre, police, rayon, surface, typo } from '../theme';
+import { couleurs, degrades, esp, ombre, police, rayon, typo } from '../theme';
 import { INFO_JAUGE, JaugeType } from '../types/domain';
 import AnimatedPressable from './AnimatedPressable';
 import { s } from '../echelle';
@@ -278,10 +278,12 @@ const styles = StyleSheet.create({
   titre: { fontSize: s(21), fontFamily: police.titreFort, color: couleurs.texte, letterSpacing: s(-0.3), flexShrink: 1 },
   sousTitre: { fontSize: s(12), color: couleurs.texteAttenue },
   iconeNue: { padding: s(2) },
+  // 1.1 : un bloc à plat, sans liseré ni ombre (une seule surface par écran).
   carte: {
-    ...surface,
-    borderRadius: rayon.lg,
-    padding: esp.lg,
+    backgroundColor: couleurs.carte,
+    borderRadius: rayon.xl,
+    paddingVertical: s(10),
+    paddingHorizontal: s(12),
   },
   boutonPrincipal: {
     height: s(34),
@@ -320,14 +322,12 @@ const styles = StyleSheet.create({
   },
   bandeauTitre: { flex: 1, color: couleurs.texte, fontSize: s(15), fontFamily: police.titre },
   tuile: { width: s(26), height: s(26), borderRadius: rayon.sm, alignItems: 'center', justifyContent: 'center' },
+  // 1.1 : lignes à plat dans leur bloc (pas de carte dans la carte).
   ligne: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: esp.lg,
-    paddingVertical: s(8),
-    paddingHorizontal: esp.md,
-    borderRadius: rayon.md,
-    backgroundColor: couleurs.surface,
+    paddingVertical: s(7),
   },
   ligneTitre: { color: couleurs.texte, fontSize: s(12.5), fontWeight: '700' },
   ligneSousTitre: { color: couleurs.texteAttenue, fontSize: s(11) },

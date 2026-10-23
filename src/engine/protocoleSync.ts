@@ -112,6 +112,8 @@ export class ServeurSync<J extends EntreeJournal = EntreeJournal> {
   invitation: Invitation | null = null;
   /** Nonces déjà reçus : un message rejoué est ignoré. */
   private vus: string[] = [];
+  /** Clé dérivée du code, calculée une fois par invitation : une rafale de tentatives ne relance pas scrypt. */
+  private cleInvitation: Promise<Uint8Array> | null = null;
 
   constructor(
     private hote: Hote<J>,
@@ -121,11 +123,13 @@ export class ServeurSync<J extends EntreeJournal = EntreeJournal> {
 
   inviter(dureeMs = DUREE_INVITATION_MS): Invitation {
     this.invitation = { code: genererCode(this.hote.aleatoire), expireAt: this.hote.maintenant() + dureeMs, essais: 0 };
+    this.cleInvitation = cleDepuisCode(this.invitation.code, this.hote.appareilId());
     return this.invitation;
   }
 
   annulerInvitation() {
     this.invitation = null;
+    this.cleInvitation = null;
   }
 
   async traiter(chemin: string, corps: string): Promise<Reponse> {
@@ -144,21 +148,22 @@ export class ServeurSync<J extends EntreeJournal = EntreeJournal> {
 
   private async associer(r: RequeteScellee): Promise<Reponse> {
     const inv = this.invitation;
-    if (!inv || this.hote.maintenant() > inv.expireAt) return json(403, { erreur: 'expire' });
-    const cleTemp = await cleDepuisCode(inv.code, this.hote.appareilId());
+    if (!inv || !this.cleInvitation || this.hote.maintenant() > inv.expireAt || inv.essais >= ESSAIS_MAX) return json(403, { erreur: 'expire' });
+    const cleTemp = await this.cleInvitation;
+    if (this.invitation !== inv) return json(403, { erreur: 'expire' });
     let message: { type: string; id: string; nom: string };
     try {
       message = ouvrir(cleTemp, `associer|${r.de}`, r);
     } catch {
       // Code faux : au bout de 5 essais, l'invitation tombe.
       inv.essais++;
-      if (inv.essais >= ESSAIS_MAX) this.invitation = null;
+      if (inv.essais >= ESSAIS_MAX) this.annulerInvitation();
       return json(403, { erreur: 'code' });
     }
     if (message.type !== 'associer' || message.id !== r.de) return json(400, { erreur: 'format' });
     const appareil: AppareilAssocie = { id: r.de, nom: String(message.nom).slice(0, 30), cle: versBase64(nouvelleCle(this.hote.aleatoire)), associeAt: this.hote.maintenant() };
     this.hote.enregistrerAppareil(appareil);
-    this.invitation = null;
+    this.annulerInvitation();
     this.surAssociation?.(appareil);
     return json(200, sceller(cleTemp, `associe|${r.de}`, { type: 'associe', id: this.hote.appareilId(), nom: this.hote.nomAppareil(), cle: appareil.cle }, this.hote.aleatoire));
   }

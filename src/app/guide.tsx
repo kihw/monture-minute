@@ -109,11 +109,11 @@ function creerPages(): Page[] {
     {
       titre: "Un enclos, un lot",
       texte:
-        "Tu ne suis pas chaque monture : un enclos décrit le lot qu’il contient. Un assistant en trois écrans le crée : la monture, la sérénité, puis les niveaux, avec le parcours prévu.",
+        "Tu ne suis pas chaque monture : un enclos décrit le lot qu’il contient. Une seule page le crée : la monture, la sérénité et les niveaux, avec le parcours prévu recalculé en direct.",
       points: [
         "Toutes à la même sérénité, ou différentes : l’app unifie d’abord",
         "Niveau actuel et niveau visé du lot",
-        "« Nouvel enclos » sur l’accueil pour en ajouter",
+        "« Nouvel enclos » sur l’accueil, ou « + » en haut d’un enclos",
       ],
       illustration: (
         <View style={styles.lot}>
@@ -302,10 +302,10 @@ function creerPages(): Page[] {
     {
       titre: "Suivre en temps réel",
       texte:
-        "Pendant l’étape, la carte du haut dit si tout roule ou s’il vaut la peine de recharger, et combien de temps tu gagnes. Chaque jauge descend en direct.",
+        "Pendant l’étape, le grand compte à rebours et l’heure de fin disent où tu en es. Le panneau des jauges, dessiné comme en jeu, descend en direct.",
       points: [
-        "Touche une jauge : les recharges utiles en cartes",
-        "Appui long : recaler sur la valeur lue en jeu",
+        "Touche un tube qui tourne : les recharges utiles s’affichent sur place",
+        "« Corriger » recale une jauge sur la valeur lue en jeu",
         "Une jauge vide bloque l’étape : l’app te prévient avant",
       ],
       illustration: (
@@ -366,10 +366,10 @@ function creerPages(): Page[] {
     {
       titre: "Valider et continuer",
       texte:
-        "Quand l’étape est finie, la carte montre ce qui a été gagné et prépare déjà la suivante : « Jauges activées » valide et relance en un geste. Si le jeu diffère, ajuste le lot depuis Options.",
+        "Quand l’étape est finie, l’écran montre ce qui a été gagné et prépare la suivante : « Jauges activées · lancer » valide et relance en un geste. Si le jeu diffère, « Ajuster selon le jeu » dans Tes montures.",
       points: [
-        "Options › Terminer l’étape compte le temps déjà passé",
-        "À la fin : tes montures sont fécondables",
+        "Menu ⋯ › Terminer l’étape compte le temps déjà passé",
+        "À la fin : « Nouveau cycle, mêmes réglages » relance l’enclos",
       ],
       illustration: (
         <View style={styles.fin}>
@@ -377,6 +377,42 @@ function creerPages(): Page[] {
           <View style={[styles.bouton, { alignSelf: "stretch" }]}>
             <Text style={styles.boutonTexte}>Étape suivante</Text>
           </View>
+        </View>
+      ),
+    },
+    {
+      titre: "Tes enclos, en un geste",
+      texte:
+        "Les pastilles en haut d’un enclos passent de l’un à l’autre ; « + » en crée un avec les réglages du dernier. Tout se change sur place, sans fenêtre par-dessus.",
+      points: [
+        "Touche le nom d’un enclos pour le renommer",
+        "La corbeille le supprime : « Annuler » pendant 5 s",
+        "Menu ⋯ › Modifier l’enclos : monture, sérénité, niveaux",
+      ],
+      illustration: (
+        <View style={styles.lancer}>
+          {["pencil-outline", "plus", "trash-can-outline"].map((icone) => (
+            <View key={icone} style={styles.rondIcone}>
+              <MaterialCommunityIcons name={icone as never} size={s(24)} color={couleurs.accent} />
+            </View>
+          ))}
+        </View>
+      ),
+    },
+    {
+      titre: "Sur ton PC et ton téléphone",
+      texte:
+        "Associe tes appareils une fois (Mes appareils › Associer) : sur le même Wi-Fi, ils gardent les mêmes enclos tout seuls. Sans compte, rien n’est stocké en ligne.",
+      points: [
+        "Le plus récent l’emporte, rien n’est perdu",
+        "Pas le même Wi-Fi ? Un fichier chiffré avec un code",
+        "« Recevoir les alertes ici » : un seul appareil sonne",
+      ],
+      illustration: (
+        <View style={styles.lancer}>
+          <MaterialCommunityIcons name="monitor" size={s(40)} color={couleurs.texte} />
+          <MaterialCommunityIcons name="sync" size={s(26)} color={couleurs.accent} />
+          <MaterialCommunityIcons name="cellphone" size={s(40)} color={couleurs.texte} />
         </View>
       ),
     },
@@ -495,6 +531,14 @@ export default function Guide() {
 }
 
 const styles = StyleSheet.create({
+  rondIcone: {
+    width: s(52),
+    height: s(52),
+    borderRadius: s(26),
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(233,184,74,0.10)",
+  },
   entete: {
     flexDirection: "row",
     justifyContent: "space-between",

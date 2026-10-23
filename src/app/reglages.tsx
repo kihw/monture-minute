@@ -12,7 +12,7 @@ import { resumeMaj } from '../engine/etatMaj';
 import { VERSION_APP } from '../engine/miseAJour';
 import { demanderPermission } from '../engine/notifications';
 import { useEleveurStore } from '../store/useStore';
-import { couleurs, esp } from '../theme';
+import { couleurs } from '../theme';
 import { formatNombre } from '../utils/format';
 import { s } from '../echelle';
 import { Text } from '../components/Texte';
@@ -149,7 +149,7 @@ export default function Reglages() {
           icone="school-outline"
           couleur={couleurs.accent}
           titre="Guide d’utilisation"
-          sousTitre="Enclos, jauges, carburant, alertes : tout en 10 pages"
+          sousTitre="Enclos, jauges, carburant, appareils : tout en 12 pages"
           onPress={() => router.push('/guide')}
         />
         <LigneReglage
@@ -256,6 +256,6 @@ export default function Reglages() {
 }
 
 const styles = StyleSheet.create({
-  groupe: { gap: esp.sm },
+  groupe: { gap: s(2) },
   note: { color: couleurs.texteFaible, fontSize: s(11), marginTop: s(2) },
 });
