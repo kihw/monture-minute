@@ -2,7 +2,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
-import { JAUGE_MAX } from '../data/constants';
+import { CARACTERISTIQUE_MAX, JAUGE_MAX, SERENITE_MAX, SERENITE_MIN } from '../data/constants';
+import { NIVEAU_MAX_MONTURE, xpPourNiveau } from '../data/xpTable';
 import { appliquerEnCours, dureeAnnonceeSec, echeances, scenarios, simulerEtape } from '../engine/descente';
 import { messageFinEtape, messagePause, messageRalentit, messageVaSeVider } from '../engine/messages';
 import { contexteDepuis, prochaineEtape, remplissageHabituel } from '../engine/parcours';
@@ -42,7 +43,21 @@ interface EleveurState {
 
   /** Ajoute un enclos avec son propre état de départ ; renvoie son id. */
   ajouterEnclos: (depart: DepartEnclos) => string;
+  /** Supprime l'enclos ; il reste récupérable par `restaurerEnclos` tant que le bandeau « Annuler » est là. */
   supprimerEnclos: (id: string) => void;
+  /** Remet le dernier enclos supprimé à sa place (bandeau « Annuler ») et reprogramme ses alertes. */
+  restaurerEnclos: (id: string) => boolean;
+  /** Renomme un enclos (nom vide ignoré). */
+  renommerEnclos: (id: string, nom: string) => void;
+  /**
+   * Modifie un enclos depuis la page d'enclos : nom, famille et robe changent sans toucher au parcours ;
+   * une sérénité, un état « unifié » ou des niveaux différents repartent de zéro (comme un redémarrage).
+   */
+  modifierEnclos: (id: string, changements: { nom?: string; depart?: DepartEnclos }) => void;
+  /** Nouvel ordre des enclos (pastilles glissées) ; ignoré s'il ne contient pas exactement les mêmes enclos. */
+  reordonnerEnclos: (ordre: string[]) => void;
+  /** « Ajuster selon le jeu » : sérénité, caractéristiques et niveau lus en jeu (le niveau est converti en XP). */
+  ajusterMontures: (id: string, valeurs: { serenite: number; endurance: number; maturite: number; amour: number; niveau: number }) => void;
   /** Repart de zéro sur un enclos, avec un nouvel état de départ. */
   redemarrerEnclos: (id: string, depart: DepartEnclos) => void;
 
@@ -103,6 +118,9 @@ const ANCIENS_NOMS_JAUGES: Record<string, JaugeType> = {
   dragofesse: 'amour',
   mangeoire: 'xp',
 };
+
+/** Dernier enclos supprimé, gardé en mémoire (pas sur le disque) le temps du bandeau « Annuler ». */
+let corbeille: { enclos: Enclos; index: number } | null = null;
 
 function nouvelId(prefixe: string) {
   return `${prefixe}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
@@ -304,10 +322,67 @@ export const useEleveurStore = create<EleveurState>()(
 
         supprimerEnclos: (id) =>
           set((s) => {
-            annulerNotifications(s.enclos[id]?.enCours?.notificationIds);
+            const e = s.enclos[id];
+            if (!e) return s;
+            annulerNotifications(e.enCours?.notificationIds);
+            corbeille = { enclos: { ...e, enCours: e.enCours ? { ...e.enCours, notificationIds: [] } : null }, index: s.ordre.indexOf(id) };
             const { [id]: _supprime, ...reste } = s.enclos;
             return { enclos: reste, ordre: s.ordre.filter((x) => x !== id) };
           }),
+
+        restaurerEnclos: (id) => {
+          if (!corbeille || corbeille.enclos.id !== id || get().enclos[id]) return false;
+          const { enclos: e, index } = corbeille;
+          corbeille = null;
+          set((s) => {
+            const ordre = [...s.ordre];
+            ordre.splice(Math.min(Math.max(0, index), ordre.length), 0, id);
+            return { enclos: { ...s.enclos, [id]: e }, ordre };
+          });
+          if (e.enCours) planifierNotifications(id, e.enCours.finAt, true);
+          return true;
+        },
+
+        renommerEnclos: (id, nom) => {
+          const propre = nom.trim().slice(0, 40);
+          if (!propre) return;
+          majEnclos(id, (e) => ({ ...e, nom: propre }));
+        },
+
+        modifierEnclos: (id, { nom, depart }) => {
+          const e = get().enclos[id];
+          if (!e) return;
+          if (nom !== undefined) get().renommerEnclos(id, nom);
+          if (!depart) return;
+          const propre = departPropre(depart);
+          const memeParcours =
+            propre.unifiee === e.depart.unifiee &&
+            propre.serenite === e.depart.serenite &&
+            propre.niveauDepart === e.depart.niveauDepart &&
+            propre.niveauCible === e.depart.niveauCible;
+          if (memeParcours) majEnclos(id, (x) => ({ ...x, depart: { ...x.depart, famille: propre.famille, robe: propre.robe } }));
+          else get().redemarrerEnclos(id, propre);
+        },
+
+        reordonnerEnclos: (ordre) =>
+          set((s) => {
+            const memes = ordre.length === s.ordre.length && new Set(ordre).size === ordre.length && ordre.every((id) => s.enclos[id]);
+            return memes ? { ordre: [...ordre] } : s;
+          }),
+
+        ajusterMontures: (id, valeurs) => {
+          const e = get().enclos[id];
+          if (!e) return;
+          const borne = (n: number, min: number, max: number) => Math.max(min, Math.min(max, Math.round(Number.isFinite(n) ? n : min)));
+          const niveau = borne(valeurs.niveau, e.depart.niveauDepart, NIVEAU_MAX_MONTURE);
+          get().ajusterLot(id, {
+            serenite: borne(valeurs.serenite, SERENITE_MIN, SERENITE_MAX),
+            endurance: borne(valeurs.endurance, 0, CARACTERISTIQUE_MAX),
+            maturite: borne(valeurs.maturite, 0, CARACTERISTIQUE_MAX),
+            amour: borne(valeurs.amour, 0, CARACTERISTIQUE_MAX),
+            xp: Math.max(0, xpPourNiveau(niveau) - xpPourNiveau(e.depart.niveauDepart)),
+          });
+        },
 
         redemarrerEnclos: (id, depart) =>
           majEnclos(id, (e) => {

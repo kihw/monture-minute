@@ -177,3 +177,72 @@ describe('notifications et réponses rapides', () => {
     expect(e.etapesValidees).toHaveLength(0);
   });
 });
+
+describe('gestion rapide des enclos (1.1)', () => {
+  const ajouter = () => useEleveurStore.getState().ajouterEnclos(useEleveurStore.getState().reglages.depart);
+
+  it('renomme un enclos, sans accepter un nom vide', () => {
+    const { id } = enclosActif();
+    useEleveurStore.getState().renommerEnclos(id, '  Muldos dorés  ');
+    expect(enclosActif().enclos.nom).toBe('Muldos dorés');
+    useEleveurStore.getState().renommerEnclos(id, '   ');
+    expect(enclosActif().enclos.nom).toBe('Muldos dorés');
+  });
+
+  it('supprime puis restaure un enclos à sa place, étape en cours et alertes comprises', async () => {
+    const premier = enclosActif().id;
+    const second = ajouter();
+    const troisieme = ajouter();
+    useEleveurStore.getState().demarrerEtape(second, { endurance: 200_000, xp: 200_000 });
+    await attendre();
+    const finAt = useEleveurStore.getState().enclos[second].enCours!.finAt;
+
+    useEleveurStore.getState().supprimerEnclos(second);
+    expect(useEleveurStore.getState().ordre).toEqual([premier, troisieme]);
+    programmes.length = 0;
+
+    expect(useEleveurStore.getState().restaurerEnclos(second)).toBe(true);
+    await attendre();
+    const s = useEleveurStore.getState();
+    expect(s.ordre).toEqual([premier, second, troisieme]);
+    expect(s.enclos[second].enCours?.finAt).toBe(finAt);
+    expect(programmes.length).toBeGreaterThan(0);
+    // Une seule restauration possible.
+    expect(useEleveurStore.getState().restaurerEnclos(second)).toBe(false);
+  });
+
+  it('modifier la monture garde le parcours ; changer la sérénité le redémarre', async () => {
+    const { id } = enclosActif();
+    useEleveurStore.getState().demarrerEtape(id, { endurance: 200_000, xp: 200_000 });
+    await attendre();
+    const depart = enclosActif().enclos.depart;
+
+    useEleveurStore.getState().modifierEnclos(id, { nom: 'Volkornes', depart: { ...depart, famille: 'volkorne', robe: 6 } });
+    let e = enclosActif().enclos;
+    expect(e.nom).toBe('Volkornes');
+    expect(e.depart.famille).toBe('volkorne');
+    expect(e.enCours).not.toBeNull();
+
+    useEleveurStore.getState().modifierEnclos(id, { depart: { ...e.depart, serenite: 500 } });
+    e = enclosActif().enclos;
+    expect(e.enCours).toBeNull();
+    expect(e.lot.serenite).toBe(500);
+  });
+
+  it('réordonne les enclos seulement avec la même liste', () => {
+    const premier = enclosActif().id;
+    const second = ajouter();
+    useEleveurStore.getState().reordonnerEnclos([second, premier]);
+    expect(useEleveurStore.getState().ordre).toEqual([second, premier]);
+    useEleveurStore.getState().reordonnerEnclos([second]);
+    expect(useEleveurStore.getState().ordre).toEqual([second, premier]);
+  });
+
+  it('ajuste les montures selon le jeu, niveau converti en XP et valeurs bornées', () => {
+    const { id } = enclosActif();
+    useEleveurStore.getState().ajusterMontures(id, { serenite: 9000, endurance: 25_000, maturite: 8_400, amour: -3, niveau: 40 });
+    const lot = enclosActif().enclos.lot;
+    expect(lot).toMatchObject({ serenite: 5000, endurance: 20_000, maturite: 8_400, amour: 0 });
+    expect(lot.xp).toBeGreaterThan(0);
+  });
+});
