@@ -318,3 +318,70 @@ describe('synchronisation (1.1)', () => {
     expect(etat.sync.ordre).not.toBeNull();
   });
 });
+
+describe('alertes sur plusieurs appareils (1.1)', () => {
+  const lancer = async () => {
+    const { id } = enclosActif();
+    useEleveurStore.getState().demarrerEtape(id, { endurance: 200_000, xp: 200_000 });
+    await attendre();
+    return id;
+  };
+  const tel = (vuHorloge: number) => ({ id: 'tel', nom: 'Téléphone', cle: 'x', associeAt: T0, alertes: true, vuHorloge });
+  // Les réglages d'alerte survivent à reinitialiserTout : chaque test repart alertes allumées, sans appareil.
+  beforeEach(() => {
+    useEleveurStore.getState().modifierReglages({ notifications: true, appareils: [] });
+    programmes.length = 0;
+    annules.length = 0;
+  });
+
+  it('couper les alertes ici annule celles programmées ; les rallumer les reprogramme', async () => {
+    const id = await lancer();
+    const ids = enclosActif().enclos.enCours!.notificationIds!;
+    expect(ids.length).toBeGreaterThan(0);
+    useEleveurStore.getState().modifierReglages({ notifications: false });
+    expect(annules).toEqual(expect.arrayContaining(ids));
+    expect(useEleveurStore.getState().enclos[id].enCours!.notificationIds).toBeUndefined();
+    programmes.length = 0;
+    useEleveurStore.getState().modifierReglages({ notifications: true });
+    await attendre();
+    expect(programmes.length).toBeGreaterThan(0);
+    expect(useEleveurStore.getState().enclos[id].enCours!.notificationIds!.length).toBe(programmes.length);
+  });
+
+  it('alertes coupées sans autre appareil qui les reçoit : rien n’est programmé', async () => {
+    useEleveurStore.getState().modifierReglages({ notifications: false });
+    await lancer();
+    expect(programmes).toHaveLength(0);
+  });
+
+  it('relais : une étape lancée ici est annoncée tant que le téléphone ne l’a pas vue', async () => {
+    useEleveurStore.getState().modifierReglages({ notifications: false, appareils: [tel(0)] });
+    const id = await lancer();
+    const ids = useEleveurStore.getState().enclos[id].enCours!.notificationIds!;
+    expect(ids.length).toBeGreaterThan(0);
+    // Le téléphone se synchronise : il a vu cette version, il programme lui-même ; le relais s'arrête.
+    useEleveurStore.getState().modifierReglages({ appareils: [tel(useEleveurStore.getState().sync.horloge)] });
+    expect(annules).toEqual(expect.arrayContaining(ids));
+    expect(useEleveurStore.getState().enclos[id].enCours!.notificationIds).toBeUndefined();
+    // Nouvelle recharge ici, pas encore vue : le relais reprend.
+    programmes.length = 0;
+    useEleveurStore.getState().rechargerJauge(id, 'endurance', 200_000);
+    await attendre();
+    expect(programmes.length).toBeGreaterThan(0);
+  });
+
+  it('deux synchronisations coup sur coup ne programment pas deux fois les mêmes alertes', async () => {
+    await lancer();
+    const distant = useEleveurStore.getState().donneesSync();
+    const parEtape = programmes.length;
+    useEleveurStore.getState().reinitialiserTout();
+    useEleveurStore.getState().configurer({ famille: 'muldo', robe: 0, unifiee: true, serenite: -5000, niveauDepart: 1, niveauCible: 100 });
+    programmes.length = 0;
+    useEleveurStore.getState().appliquerSync(distant);
+    useEleveurStore.getState().appliquerSync(distant);
+    await attendre();
+    expect(programmes).toHaveLength(parEtape);
+    const recu = Object.values(useEleveurStore.getState().enclos).find((e) => e.enCours)!;
+    expect(recu.enCours!.notificationIds).toHaveLength(parEtape);
+  });
+});

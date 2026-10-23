@@ -202,6 +202,10 @@ export interface AppareilAssocie {
   adresses?: string[];
   associeAt: number;
   derniereSync?: number;
+  /** Il reçoit les alertes (annoncé à chaque synchronisation). */
+  alertes?: boolean;
+  /** Horloge de nos données qu'il a vue à la dernière synchronisation (relais des alertes). */
+  vuHorloge?: number;
 }
 
 export function lotInitial(depart: Pick<DepartEnclos, 'unifiee' | 'serenite'>): EtatLot {

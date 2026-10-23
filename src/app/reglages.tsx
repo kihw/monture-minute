@@ -80,7 +80,7 @@ export default function Reglages() {
           icone="bell-outline"
           couleur={couleurs.accent}
           titre="Notifications"
-          sousTitre="Te prévenir des fins d’étape, paliers et jauges vides"
+          sousTitre="Recevoir sur cet appareil les fins d’étape, paliers et jauges vides"
           interrupteur={{
             actif: reglages.notifications,
             onChange: (v) => {

@@ -6,7 +6,7 @@ import QRCode from 'react-native-qrcode-svg';
 
 import ScanQr from '../components/jeu/ScanQr';
 import { Text } from '../components/Texte';
-import { BoutonContour, BoutonPrincipal, Ecran, retour } from '../components/ui';
+import { BoutonContour, BoutonPrincipal, Ecran, Interrupteur, retour } from '../components/ui';
 import { s } from '../echelle';
 import { enregistrerTransfert, ouvrirTransfert } from '../engine/fichierTransfert';
 import { ErreurSync, LienInvitation, lireLienInvitation, motDeControle } from '../engine/protocoleSync';
@@ -26,6 +26,7 @@ import {
 } from '../engine/transfert';
 import { useBandeau } from '../store/useBandeau';
 import { Confirmation, useEleveurStore } from '../store/useStore';
+import { demanderPermission } from '../engine/notifications';
 import { couleurs, rayon } from '../theme';
 import { AppareilAssocie } from '../types/domain';
 import { formatDateHeure, formatIlYa } from '../utils/format';
@@ -116,6 +117,8 @@ function Liste({ onEnvoyer, onRecevoir, onAssocier }: { onEnvoyer: () => void; o
         {serveur?.erreur && <Text style={[styles.texte, { color: couleurs.attention }]}>Le serveur de synchronisation n’a pas pu démarrer ({serveur.erreur}).</Text>}
         <BoutonContour label="Associer un appareil" icone="link-variant" onPress={onAssocier} accent />
       </View>
+
+      {appareils.length > 0 && <AlertesIci appareils={appareils} />}
 
       <View style={styles.bloc}>
         <Text style={styles.titreBloc}>Pas sur le même Wi-Fi ?</Text>
@@ -298,6 +301,38 @@ function Recevoir({ onFini }: { onFini: () => void }) {
   );
 }
 
+/** « Recevoir les alertes ici » : un seul appareil prévenu, sans doublon ni alerte perdue. */
+function AlertesIci({ appareils }: { appareils: AppareilAssocie[] }) {
+  const ici = useEleveurStore((s) => s.reglages.notifications);
+  const modifier = useEleveurStore((s) => s.modifierReglages);
+  const autres = appareils.filter((a) => a.alertes).map((a) => `« ${a.nom} »`);
+  const inconnus = appareils.some((a) => a.alertes === undefined);
+  const note =
+    ici && autres.length
+      ? { texte: `${autres.join(' et ')} ${autres.length > 1 ? 'reçoivent' : 'reçoit'} aussi les alertes : tu seras prévenu deux fois. Coupe-les sur l’un des deux.`, couleur: couleurs.attention }
+      : !ici && autres.length
+        ? { texte: `Les alertes sonnent sur ${autres.join(' et ')}. Une étape lancée ici est quand même annoncée par cet appareil tant que l’autre ne l’a pas vue.`, couleur: couleurs.texteAttenue }
+        : !ici && !inconnus
+          ? { texte: 'Aucun appareil ne reçoit les alertes : tu ne seras pas prévenu.', couleur: couleurs.danger }
+          : { texte: 'Coupe-les sur un appareil pour ne pas être prévenu deux fois.', couleur: couleurs.texteAttenue };
+  return (
+    <View style={styles.bloc}>
+      <View style={styles.ligne}>
+        <MaterialCommunityIcons name={ici ? 'bell-ring-outline' : 'bell-off-outline'} size={s(20)} color={ici ? couleurs.accent : couleurs.texteAttenue} />
+        <Text style={[styles.nom, { fontSize: s(14) }]}>Recevoir les alertes ici</Text>
+        <Interrupteur
+          actif={ici}
+          onChange={(v) => {
+            modifier({ notifications: v });
+            if (v) demanderPermission();
+          }}
+        />
+      </View>
+      <Text style={[styles.texte, { color: note.couleur }]}>{note.texte}</Text>
+    </View>
+  );
+}
+
 function LigneAppareil({
   appareil,
   etat,
@@ -318,6 +353,7 @@ function LigneAppareil({
         : appareil.derniereSync
           ? { texte: `Synchronisé ${formatIlYa(appareil.derniereSync)}${etat?.message ? ` · ${etat.message}` : ''}`, couleur: couleurs.succes }
           : { texte: joignable ? 'Pas encore synchronisé' : 'Se synchronise quand il est ouvert sur le même Wi-Fi', couleur: couleurs.texteAttenue };
+  const alertes = appareil.alertes === undefined ? '' : appareil.alertes ? ' · reçoit les alertes' : ' · alertes coupées';
   return (
     <View style={styles.appareil}>
       <View style={styles.ligne}>
@@ -326,7 +362,10 @@ function LigneAppareil({
           <Text style={styles.nom} numberOfLines={1}>
             {appareil.nom}
           </Text>
-          <Text style={[styles.texte, { color: ligne.couleur }]}>{ligne.texte}</Text>
+          <Text style={[styles.texte, { color: ligne.couleur }]}>
+            {ligne.texte}
+            <Text style={styles.texte}>{alertes}</Text>
+          </Text>
         </View>
       </View>
       <View style={styles.actions}>

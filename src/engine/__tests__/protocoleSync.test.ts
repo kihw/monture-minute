@@ -135,6 +135,16 @@ describe('synchronisation', () => {
     expect(tel.etat.ecarts[0]).toBe(-30_000);
   });
 
+  it('chacun apprend si l’autre reçoit les alertes, et jusqu’où il a vu ses données', async () => {
+    const { pc, tel, transport } = await paire();
+    pc.hote.alertesIci = () => false;
+    tel.hote.alertesIci = () => true;
+    await synchroniser(tel.hote, transport, tel.etat.appareils[0]);
+    expect(pc.etat.appareils[0]).toMatchObject({ alertes: true, vuHorloge: pc.etat.d.sync.horloge });
+    expect(tel.etat.appareils[0]).toMatchObject({ alertes: false, vuHorloge: tel.etat.d.sync.horloge });
+    expect(pc.etat.d.sync.horloge).toBe(tel.etat.d.sync.horloge);
+  });
+
   it('un appareil dissocié n’est plus reconnu', async () => {
     const { pc, tel, transport } = await paire();
     pc.etat.appareils = [];

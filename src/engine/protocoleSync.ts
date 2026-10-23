@@ -34,6 +34,8 @@ export interface Invitation {
 export interface Hote<J extends EntreeJournal = EntreeJournal> {
   appareilId: () => string;
   nomAppareil: () => string;
+  /** Cet appareil reçoit les alertes (annoncé à l'autre à chaque synchronisation). */
+  alertesIci?: () => boolean;
   appareils: () => AppareilAssocie[];
   enregistrerAppareil: (a: AppareilAssocie) => void;
   majAppareil: (id: string, patch: Partial<AppareilAssocie>) => void;
@@ -165,7 +167,7 @@ export class ServeurSync<J extends EntreeJournal = EntreeJournal> {
     const appareil = this.hote.appareils().find((a) => a.id === r.de);
     if (!appareil) return json(401, { erreur: 'inconnu' });
     const cle = depuisBase64(appareil.cle);
-    let message: { type: 'lire' | 'sync'; t: number; donnees?: DonneesSync<J> };
+    let message: { type: 'lire' | 'sync'; t: number; donnees?: DonneesSync<J>; alertes?: boolean };
     try {
       message = ouvrir(cle, `sync|${r.de}`, r);
     } catch {
@@ -174,9 +176,11 @@ export class ServeurSync<J extends EntreeJournal = EntreeJournal> {
     const maintenant = this.hote.maintenant();
     if (message.type === 'sync' && message.donnees) {
       this.hote.appliquer(message.donnees, message.t - maintenant);
-      this.hote.majAppareil(appareil.id, { derniereSync: maintenant });
+      // Après la fusion, les deux appareils ont la même horloge : l'autre a vu nos données jusque-là.
+      this.hote.majAppareil(appareil.id, { derniereSync: maintenant, alertes: message.alertes, vuHorloge: this.hote.donnees().sync.horloge });
     }
-    return json(200, sceller(cle, `sync-reponse|${r.de}`, { type: message.type, t: this.hote.maintenant(), donnees: this.hote.donnees() }, this.hote.aleatoire));
+    const alertes = this.hote.alertesIci?.();
+    return json(200, sceller(cle, `sync-reponse|${r.de}`, { type: message.type, t: this.hote.maintenant(), donnees: this.hote.donnees(), alertes }, this.hote.aleatoire));
   }
 }
 
@@ -222,15 +226,16 @@ async function echanger<J extends EntreeJournal>(hote: Hote<J>, transport: Trans
   const moi = hote.appareilId();
   const cle = depuisBase64(appareil.cle);
   const t0 = hote.maintenant();
-  const message = type === 'sync' ? { type, t: t0, donnees: hote.donnees() } : { type, t: t0 };
+  const alertes = hote.alertesIci?.();
+  const message = type === 'sync' ? { type, t: t0, donnees: hote.donnees(), alertes } : { type, t: t0, alertes };
   const { adresse, reponse } = await appeler(transport, appareil.adresses ?? [], '/sync', { de: moi, ...sceller(cle, `sync|${moi}`, message, hote.aleatoire) });
   if (reponse.statut === 401) throw new ErreurSync('inconnu', `« ${appareil.nom} » ne reconnaît plus cet appareil : associe-les à nouveau.`);
   if (reponse.statut !== 200) throw new ErreurSync('format', `Réponse inattendue (${reponse.statut}).`);
-  const r = ouvrir<{ t: number; donnees: DonneesSync<J> }>(cle, `sync-reponse|${moi}`, JSON.parse(reponse.corps));
+  const r = ouvrir<{ t: number; donnees: DonneesSync<J>; alertes?: boolean }>(cle, `sync-reponse|${moi}`, JSON.parse(reponse.corps));
   // Écart d'horloge : instant du PC comparé au milieu de l'aller-retour.
   const ecartMs = r.t - (t0 + hote.maintenant()) / 2;
   if (appareil.adresses?.[0] !== adresse) hote.majAppareil(appareil.id, { adresses: [adresse, ...(appareil.adresses ?? []).filter((a) => a !== adresse)] });
-  return { donnees: r.donnees, ecartMs };
+  return { donnees: r.donnees, ecartMs, alertes: r.alertes };
 }
 
 /** Données de l'autre appareil, sans rien fusionner (aperçu de la première synchronisation). */
@@ -240,8 +245,8 @@ export async function lireDistant<J extends EntreeJournal>(hote: Hote<J>, transp
 
 /** Synchronise les deux appareils : chacun fusionne les données de l'autre. */
 export async function synchroniser<J extends EntreeJournal>(hote: Hote<J>, transport: Transport, appareil: AppareilAssocie): Promise<{ ecartMs: number }> {
-  const { donnees, ecartMs } = await echanger(hote, transport, appareil, 'sync');
+  const { donnees, ecartMs, alertes } = await echanger(hote, transport, appareil, 'sync');
   hote.appliquer(donnees, ecartMs);
-  hote.majAppareil(appareil.id, { derniereSync: hote.maintenant() });
+  hote.majAppareil(appareil.id, { derniereSync: hote.maintenant(), alertes, vuHorloge: hote.donnees().sync.horloge });
   return { ecartMs };
 }

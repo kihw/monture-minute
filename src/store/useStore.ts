@@ -211,10 +211,38 @@ export const useEleveurStore = create<EleveurState>()(
        * `anticipationMin` avant une baisse de palier ou une jauge vide, signal discret quand une
        * jauge a couvert son besoin. Les anciennes notifications doivent avoir été annulées.
        */
+      const sansIds = (id: string) => majEnclos(id, (x) => (x.enCours ? { ...x, enCours: { ...x.enCours, notificationIds: undefined } } : x));
+
+      /**
+       * Cet appareil doit-il programmer les alertes de cet enclos ? Oui s'il reçoit les alertes. Sinon,
+       * il sert de relais tant qu'aucun appareil associé qui les reçoit n'a vu cette version de
+       * l'enclos (étape lancée ici, téléphone pas encore synchronisé) : aucune alerte n'est perdue.
+       */
+      const alerterIci = (id: string) => {
+        const { reglages, sync } = get();
+        if (reglages.notifications) return true;
+        const relais = (reglages.appareils ?? []).filter((a) => a.alertes);
+        if (relais.length === 0) return false;
+        const version = sync.enclos[id]?.h ?? 0;
+        return !relais.some((a) => (a.vuHorloge ?? -1) >= version);
+      };
+
+      /**
+       * Programme les notifications de l'étape en cours : fin de l'étape (à `finEtape`) et, si
+       * `avecCarburant`, les échéances des jauges simulées avec les recharges saisies : alerte
+       * `anticipationMin` avant une baisse de palier ou une jauge vide, signal discret quand une
+       * jauge a couvert son besoin. Les anciennes notifications doivent avoir été annulées.
+       * `notificationIds` vaut [] dès le début (programmation en cours), undefined si rien n'est programmé ici.
+       */
       const planifierNotifications = async (id: string, finEtape: number, avecCarburant: boolean) => {
         const { enclos, reglages } = get();
         const e = enclos[id];
-        if (!e?.enCours || !reglages.notifications) return;
+        if (!e?.enCours) return;
+        if (!alerterIci(id)) {
+          if (e.enCours.notificationIds) sansIds(id);
+          return;
+        }
+        if (!e.enCours.notificationIds) majEnclos(id, (x) => (x.enCours ? { ...x, enCours: { ...x.enCours, notificationIds: [] } } : x));
         const enCours = e.enCours;
         const { demarreeAt, etape } = enCours;
         const ctx = ctxEnclos(reglages, e);
@@ -278,10 +306,24 @@ export const useEleveurStore = create<EleveurState>()(
         const ids = (await Promise.all(promesses)).filter((x): x is string => !!x);
         // L'étape a pu être validée, annulée ou recalculée entre-temps : on n'attache les ids qu'à la même étape.
         const actuel = get().enclos[id]?.enCours;
-        if (actuel?.demarreeAt === demarreeAt && actuel.finAt === enCours.finAt) {
+        if (actuel?.demarreeAt === demarreeAt && actuel.finAt === enCours.finAt && actuel.notificationIds && alerterIci(id)) {
           majEnclos(id, (x) => ({ ...x, enCours: { ...actuel, notificationIds: [...(actuel.notificationIds ?? []), ...ids] } }));
         } else {
           annulerNotifications(ids);
+        }
+      };
+
+      /** Programme ce qui doit l'être ici, annule ce qui ne doit plus l'être (réglage, synchronisation). */
+      const reevaluerAlertes = () => {
+        const maintenant = Date.now();
+        for (const e of Object.values(get().enclos)) {
+          if (!e.enCours || e.enCours.finAt <= maintenant) continue;
+          const doit = alerterIci(e.id);
+          if (doit && !e.enCours.notificationIds) planifierNotifications(e.id, e.enCours.finAt, true);
+          else if (!doit && e.enCours.notificationIds) {
+            annulerNotifications(e.enCours.notificationIds);
+            sansIds(e.id);
+          }
         }
       };
 
@@ -331,9 +373,7 @@ export const useEleveurStore = create<EleveurState>()(
             reglages: { ...s.reglages, ...f.reglages, configuree: s.reglages.configuree || f.ordre.length > 0 },
             sync: f.sync,
           }));
-          for (const [id, e] of Object.entries(f.enclos)) {
-            if (e.enCours && !e.enCours.notificationIds && e.enCours.finAt > maintenant) planifierNotifications(id, e.enCours.finAt, true);
-          }
+          reevaluerAlertes();
           return { horlogeCorrigee: Math.abs(ecartMs) > ECART_HORLOGE_MAX_MS };
         },
 
@@ -352,6 +392,8 @@ export const useEleveurStore = create<EleveurState>()(
 
         modifierReglages: (patch) => {
           set((s) => ({ reglages: { ...s.reglages, ...patch } }));
+          // Alertes coupées ou rallumées ici, appareils associés mis à jour (ce qu'ils ont vu).
+          if (patch.notifications !== undefined || patch.appareils !== undefined) reevaluerAlertes();
           // Le délai d'alerte change les heures des notifications des étapes en cours.
           if (patch.anticipationMin === undefined) return;
           for (const e of Object.values(get().enclos)) {
@@ -487,6 +529,7 @@ export const useEleveurStore = create<EleveurState>()(
         replanifierNotifications: () => {
           for (const e of Object.values(get().enclos)) {
             if (!e.enCours || e.enCours.finAt <= Date.now()) continue;
+            annulerNotifications(e.enCours.notificationIds);
             majEnclos(e.id, (x) => (x.enCours ? { ...x, enCours: { ...x.enCours, notificationIds: [] } } : x));
             planifierNotifications(e.id, e.enCours.finAt, true);
           }

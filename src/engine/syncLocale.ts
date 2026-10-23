@@ -40,6 +40,7 @@ let enFusion = false;
 const hote: Hote = {
   appareilId: () => useEleveurStore.getState().sync.appareilId,
   nomAppareil: () => useEleveurStore.getState().reglages.nomAppareil ?? nomAppareilParDefaut(),
+  alertesIci: () => useEleveurStore.getState().reglages.notifications,
   appareils: () => useEleveurStore.getState().reglages.appareils ?? [],
   enregistrerAppareil: (a) => {
     const liste = hote.appareils().filter((x) => x.id !== a.id);
