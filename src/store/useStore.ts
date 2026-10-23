@@ -471,7 +471,14 @@ export const useEleveurStore = create<EleveurState>()(
                 enCours: null,
                 etapesValidees: [
                   ...e.etapesValidees,
-                  { titre: etape.titre, type: etape.type, jauges: etape.jauges, valideeAt: Date.now() },
+                  {
+                    titre: etape.titre,
+                    type: etape.type,
+                    jauges: etape.jauges,
+                    valideeAt: Date.now(),
+                    demarreeAt,
+                    recharges: (e.enCours?.segments ?? []).filter((x) => x.source === 'recharge').length,
+                  },
                 ],
               },
             },

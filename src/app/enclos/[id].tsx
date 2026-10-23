@@ -5,6 +5,7 @@ import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import PopupCarburant from '../../components/ChoixCarburant';
 import BlocMontures from '../../components/jeu/BlocMontures';
+import FinCycle from '../../components/jeu/FinCycle';
 import EnTeteEnclos from '../../components/jeu/EnTeteEnclos';
 import PanneauJeu from '../../components/jeu/PanneauJeu';
 import PanneauRecharge from '../../components/jeu/PanneauRecharge';
@@ -92,9 +93,8 @@ export default function DetailEnclos() {
   }
 
   function confirmer(anticipee?: boolean) {
+    // Dernière étape : l'écran passe de lui-même à la fin de cycle.
     store.validerEtape(id, anticipee);
-    const lot = useEleveurStore.getState().enclos[id]?.lot;
-    if (lot && !prochaineEtape(lot, ctx)) router.replace(`/objectifs/${id}`);
   }
 
   function ouvrirSaisie(mode: 'recharge' | 'correction', type: JaugeType) {
@@ -157,7 +157,7 @@ export default function DetailEnclos() {
     };
     action = suivante
       ? { label: `Jauges activées · lancer l’étape ${vue.numeroEtape + 1}`, onPress: lancer }
-      : { label: 'Valider et voir le bilan', onPress: () => confirmer() };
+      : { label: 'Valider · fin du cycle', onPress: () => confirmer() };
   } else if (vue.statut === 'en_cours' && etape && enCours) {
     entete = {
       temps: formatDureeClaire(vue.restantSec),
@@ -236,7 +236,17 @@ export default function DetailEnclos() {
         decalage.current = e.nativeEvent.contentOffset.y;
       }}
     >
-      <EnTeteEnclos key={id} enclos={enclos} etape={etiquetteEtape} {...entete} onRenommer={(nom) => store.renommerEnclos(id, nom)} renommerAuDebut={renommer === '1'} />
+      {vue.statut === 'termine' ? (
+        <FinCycle
+          enclos={enclos}
+          lot={vue.lot}
+          ctx={ctx}
+          onChangerReglages={() => router.push(`/depart?mode=cycle&id=${id}`)}
+          onVoirBilan={() => router.push(`/objectifs/${id}`)}
+        />
+      ) : (
+        <EnTeteEnclos key={id} enclos={enclos} etape={etiquetteEtape} {...entete} onRenommer={(nom) => store.renommerEnclos(id, nom)} renommerAuDebut={renommer === '1'} />
+      )}
 
       {suggestion && (
         <Pressable onPress={() => setRecharge(suggestion.j)} style={({ pressed }) => [styles.astuce, pressed && { opacity: 0.7 }]} accessibilityRole="button">
@@ -248,22 +258,7 @@ export default function DetailEnclos() {
         </Pressable>
       )}
 
-      {vue.statut === 'termine' && (
-        <View style={styles.message}>
-          <Text style={styles.messageTitre}>Tes montures sont fécondables</Text>
-          <Text style={texte.legende}>Place-les à la reproduction, puis relance l’enclos avec de nouvelles montures : il garde sa monture, sa robe et ses réglages.</Text>
-          <View style={styles.liens}>
-            <Pressable onPress={() => router.push(`/depart?mode=cycle&id=${id}`)} hitSlop={6}>
-              <Text style={styles.lien}>Changer les réglages</Text>
-            </Pressable>
-            <Pressable onPress={() => router.push(`/objectifs/${id}`)} hitSlop={6}>
-              <Text style={styles.lien}>Voir le bilan</Text>
-            </Pressable>
-          </View>
-        </View>
-      )}
-
-      <View ref={refJauges} collapsable={false}>
+      <View ref={refJauges} collapsable={false} style={vue.statut === 'termine' && { display: 'none' }}>
         <PanneauJeu
           carburant={carburantPanneau}
           actives={tourne && etape ? etape.jauges : []}
@@ -276,7 +271,7 @@ export default function DetailEnclos() {
 
       {preparation && prevue && (
         <View style={styles.bloc}>
-          <ConsigneSetup texte="Carburant mis (tes habitudes, touche pour changer) :" />
+          <ConsigneSetup texte="Carburant mis · tes habitudes, touche pour changer" />
           <SetupEtape
             jauges={preparation.etape.jauges}
             reste={preparation.reste}
@@ -298,7 +293,7 @@ export default function DetailEnclos() {
         </View>
       )}
 
-      <View ref={refMontures} collapsable={false}>
+      <View ref={refMontures} collapsable={false} style={vue.statut === 'termine' && { display: 'none' }}>
         {recharge && enCours && tourne ? (
           <PanneauRecharge
             enCours={enCours}
@@ -420,7 +415,7 @@ export default function DetailEnclos() {
       />
 
       <VisiteGuidee
-        visible={!visiteVue && popup === null && recharge === null && saisie === null && selection === null && renommer !== '1'}
+        visible={!visiteVue && vue.statut !== 'termine' && popup === null && recharge === null && saisie === null && selection === null && renommer !== '1'}
         etapes={etapesVisite}
         scrollRef={defilement}
         decalage={decalage}
@@ -455,9 +450,6 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(233,184,74,0.08)',
   },
   astuceTexte: { flex: 1, color: couleurs.texte, fontSize: s(12), fontWeight: '600' },
-  message: { gap: s(6), paddingVertical: s(4) },
-  messageTitre: { color: couleurs.texte, fontSize: s(17), fontWeight: '900' },
-  liens: { flexDirection: 'row', gap: s(18) },
   lien: { color: couleurs.texteAttenue, fontSize: s(12.5), fontWeight: '700', textDecorationLine: 'underline' },
   bloc: { backgroundColor: couleurs.carte, borderRadius: rayon.xl, paddingVertical: s(10), paddingHorizontal: s(12), gap: s(8) },
   titreSection: { flexDirection: 'row', alignItems: 'center', minHeight: s(32) },

@@ -100,6 +100,10 @@ export interface EtapeValidee {
   type: TypeEtape;
   jauges: JaugeType[];
   valideeAt: number;
+  /** Lancement de l'étape (bilan de fin de cycle). */
+  demarreeAt?: number;
+  /** Recharges saisies pendant l'étape (bilan de fin de cycle). */
+  recharges?: number;
 }
 
 /** Recharge faite en jeu, ou niveau relu en jeu, pendant une étape : ouvre un nouveau tronçon de simulation. */

@@ -246,3 +246,19 @@ describe('gestion rapide des enclos (1.1)', () => {
     expect(lot.xp).toBeGreaterThan(0);
   });
 });
+
+describe('bilan de fin de cycle (1.1)', () => {
+  it('chaque étape validée garde son lancement et ses recharges', async () => {
+    const { id } = enclosActif();
+    useEleveurStore.getState().demarrerEtape(id, { endurance: 90_000, xp: 200_000 });
+    await attendre();
+    jest.setSystemTime(T0 + 10 * 60_000);
+    useEleveurStore.getState().rechargerJauge(id, 'endurance', 200_000);
+    await attendre();
+    jest.setSystemTime(enclosActif().enclos.enCours!.finAt + 1000);
+    useEleveurStore.getState().validerEtape(id);
+    const v = enclosActif().enclos.etapesValidees[0];
+    expect(v.demarreeAt).toBe(T0);
+    expect(v.recharges).toBe(1);
+  });
+});
