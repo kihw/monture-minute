@@ -1,7 +1,7 @@
 // Ce qui attend le joueur sur tout l'élevage : actions à faire maintenant (étape finie, étape à
 // lancer, jauge vide), conseils facultatifs (recharge qui fait gagner du temps) et échéances à
 // venir (paliers, jauges vides, fins d'étape), triées dans l'ordre. Sert à l'accueil (résumé) et à
-// l'onglet Alertes. Seules les actions comptent dans « à faire » (compteur, pastille d'onglet).
+// la section « À venir » de Mes enclos.
 
 import { Enclos, INFO_JAUGE } from '../types/domain';
 import { Conseil, echeances } from './descente';

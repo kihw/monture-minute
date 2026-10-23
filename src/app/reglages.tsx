@@ -4,8 +4,7 @@ import { Linking, StyleSheet } from 'react-native';
 
 import { rechercherMiseAJour, useMiseAJour } from '../components/MiseAJour';
 import { Confirmation, PopupChoix } from '../components/Popup';
-import { Carte, Ecran, LigneReglage, Titre } from '../components/ui';
-import { BarreOnglets, EnTeteOnglet } from '../components/v2/onglets';
+import { Carte, Ecran, EnTete, LigneReglage, Titre } from '../components/ui';
 import { TIERS_CARBURANT } from '../data/constants';
 import { pontBureau } from '../engine/bureau';
 import { palierPourNiveau, tierPourNiveau } from '../engine/carburant';
@@ -33,8 +32,8 @@ export default function Reglages() {
   const remplissages = TIERS_CARBURANT.map((t) => t.plafond).reverse();
 
   return (
-    <Ecran basDePage={<BarreOnglets actif="reglages" />}>
-      <EnTeteOnglet titre="Réglages" />
+    <Ecran>
+      <EnTete titre="Réglages" avecRetour />
 
       <Carte style={styles.groupe}>
         <Titre>Carburant</Titre>

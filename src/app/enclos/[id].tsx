@@ -393,6 +393,12 @@ export default function DetailEnclos() {
               ]
             : []),
           {
+            icone: 'pencil-outline' as const,
+            titre: 'Modifier l’enclos',
+            detail: 'Nom, monture, sérénité, niveaux',
+            onPress: () => router.push(`/depart?mode=modifier&id=${id}`),
+          },
+          {
             icone: 'restart' as const,
             titre: 'Redémarrer l’enclos',
             detail: 'Nouvel état de départ, parcours remis à zéro',

@@ -164,7 +164,7 @@ function recalculer(enCours: EtapeEnCours, prudent: boolean): EtapeEnCours {
   };
 }
 
-function prochainNom(enclos: Record<string, Enclos>) {
+export function prochainNom(enclos: Record<string, Enclos>) {
   const pris = new Set(Object.values(enclos).map((e) => e.nom));
   let n = 1;
   while (pris.has(`Enclos ${n}`)) n++;

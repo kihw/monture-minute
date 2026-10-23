@@ -1,5 +1,5 @@
 // Vue d'ensemble de l'élevage, recalculée en direct : vue de chaque enclos, conseil de recharge
-// des étapes en cours, actions à faire et échéances à venir (accueil, onglet Alertes, onglets).
+// des étapes en cours, actions à faire et échéances à venir (accueil Mes enclos).
 
 import { useMemo } from 'react';
 

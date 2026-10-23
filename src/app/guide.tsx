@@ -340,7 +340,7 @@ function creerPages(): Page[] {
     {
       titre: "Les alertes au bon moment",
       texte:
-        "Une notification arrive avant chaque baisse de vitesse ou jauge vide, et à la fin de l’étape. L’onglet Alertes liste tout ce qui arrive, pour tous tes enclos.",
+        "Une notification arrive avant chaque baisse de vitesse ou jauge vide, et à la fin de l’étape. « À venir », dans Mes enclos, liste tout ce qui arrive, pour tous tes enclos.",
       points: [
         "Délai d’avance réglable dans Réglages › Alertes",
         "« Plus tard » repousse le rappel de 30 min",
