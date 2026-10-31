@@ -1,11 +1,8 @@
-import { randomBytes } from 'node:crypto';
-
 import { carburantVide, DepartEnclos, Enclos, lotInitial } from '../../types/domain';
 import { corrigerHorloge, DonneesSync, etatSyncInitial, fusionner, marquer } from '../fusion';
 import { AppareilAssocie, associer, Hote, lienInvitation, lireDistant, lireLienInvitation, motDeControle, ServeurSync, synchroniser, Transport } from '../protocoleSync';
 
-// eslint-disable-next-line @typescript-eslint/no-require-imports -- fabrique de jest.mock
-jest.mock('expo-crypto', () => ({ getRandomBytes: (n: number) => new Uint8Array(require('node:crypto').randomBytes(n)) }));
+jest.mock('expo-crypto', () => ({ getRandomBytes: (n: number) => globalThis.crypto.getRandomValues(new Uint8Array(n)) }));
 
 const T0 = Date.UTC(2026, 9, 23, 18, 0);
 const DEPART: DepartEnclos = { famille: 'volkorne', robe: 1, unifiee: true, serenite: -5000, niveauDepart: 1, niveauCible: 100 };
@@ -31,7 +28,7 @@ function appareil(id: string, nom: string, decalageMs = 0) {
       etat.d = fusionner(etat.d, corrigerHorloge(d, ecart), etat.horloge);
     },
     maintenant: () => etat.horloge,
-    aleatoire: (n) => new Uint8Array(randomBytes(n)),
+    aleatoire: (n) => globalThis.crypto.getRandomValues(new Uint8Array(n)),
   };
   const changer = (f: (d: DonneesSync) => Partial<DonneesSync>) => {
     const suite = { ...etat.d, ...f(etat.d) };

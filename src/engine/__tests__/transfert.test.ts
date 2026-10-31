@@ -1,5 +1,3 @@
-import { randomBytes } from 'node:crypto';
-
 import { etatSyncInitial, resumeFusion } from '../fusion';
 import {
   assemblerQr,
@@ -16,10 +14,9 @@ import {
 } from '../transfert';
 import { carburantVide, DepartEnclos, Enclos, lotInitial } from '../../types/domain';
 
-// eslint-disable-next-line @typescript-eslint/no-require-imports -- fabrique de jest.mock
-jest.mock('expo-crypto', () => ({ getRandomBytes: (n: number) => new Uint8Array(require('node:crypto').randomBytes(n)) }));
+jest.mock('expo-crypto', () => ({ getRandomBytes: (n: number) => globalThis.crypto.getRandomValues(new Uint8Array(n)) }));
 
-const aleatoire = (n: number) => new Uint8Array(randomBytes(n));
+const aleatoire = (n: number) => globalThis.crypto.getRandomValues(new Uint8Array(n));
 const DEPART: DepartEnclos = { famille: 'muldo', robe: 2, unifiee: true, serenite: -5000, niveauDepart: 1, niveauCible: 100 };
 const enclos = (id: string, nom: string): Enclos => ({ id, nom, depart: DEPART, lot: lotInitial(DEPART), carburant: carburantVide(), etapesValidees: [], enCours: null });
 
@@ -53,7 +50,7 @@ describe('code de transfert', () => {
     for (let n = 0; n < 40; n++) {
       const o = aleatoire(n);
       expect([...depuisBase64(versBase64(o))]).toEqual([...o]);
-      expect(versBase64(o)).toBe(Buffer.from(o).toString('base64'));
+      expect(versBase64(o)).toBe(btoa(String.fromCharCode(...o)));
     }
   });
 });
