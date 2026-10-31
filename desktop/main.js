@@ -279,6 +279,8 @@ const PORT_SYNC = Number(process.env.MONTURE_PORT_SYNC ?? 47811);
 const HOTE_SYNC = process.env.MONTURE_SYNC_HOTE ?? '0.0.0.0';
 const CHEMINS_SYNC = new Set(['/bonjour', '/associer', '/sync']);
 const TAILLE_MAX_SYNC = 4 * 1024 * 1024;
+// Requêtes en attente de l'app au même moment : au-delà, refus immédiat (rafale, appareil inconnu).
+const ATTENTES_MAX_SYNC = 8;
 let serveurSync = null;
 let etatServeurSync = { actif: false, erreur: null };
 const attentesSync = new Map();
@@ -300,6 +302,7 @@ function demarrerServeurSync() {
       if (requete.method === 'OPTIONS') return reponse.writeHead(204, entetes).end();
       const chemin = new URL(requete.url, 'http://local').pathname;
       if (requete.method !== 'POST' || !CHEMINS_SYNC.has(chemin)) return reponse.writeHead(404, entetes).end();
+      if (attentesSync.size >= ATTENTES_MAX_SYNC) return reponse.writeHead(503, entetes).end();
       const morceaux = [];
       let taille = 0;
       requete.on('data', (m) => {
