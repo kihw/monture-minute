@@ -2,6 +2,7 @@
 // (règle de sérénité avec ses zones, caractéristiques, niveau) et parcours en frise verticale.
 
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import Slider from '@react-native-community/slider';
 import { router } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
@@ -18,6 +19,7 @@ import { Lien, P } from './base';
 import { Text } from '../Texte';
 
 const ETENDUE = SERENITE_MAX - SERENITE_MIN;
+const MARGE_CURSEUR = 10;
 const position = (v: number) => `${((Math.max(SERENITE_MIN, Math.min(SERENITE_MAX, v)) - SERENITE_MIN) / ETENDUE) * 100}%` as const;
 
 /** Caractéristiques qui progressent à cette sérénité. */
@@ -141,7 +143,12 @@ export function SelecteurEnclos({
 // ── Tes montures : sérénité, caractéristiques, niveau ─────────────────────────
 
 /** Règle −5 000 → +5 000 : une ligne par caractéristique sur sa zone, un repère à la sérénité du lot. */
-export function RegleSerenite({ serenite, cible, compact }: { serenite: number; cible?: number; compact?: boolean }) {
+export function RegleSerenite({ serenite, cible, compact, edition }: {
+  serenite: number;
+  cible?: number;
+  compact?: boolean;
+  edition?: { pas: number; onChange: (valeur: number) => void };
+}) {
   const actives = progressentA(serenite);
   return (
     <View style={{ gap: s(compact ? 2 : 4) }}>
@@ -155,7 +162,7 @@ export function RegleSerenite({ serenite, cible, compact }: { serenite: number; 
             ))}
           </View>
         )}
-        <View style={styles.reglePiste}>
+        <View style={[styles.reglePiste, edition && styles.reglePisteEditable]}>
           {CARACTERISTIQUES.map((c) => {
             const z = ZONE_CARACTERISTIQUE[c];
             return (
@@ -168,7 +175,7 @@ export function RegleSerenite({ serenite, cible, compact }: { serenite: number; 
                       left: position(z.min),
                       width: `${((z.max - z.min) / ETENDUE) * 100}%`,
                       backgroundColor: INFO_SUIVI[c].couleur,
-                      opacity: actives.includes(c) ? 1 : 0.28,
+                      opacity: actives.includes(c) ? 1 : edition ? 0.48 : 0.28,
                     },
                   ]}
                 />
@@ -176,10 +183,31 @@ export function RegleSerenite({ serenite, cible, compact }: { serenite: number; 
             );
           })}
           {cible !== undefined && cible !== serenite && <View style={[styles.repere, styles.repereCible, { left: position(cible) }]} />}
-          <View style={[styles.repere, { left: position(serenite) }]} />
+          {edition ? (
+            <>
+              <View pointerEvents="none" style={[styles.repereEditable, { left: position(serenite) }]}>
+                <View style={styles.poigneeSerenite} />
+              </View>
+              <Slider
+                accessibilityLabel="Ajuster la sérénité"
+                accessibilityValue={{ min: SERENITE_MIN, max: SERENITE_MAX, now: serenite }}
+                value={serenite - SERENITE_MIN}
+                minimumValue={0}
+                maximumValue={ETENDUE}
+                step={edition.pas}
+                minimumTrackTintColor="transparent"
+                maximumTrackTintColor="transparent"
+                thumbTintColor="transparent"
+                onValueChange={(valeur) => edition.onChange(Math.round(valeur + SERENITE_MIN))}
+                style={styles.regleCurseur}
+              />
+            </>
+          ) : (
+            <View style={[styles.repere, { left: position(serenite) }]} />
+          )}
         </View>
       </View>
-      <View style={[styles.regleEchelle, compact && { marginLeft: 0 }]}>
+      <View style={[styles.regleEchelle, compact && { marginLeft: 0 }, edition && styles.regleEchelleEditable]}>
         <Text style={styles.regleGraduation}>−5 000</Text>
         <Text style={styles.regleGraduation}>0</Text>
         <Text style={styles.regleGraduation}>+5 000</Text>
@@ -393,6 +421,10 @@ const styles = StyleSheet.create({
   regleNoms: { width: s(62), justifyContent: 'space-between' },
   regleNom: { color: couleurs.texteFaible, fontSize: s(10.5), fontWeight: '600', height: s(14), lineHeight: s(14) },
   reglePiste: { flex: 1, justifyContent: 'space-between' },
+  reglePisteEditable: { minHeight: s(29), justifyContent: 'center', marginHorizontal: MARGE_CURSEUR },
+  regleCurseur: { ...StyleSheet.absoluteFill, left: -MARGE_CURSEUR, right: -MARGE_CURSEUR },
+  repereEditable: { position: 'absolute', top: s(5), bottom: s(4), width: s(2), marginLeft: -s(1), borderRadius: s(1), backgroundColor: couleurs.accent, alignItems: 'center' },
+  poigneeSerenite: { width: s(10), height: s(10), borderRadius: s(5), marginTop: -s(2), backgroundColor: couleurs.accent, borderWidth: 1, borderColor: couleurs.fond },
   regleLigne: { height: s(14), justifyContent: 'center' },
   regleLigneCompacte: { height: s(8) },
   regleFond: { position: 'absolute', left: 0, right: 0, height: s(2), borderRadius: s(1), backgroundColor: couleurs.piste },
@@ -400,6 +432,7 @@ const styles = StyleSheet.create({
   repere: { position: 'absolute', top: -s(3), bottom: -s(3), width: s(3), marginLeft: -s(1.5), borderRadius: s(2), backgroundColor: '#ffffff' },
   repereCible: { width: s(2), marginLeft: -s(1), backgroundColor: couleurs.accent, opacity: 0.8 },
   regleEchelle: { flexDirection: 'row', justifyContent: 'space-between', marginLeft: s(62) + grille.x2 },
+  regleEchelleEditable: { marginHorizontal: MARGE_CURSEUR },
   regleGraduation: { color: couleurs.texteFaible, fontSize: s(10.5), fontWeight: '600' },
   separateur: { height: 1, backgroundColor: couleurs.liseret, marginVertical: s(2) },
   stat: { flexDirection: 'row', alignItems: 'center', gap: grille.x2 },

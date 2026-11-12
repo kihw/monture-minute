@@ -19,6 +19,7 @@ jest.mock('../../engine/notifications', () => {
   };
 });
 
+import { appliquerEnCours } from '../../engine/descente';
 import { useEleveurStore } from '../useStore';
 
 const T0 = Date.UTC(2026, 9, 11, 14, 0);
@@ -244,6 +245,59 @@ describe('gestion rapide des enclos (1.1)', () => {
     const lot = enclosActif().enclos.lot;
     expect(lot).toMatchObject({ serenite: 5000, endurance: 20_000, maturite: 8_400, amour: 0 });
     expect(lot.xp).toBeGreaterThan(0);
+  });
+
+  it('changer le niveau visé conserve les corrections du lot avant la première étape', () => {
+    const { id } = enclosActif();
+    const store = useEleveurStore.getState();
+    store.ajusterMontures(id, { serenite: 500, maturite: 8_400, niveau: 40 });
+    const { lot, carburant } = enclosActif().enclos;
+    store.changerNiveauCible(id, 80);
+    expect(enclosActif().enclos).toMatchObject({ depart: { niveauCible: 80 }, lot, carburant });
+  });
+
+  it('corriger une valeur conserve le reste du lot simulé, son XP et le carburant restant', () => {
+    const { id } = enclosActif();
+    const store = useEleveurStore.getState();
+    store.demarrerEtape(id, { endurance: 200_000, xp: 200_000 });
+    const { lot, enCours, carburant } = enclosActif().enclos;
+    jest.setSystemTime(T0 + 60_000);
+    const simule = appliquerEnCours(lot, enCours!, 60);
+    expect(simule.lot.xp).toBeGreaterThan(0);
+
+    store.ajusterMontures(id, { serenite: simule.lot.serenite });
+    expect(enclosActif().enclos.enCours).toBe(enCours);
+
+    store.ajusterMontures(id, { serenite: -4500 });
+    expect(enclosActif().enclos).toMatchObject({
+      lot: { ...simule.lot, serenite: -4500 },
+      carburant: { ...carburant, ...simule.carburant },
+      enCours: null,
+    });
+  });
+
+  it('changer le niveau visé en cours d’étape conserve la progression et les étapes validées', () => {
+    const { id } = enclosActif();
+    const store = useEleveurStore.getState();
+    const carburant = { endurance: 200_000, xp: 200_000 };
+    store.demarrerEtape(id, carburant);
+    const premiere = enclosActif().enclos.enCours!;
+    jest.setSystemTime(premiere.finAt);
+    store.validerEtape(id);
+    store.demarrerEtape(id, { ...carburant, plus: 200_000, maturite: 200_000, amour: 200_000 });
+    const avant = enclosActif().enclos;
+    expect(avant.enCours).not.toBeNull();
+    jest.setSystemTime(premiere.finAt + 60_000);
+    const simule = appliquerEnCours(avant.lot, avant.enCours!, 60);
+
+    store.changerNiveauCible(id, 80);
+    expect(enclosActif().enclos).toMatchObject({
+      depart: { niveauCible: 80 },
+      lot: simule.lot,
+      carburant: { ...avant.carburant, ...simule.carburant },
+      etapesValidees: avant.etapesValidees,
+      enCours: null,
+    });
   });
 });
 

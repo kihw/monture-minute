@@ -26,6 +26,7 @@ export function Ecran({
   entete,
   scrollRef,
   onScroll,
+  compact,
 }: {
   children: ReactNode;
   basDePage?: ReactNode;
@@ -34,9 +35,10 @@ export function Ecran({
   /** Accès au défilement (visite guidée : amener un élément à l'écran). */
   scrollRef?: RefObject<ScrollView | null>;
   onScroll?: (e: NativeSyntheticEvent<NativeScrollEvent>) => void;
+  compact?: boolean;
 }) {
   const insets = useSafeAreaInsets();
-  const padBas = basDePage ? 0 : Math.max(insets.bottom, esp.lg);
+  const padBas = basDePage ? 0 : Math.max(insets.bottom, compact ? esp.xs : esp.lg);
   return (
     <View style={styles.ecran}>
       <View style={[styles.colonne, { paddingTop: entete ? insets.top : 0 }]}>
@@ -47,6 +49,7 @@ export function Ecran({
           scrollEventThrottle={32}
           contentContainerStyle={[
             styles.contenu,
+            compact && { gap: esp.xs },
             { paddingTop: entete ? esp.sm : insets.top + esp.lg, paddingBottom: padBas + esp.xs },
           ]}
           showsVerticalScrollIndicator={false}

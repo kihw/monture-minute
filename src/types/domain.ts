@@ -62,6 +62,8 @@ export interface EtatLot {
   xp: number;
 }
 
+export type ValeursMontures = Pick<EtatLot, 'serenite' | 'endurance' | 'maturite' | 'amour'> & { niveau: number };
+
 export type TypeEtape = 'unification' | 'deplacement' | 'progression' | 'xp';
 
 export interface Etape {

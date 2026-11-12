@@ -6,7 +6,7 @@ import { CARACTERISTIQUE_MAX, JAUGE_MAX, SERENITE_MAX, SERENITE_MIN } from '../d
 import { NIVEAU_MAX_MONTURE, xpPourNiveau } from '../data/xpTable';
 import { appliquerEnCours, echeances, recalculerEnCours, scenarios } from '../engine/descente';
 import { messageFinEtape, messagePause, messageRalentit, messageVaSeVider } from '../engine/messages';
-import { contexteDepuis, prochaineEtape, remplissageHabituel } from '../engine/parcours';
+import { contexteDepuis, niveauLot, prochaineEtape, remplissageHabituel } from '../engine/parcours';
 import { corrigerHorloge, DonneesSync, ECART_HORLOGE_MAX_MS, etatSyncInitial, EtatSync, fusionner, marquer, marquerTout, REGLAGES_SYNC, ReglagesSync, ResumeFusion, resumeFusion } from '../engine/fusion';
 import { carburantPropose } from '../engine/statut';
 import { annulerNotifications, DELAI_RAPPEL_MS, programmer } from '../engine/notifications';
@@ -14,12 +14,12 @@ import {
   carburantVide,
   DepartEnclos,
   Enclos,
-  EtatLot,
   INFO_JAUGE,
   JaugeType,
   lotInitial,
   Reglages,
   Segment,
+  ValeursMontures,
 } from '../types/domain';
 
 export interface Confirmation {
@@ -68,8 +68,9 @@ interface EleveurState {
   modifierEnclos: (id: string, changements: { nom?: string; depart?: DepartEnclos }) => void;
   /** Nouvel ordre des enclos (pastilles glissées) ; ignoré s'il ne contient pas exactement les mêmes enclos. */
   reordonnerEnclos: (ordre: string[]) => void;
-  /** « Ajuster selon le jeu » : sérénité, caractéristiques et niveau lus en jeu (le niveau est converti en XP). */
-  ajusterMontures: (id: string, valeurs: { serenite: number; endurance: number; maturite: number; amour: number; niveau: number }) => void;
+  changerNiveauCible: (id: string, niveau: number) => void;
+  /** Corrige les valeurs saisies à partir de l'état simulé à l'instant de la correction. */
+  ajusterMontures: (id: string, valeurs: Partial<ValeursMontures>) => void;
   /** Repart de zéro sur un enclos, avec un nouvel état de départ. */
   redemarrerEnclos: (id: string, depart: DepartEnclos) => void;
 
@@ -92,7 +93,6 @@ interface EleveurState {
   validerEtape: (id: string, anticipee?: boolean) => void;
   annulerEtape: (id: string) => void;
   /** Recale le lot sur les valeurs réellement observées en jeu. */
-  ajusterLot: (id: string, patch: Partial<EtatLot>) => void;
   /** Recharge faite en jeu pendant l'étape : la jauge repart de `niveau` maintenant. */
   rechargerJauge: (id: string, jauge: JaugeType, niveau: number) => void;
   /** Niveau relu en jeu pendant l'étape : la simulation se recale dessus. */
@@ -164,6 +164,13 @@ function creerEnclos(nom: string, depart: DepartEnclos): Enclos {
 }
 
 const ctxEnclos = (reglages: Reglages, e: Enclos) => contexteDepuis(reglages, e.depart);
+
+function progressionActuelle(e: Enclos) {
+  if (!e.enCours) return { lot: e.lot, carburant: e.carburant };
+  const ecoule = Math.max(0, (Date.now() - e.enCours.demarreeAt) / 1000);
+  const resultat = appliquerEnCours(e.lot, e.enCours, ecoule);
+  return { lot: resultat.lot, carburant: { ...e.carburant, ...resultat.carburant } };
+}
 
 export function prochainNom(enclos: Record<string, Enclos>) {
   const pris = new Set(Object.values(enclos).map((e) => e.nom));
@@ -478,18 +485,37 @@ export const useEleveurStore = create<EleveurState>()(
             return memes ? { ordre: [...ordre] } : s;
           }),
 
-        ajusterMontures: (id, valeurs) => {
+        changerNiveauCible: (id, niveau) => {
           const e = get().enclos[id];
+          if (!e || !Number.isFinite(niveau)) return;
+          const niveauCible = Math.max(e.depart.niveauDepart, Math.min(NIVEAU_MAX_MONTURE, Math.round(niveau)));
+          if (niveauCible === e.depart.niveauCible) return;
+          const progression = progressionActuelle(e);
+          annulerNotifications(e.enCours?.notificationIds);
+          majEnclos(id, (x) => ({ ...x, ...progression, depart: { ...x.depart, niveauCible }, enCours: null }));
+        },
+
+        ajusterMontures: (id, valeurs) => {
+          const { enclos, reglages } = get();
+          const e = enclos[id];
           if (!e) return;
-          const borne = (n: number, min: number, max: number) => Math.max(min, Math.min(max, Math.round(Number.isFinite(n) ? n : min)));
-          const niveau = borne(valeurs.niveau, e.depart.niveauDepart, NIVEAU_MAX_MONTURE);
-          get().ajusterLot(id, {
-            serenite: borne(valeurs.serenite, SERENITE_MIN, SERENITE_MAX),
-            endurance: borne(valeurs.endurance, 0, CARACTERISTIQUE_MAX),
-            maturite: borne(valeurs.maturite, 0, CARACTERISTIQUE_MAX),
-            amour: borne(valeurs.amour, 0, CARACTERISTIQUE_MAX),
-            xp: Math.max(0, xpPourNiveau(niveau) - xpPourNiveau(e.depart.niveauDepart)),
-          });
+          const progression = progressionActuelle(e);
+          const avant = progression.lot;
+          const borne = (n: number | undefined, min: number, max: number, sinon: number) =>
+            n !== undefined && Number.isFinite(n) ? Math.max(min, Math.min(max, Math.round(n))) : sinon;
+          const niveauActuel = niveauLot(avant, ctxEnclos(reglages, e));
+          const niveau = borne(valeurs.niveau, e.depart.niveauDepart, NIVEAU_MAX_MONTURE, niveauActuel);
+          const lot = {
+            ...avant,
+            serenite: borne(valeurs.serenite, SERENITE_MIN, SERENITE_MAX, avant.serenite),
+            endurance: borne(valeurs.endurance, 0, CARACTERISTIQUE_MAX, avant.endurance),
+            maturite: borne(valeurs.maturite, 0, CARACTERISTIQUE_MAX, avant.maturite),
+            amour: borne(valeurs.amour, 0, CARACTERISTIQUE_MAX, avant.amour),
+            xp: niveau === niveauActuel ? avant.xp : xpPourNiveau(niveau) - xpPourNiveau(e.depart.niveauDepart),
+          };
+          if (lot.serenite === avant.serenite && lot.endurance === avant.endurance && lot.maturite === avant.maturite && lot.amour === avant.amour && lot.xp === avant.xp) return;
+          annulerNotifications(e.enCours?.notificationIds);
+          majEnclos(id, (x) => ({ ...x, ...progression, lot, enCours: null }));
         },
 
         redemarrerEnclos: (id, depart) =>
@@ -602,12 +628,6 @@ export const useEleveurStore = create<EleveurState>()(
           majEnclos(id, (e) => {
             annulerNotifications(e.enCours?.notificationIds);
             return { ...e, enCours: null };
-          }),
-
-        ajusterLot: (id, patch) =>
-          majEnclos(id, (e) => {
-            annulerNotifications(e.enCours?.notificationIds);
-            return { ...e, lot: { ...e.lot, ...patch }, enCours: null };
           }),
 
         rechargerJauge: (id, jauge, niveau) => saisirJauge(id, jauge, niveau, 'recharge'),

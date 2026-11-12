@@ -366,7 +366,7 @@ function creerPages(): Page[] {
     {
       titre: "Valider et continuer",
       texte:
-        "Quand l’étape est finie, l’écran montre ce qui a été gagné et prépare la suivante : « Jauges activées · lancer » valide et relance en un geste. Si le jeu diffère, « Ajuster selon le jeu » dans Tes montures.",
+        "Quand l’étape est finie, l’écran montre ce qui a été gagné et prépare la suivante : « Jauges activées · lancer » valide et relance en un geste. Si le jeu diffère, corrige les valeurs dans Tes montures puis touche « Appliquer ».",
       points: [
         "Menu ⋯ › Terminer l’étape compte le temps déjà passé",
         "À la fin : « Nouveau cycle, mêmes réglages » relance l’enclos",

@@ -6,7 +6,7 @@ import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import PopupCarburant from '../../components/ChoixCarburant';
 import BlocMontures from '../../components/jeu/BlocMontures';
 import FinCycle from '../../components/jeu/FinCycle';
-import EnTeteEnclos from '../../components/jeu/EnTeteEnclos';
+import IdentiteEnclos from '../../components/jeu/IdentiteEnclos';
 import PanneauJeu from '../../components/jeu/PanneauJeu';
 import PanneauRecharge from '../../components/jeu/PanneauRecharge';
 import PastillesEnclos from '../../components/jeu/PastillesEnclos';
@@ -24,17 +24,12 @@ import { useCalcul, useMaintenant } from '../../hooks/useElevage';
 import { useBandeau } from '../../store/useBandeau';
 import { useEleveurStore, useListeEnclos } from '../../store/useStore';
 import { couleurs, rayon, texte } from '../../theme';
-import { CARACTERISTIQUES, INFO_JAUGE, INFO_SUIVI, JaugeType } from '../../types/domain';
+import { CARACTERISTIQUES, DepartEnclos, INFO_JAUGE, INFO_SUIVI, JaugeType } from '../../types/domain';
 import { formatDureeClaire, formatHeure, formatPoints, formatSerenite, titreClair } from '../../utils/format';
 
 type PopupOuverte = 'menu' | 'terminer' | null;
 
-/**
- * Écran d'un enclos « Comme en jeu » (1.1, docs/PLAN-1.1.md) : pastilles des enclos, en-tête (monture,
- * nom à renommer sur place, compte à rebours), panneau des 6 jauges comme en jeu, puis « Tes montures »
- * (ajustable sur place) ou, quand on touche une jauge, la recharge sur place. En bas : la corbeille
- * (avec « Annuler ») et le bouton de la chose à faire.
- */
+/** Suivi du cycle et édition de l'enclos sur le même écran. */
 export default function DetailEnclos() {
   const { id, renommer } = useLocalSearchParams<{ id: string; renommer?: string }>();
   const liste = useListeEnclos();
@@ -46,8 +41,11 @@ export default function DetailEnclos() {
   const calcul = useCalcul();
   const maintenant = useMaintenant();
   const [popup, setPopup] = useState<PopupOuverte>(null);
-  // Jauge touchée : la recharge sur place remplace le bloc « Tes montures ».
-  const [recharge, setRecharge] = useState<JaugeType | null>(null);
+  const [rechargeChoisie, setRechargeChoisie] = useState<{ id: string; jauge: JaugeType } | null>(null);
+  const recharge = rechargeChoisie?.id === id ? rechargeChoisie.jauge : null;
+  const setRecharge = (jauge: JaugeType | null) => setRechargeChoisie(jauge ? { id, jauge } : null);
+  const [cibleEnAttente, setCibleEnAttente] = useState<{ id: string; niveau: number } | null>(null);
+  const [carburantOuvert, setCarburantOuvert] = useState<string | null>(null);
   // Carburant ajusté pour la préparation de l'étape (effacé quand l'étape change).
   const [ajuste, setAjuste] = useState<{ cle: string; valeurs: Partial<Record<JaugeType, number>> }>({ cle: '', valeurs: {} });
   const [selection, setSelection] = useState<{ type: JaugeType; valeur: number } | null>(null);
@@ -79,13 +77,25 @@ export default function DetailEnclos() {
       : vue.statut === 'a_confirmer' && !vide && suivante
         ? { etape: suivante, reste: vue.carburant, lot: vue.lot }
         : null;
-  const cleSetup = `${vue.statut}-${vue.numeroEtape}`;
+  const cleSetup = `${id}-${vue.statut}-${vue.numeroEtape}`;
   const ajustees = ajuste.cle === cleSetup ? ajuste.valeurs : {};
   const valeurs: Partial<Record<JaugeType, number>> = preparation
     ? Object.fromEntries(preparation.etape.jauges.map((j) => [j, ajustees[j] ?? carburantPropose(preparation.reste, ctx, j)]))
     : {};
   const prevue = preparation ? prochaineEtape(preparation.lot, ctx, valeurs) : null;
   const choisir = (j: JaugeType, niveau: number) => setAjuste({ cle: cleSetup, valeurs: { ...ajustees, [j]: niveau } });
+  const afficherCarburant = carburantOuvert === cleSetup;
+
+  function modifierDepart(changement: Partial<DepartEnclos>) {
+    const courant = useEleveurStore.getState().enclos[id];
+    if (!courant) return;
+    if (changement.niveauCible !== undefined) {
+      if (courant.enCours) setCibleEnAttente({ id, niveau: changement.niveauCible });
+      else store.changerNiveauCible(id, changement.niveauCible);
+      return;
+    }
+    store.modifierEnclos(id, { depart: { ...courant.depart, ...changement } });
+  }
 
   function lancer() {
     if (vue.statut === 'attente') store.demarrerEtape(id, valeurs);
@@ -169,7 +179,7 @@ export default function DetailEnclos() {
       : { label: 'Recharger une jauge', onPress: () => setRecharge(conseil?.jauge ?? etape.jauges[0]), fond: couleurs.carteClaire, texteCouleur: couleurs.texte };
   } else {
     entete = {
-      surtitre: `À faire · étape ${vue.numeroEtape}`,
+      surtitre: 'Prête à lancer',
       temps: prevue ? formatDureeClaire(prevue.dureeSec) : undefined,
       detail: prevue ? `fin vers ${formatHeure(maintenant + prevue.dureeSec * 1000)}` : undefined,
     };
@@ -178,7 +188,6 @@ export default function DetailEnclos() {
 
   const etiquetteEtape = etape ? `Étape ${vue.numeroEtape}/${vue.totalEtapes} · ${titreClair(etape.titre)}` : 'Parcours terminé';
   const carburantPanneau = preparation ? { ...vue.carburant, ...preparation.reste, ...valeurs } : vue.carburant;
-  const cible = etape && etape.sereniteCible !== etape.sereniteDepart ? etape.sereniteCible : undefined;
   const pastilles = liste.map((e, i) => {
     const v = vues[i];
     const c = e.enCours && v.statut === 'en_cours' ? calculerConseil(e.enCours, maintenant, { ...calcul, seuilGainMin: seuilConseilMin }) : null;
@@ -194,12 +203,13 @@ export default function DetailEnclos() {
     {
       cible: refMontures,
       titre: 'Tes montures',
-      texte: 'Sérénité, caractéristiques et niveau du lot. Si le jeu affiche autre chose, « Ajuster selon le jeu » et corrige directement les valeurs : le parcours se recalcule.',
+      texte: 'Glisse les jauges ou saisis les valeurs lues en jeu. Touche « Appliquer » pour recalculer le parcours.',
     },
   ];
 
   return (
     <Ecran
+      compact
       entete={
         <View style={styles.barre}>
           <Pressable onPress={() => router.replace('/enclos')} hitSlop={8} style={styles.iconeBarre} accessibilityRole="button" accessibilityLabel="Retour à mes enclos">
@@ -208,27 +218,15 @@ export default function DetailEnclos() {
           <View style={{ flex: 1, minWidth: 0 }}>
             <PastillesEnclos pastilles={pastilles} actif={id} onChoisir={(x) => router.replace(`/enclos/${x}`)} onAjouter={ajouter} />
           </View>
+          {etape && (
+            <Pressable onPress={() => setParcoursOuvert(!parcoursOuvert)} style={styles.iconeBarre}
+              accessibilityRole="button" accessibilityLabel="Parcours" accessibilityState={{ expanded: parcoursOuvert }}>
+              <MaterialCommunityIcons name="format-list-numbered" size={s(20)} color={parcoursOuvert ? couleurs.accent : couleurs.texteAttenue} />
+            </Pressable>
+          )}
           <Pressable onPress={() => setPopup('menu')} hitSlop={8} style={styles.iconeBarre} accessibilityRole="button" accessibilityLabel="Options de l’enclos">
             <MaterialCommunityIcons name="dots-horizontal" size={s(22)} color={couleurs.texteAttenue} />
           </Pressable>
-        </View>
-      }
-      basDePage={
-        <View style={styles.bas}>
-          <Pressable onPress={supprimer} style={({ pressed }) => [styles.corbeille, pressed && { opacity: 0.7 }]} accessibilityRole="button" accessibilityLabel="Supprimer l’enclos">
-            <MaterialCommunityIcons name="trash-can-outline" size={s(20)} color="#f08a7c" />
-          </Pressable>
-          {action && (
-            <View style={{ flex: 1 }}>
-              {action.fond ? (
-                <Pressable onPress={action.onPress} style={({ pressed }) => [styles.bouton, { backgroundColor: action.fond }, pressed && { opacity: 0.85 }]} accessibilityRole="button">
-                  <Text style={[styles.boutonTexte, { color: action.texteCouleur }]}>{action.label}</Text>
-                </Pressable>
-              ) : (
-                <BoutonPrincipal label={action.label} onPress={action.onPress} />
-              )}
-            </View>
-          )}
         </View>
       }
       scrollRef={defilement}
@@ -236,107 +234,133 @@ export default function DetailEnclos() {
         decalage.current = e.nativeEvent.contentOffset.y;
       }}
     >
-      {vue.statut === 'termine' ? (
-        <FinCycle
-          enclos={enclos}
-          lot={vue.lot}
-          ctx={ctx}
-          onChangerReglages={() => router.push(`/depart?mode=cycle&id=${id}`)}
-          onVoirBilan={() => router.push(`/objectifs/${id}`)}
-        />
-      ) : (
-        <EnTeteEnclos key={id} enclos={enclos} etape={etiquetteEtape} {...entete} onRenommer={(nom) => store.renommerEnclos(id, nom)} renommerAuDebut={renommer === '1'} />
-      )}
-
-      {suggestion && (
-        <Pressable onPress={() => setRecharge(suggestion.j)} style={({ pressed }) => [styles.astuce, pressed && { opacity: 0.7 }]} accessibilityRole="button">
-          <MaterialCommunityIcons name="flask-outline" size={s(15)} color={couleurs.accent} />
-          <Text style={styles.astuceTexte}>
-            Facultatif : remplir {nomJ(suggestion.j)} à {formatPoints(suggestion.sc.recharge!.niveau)} fait gagner {formatDureeClaire(suggestion.sc.gainMs! / 1000)}
-          </Text>
-          <MaterialCommunityIcons name="chevron-right" size={s(16)} color={couleurs.texteFaible} />
-        </Pressable>
-      )}
-
-      <View ref={refJauges} collapsable={false} style={vue.statut === 'termine' && { display: 'none' }}>
-        <PanneauJeu
-          carburant={carburantPanneau}
-          actives={tourne && etape ? etape.jauges : []}
-          aActiver={preparation ? preparation.etape.jauges : []}
-          choisie={recharge}
-          consigne={preparation ? 'Active en jeu les jauges qui clignotent' : undefined}
-          onToucher={tourne && enCours ? (j) => setRecharge(recharge === j ? null : j) : undefined}
-        />
-      </View>
-
-      {preparation && prevue && (
-        <View style={styles.bloc}>
-          <ConsigneSetup texte="Carburant mis · tes habitudes, touche pour changer" />
-          <SetupEtape
-            jauges={preparation.etape.jauges}
-            reste={preparation.reste}
-            valeurs={valeurs}
-            habituel={(j) => remplissageHabituel(ctx, j)}
-            onChoisir={choisir}
-            onAutre={(j) => setSelection({ type: j, valeur: valeurs[j] ?? ctx.remplissage })}
-          />
-          {prevue.vides.length > 0 && (
-            <Text style={[texte.legende, { color: couleurs.attention }]}>
-              Pas assez de carburant : {prevue.vides.map(nomJ).join(', ')} se videra avant la fin. Mets-en davantage.
-            </Text>
-          )}
-          {vue.statut === 'a_confirmer' && (
-            <Pressable onPress={() => confirmer()} hitSlop={6} style={{ alignSelf: 'center' }}>
-              <Text style={styles.lien}>Valider sans lancer</Text>
-            </Pressable>
-          )}
-        </View>
-      )}
-
-      <View ref={refMontures} collapsable={false} style={vue.statut === 'termine' && { display: 'none' }}>
-        {recharge && enCours && tourne ? (
-          <PanneauRecharge
-            enCours={enCours}
-            jauge={recharge}
-            maintenant={maintenant}
-            options={{ ...calcul, remplissage: remplissageHabituel(ctx, recharge) }}
-            conseille={conseil && (conseil.niveau === 'recharger' || conseil.niveau === 'vide') && conseil.jauge === recharge ? (conseil.scenario?.type ?? null) : null}
-            onRecharger={(niveau) => recharger(recharge, niveau)}
-            onAutreNiveau={() => ouvrirSaisie('recharge', recharge)}
-            onCorriger={() => ouvrirSaisie('correction', recharge)}
-            onFermer={() => setRecharge(null)}
-          />
-        ) : (
-          <BlocMontures
+      <View style={styles.cycle}>
+        {vue.statut === 'termine' ? (
+          <FinCycle
+            enclos={enclos}
             lot={vue.lot}
             ctx={ctx}
-            cible={cible}
+            onChangerReglages={() => router.push(`/depart?mode=cycle&id=${id}`)}
+            onVoirBilan={() => router.push(`/objectifs/${id}`)}
+          />
+        ) : (
+          <View style={styles.suivi}>
+            <View style={styles.suiviTexte}>
+              <Text style={styles.sectionTexte} accessibilityRole="header">{etiquetteEtape}</Text>
+              {entete.surtitre && <Text style={[texte.legende, { color: entete.couleurSurtitre ?? couleurs.accent }]}>{entete.surtitre}</Text>}
+            </View>
+            {entete.temps && (
+              <View style={styles.horloge}>
+                <Text style={styles.temps}>{entete.temps}</Text>
+                {entete.detail && <Text style={[texte.legende, { color: entete.couleurDetail ?? couleurs.texteAttenue }]}>{entete.detail}</Text>}
+              </View>
+            )}
+          </View>
+        )}
+
+        {suggestion && (
+          <Pressable onPress={() => setRecharge(suggestion.j)} style={({ pressed }) => [styles.astuce, pressed && { opacity: 0.7 }]} accessibilityRole="button">
+            <MaterialCommunityIcons name="flask-outline" size={s(15)} color={couleurs.accent} />
+            <Text style={styles.astuceTexte}>
+              Facultatif : remplir {nomJ(suggestion.j)} à {formatPoints(suggestion.sc.recharge!.niveau)} fait gagner {formatDureeClaire(suggestion.sc.gainMs! / 1000)}
+            </Text>
+            <MaterialCommunityIcons name="chevron-right" size={s(16)} color={couleurs.texteFaible} />
+          </Pressable>
+        )}
+
+        <View ref={refJauges} collapsable={false} style={vue.statut === 'termine' && { display: 'none' }}>
+          <PanneauJeu
+            carburant={carburantPanneau}
+            actives={tourne && etape ? etape.jauges : []}
+            aActiver={preparation ? preparation.etape.jauges : []}
+            choisie={recharge}
+            onToucher={tourne && enCours ? (j) => setRecharge(recharge === j ? null : j) : undefined}
+          />
+        </View>
+
+        {preparation && prevue && (afficherCarburant || prevue.vides.length > 0) && (
+          <View style={styles.bloc}>
+            {afficherCarburant && <>
+            <ConsigneSetup texte="Carburant prérempli d’après tes habitudes" />
+            <SetupEtape
+              jauges={preparation.etape.jauges}
+              reste={preparation.reste}
+              valeurs={valeurs}
+              habituel={(j) => remplissageHabituel(ctx, j)}
+              onChoisir={choisir}
+              onAutre={(j) => setSelection({ type: j, valeur: valeurs[j] ?? ctx.remplissage })}
+            />
+            </>}
+            {prevue.vides.length > 0 && (
+              <Text style={[texte.legende, { color: couleurs.attention }]}>
+                Pas assez de carburant : {prevue.vides.map(nomJ).join(', ')} se videra avant la fin. Mets-en davantage.
+              </Text>
+            )}
+          </View>
+        )}
+
+        {recharge && enCours && tourne && (
+            <PanneauRecharge
+              enCours={enCours}
+              jauge={recharge}
+              maintenant={maintenant}
+              options={{ ...calcul, remplissage: remplissageHabituel(ctx, recharge) }}
+              conseille={conseil && (conseil.niveau === 'recharger' || conseil.niveau === 'vide') && conseil.jauge === recharge ? (conseil.scenario?.type ?? null) : null}
+              onRecharger={(niveau) => recharger(recharge, niveau)}
+              onAutreNiveau={() => ouvrirSaisie('recharge', recharge)}
+              onCorriger={() => ouvrirSaisie('correction', recharge)}
+              onFermer={() => setRecharge(null)}
+            />
+        )}
+
+        {action && (
+          <View style={styles.actions}>
+            <View style={styles.suiviTexte}>
+              {action.fond ? (
+                <Pressable onPress={action.onPress} style={({ pressed }) => [styles.bouton, { backgroundColor: action.fond }, pressed && { opacity: 0.85 }]} accessibilityRole="button">
+                  <Text style={[styles.boutonTexte, { color: action.texteCouleur }]}>{action.label}</Text>
+                </Pressable>
+              ) : <BoutonPrincipal label={action.label} onPress={action.onPress} />}
+            </View>
+            {preparation && (
+              <Pressable
+                onPress={() => setCarburantOuvert(afficherCarburant ? null : cleSetup)}
+                style={styles.carburant}
+                accessibilityRole="button"
+                accessibilityLabel="Carburant avant le lancement"
+                accessibilityState={{ expanded: afficherCarburant }}
+              >
+                <MaterialCommunityIcons name="flask-outline" size={s(18)} color={couleurs.accent} />
+                <Text style={styles.libelleCarburant}>Carburant</Text>
+              </Pressable>
+            )}
+          </View>
+        )}
+      </View>
+
+      <IdentiteEnclos key={id} enclos={enclos} focusNom={renommer === '1'} onNom={(nom) => store.renommerEnclos(id, nom)} onDepart={modifierDepart} />
+      <View ref={refMontures} collapsable={false}>
+          <BlocMontures
+            key={id}
+            lot={vue.lot}
+            ctx={ctx}
+            etapeEnCours={!!enCours}
             onAjuster={(v) => {
               store.ajusterMontures(id, v);
               montrer('Valeurs du jeu enregistrées · parcours recalculé');
             }}
           />
-        )}
       </View>
 
-      {etape && (
+      {etape && parcoursOuvert && (
         <View style={{ gap: s(6) }}>
-          {/* Replié sur une ligne : le parcours complet s'ouvre à la demande. */}
-          <Pressable
-            onPress={() => setParcoursOuvert(!parcoursOuvert)}
-            style={({ pressed }) => [styles.titreSection, pressed && { opacity: 0.7 }]}
-            accessibilityRole="button"
-            accessibilityState={{ expanded: parcoursOuvert }}
-          >
+          <View style={styles.titreSection}>
             <Text style={styles.sectionTexte}>Parcours</Text>
             <Text style={[texte.legende, { flex: 1, marginLeft: s(8) }]} numberOfLines={1}>
               {`${vue.totalEtapes} étapes${vue.dureeTotaleSec > 0 ? ` · encore ≈ ${formatDureeClaire(vue.dureeTotaleSec)}` : ''}`}
             </Text>
-            <MaterialCommunityIcons name={parcoursOuvert ? 'chevron-up' : 'chevron-down'} size={s(18)} color={couleurs.texteAttenue} />
-          </Pressable>
-          {parcoursOuvert && (
-            <FriseEtapes validees={enclos.etapesValidees} actuelle={etape} aVenir={vue.aVenir} statut={vue.statut} restantSec={vue.restantSec} />
-          )}
+          </View>
+          <FriseEtapes validees={enclos.etapesValidees} actuelle={etape} aVenir={vue.aVenir} statut={vue.statut} restantSec={vue.restantSec} />
         </View>
       )}
 
@@ -377,6 +401,9 @@ export default function DetailEnclos() {
         titre={enclos.nom}
         onFermer={() => setPopup(null)}
         actions={[
+          ...(preparation && vue.statut === 'a_confirmer'
+            ? [{ icone: 'skip-next' as const, titre: 'Valider sans lancer', onPress: () => confirmer() }]
+            : []),
           ...(vide
             ? [{ icone: 'skip-next' as const, titre: 'Valider sans recharger', detail: 'Garde la progression obtenue et passe à la suite', onPress: () => confirmer() }]
             : []),
@@ -393,10 +420,10 @@ export default function DetailEnclos() {
               ]
             : []),
           {
-            icone: 'pencil-outline' as const,
-            titre: 'Modifier l’enclos',
-            detail: 'Nom, monture, sérénité, niveaux',
-            onPress: () => router.push(`/depart?mode=modifier&id=${id}`),
+            icone: 'trash-can-outline' as const,
+            titre: 'Supprimer l’enclos',
+            couleur: couleurs.danger,
+            onPress: supprimer,
           },
           {
             icone: 'restart' as const,
@@ -406,6 +433,18 @@ export default function DetailEnclos() {
             onPress: () => router.push(`/depart?mode=redemarrage&id=${id}`),
           },
         ]}
+      />
+
+      <Confirmation
+        visible={cibleEnAttente?.id === id}
+        titre="Modifier le niveau visé"
+        message="Le minuteur de l’étape s’arrêtera. Le parcours sera recalculé à partir de la progression actuelle."
+        libelle="Arrêter et recalculer"
+        onFermer={() => setCibleEnAttente(null)}
+        onConfirmer={() => {
+          if (cibleEnAttente?.id === id) store.changerNiveauCible(id, cibleEnAttente.niveau);
+          setCibleEnAttente(null);
+        }}
       />
 
       <Confirmation
@@ -432,32 +471,29 @@ export default function DetailEnclos() {
 }
 
 const styles = StyleSheet.create({
-  barre: { flexDirection: 'row', alignItems: 'center', gap: s(4), paddingHorizontal: s(6), paddingVertical: s(6) },
+  barre: { flexDirection: 'row', alignItems: 'center', gap: s(4), paddingHorizontal: s(6), paddingVertical: s(3) },
   iconeBarre: { width: s(36), height: s(36), borderRadius: s(18), alignItems: 'center', justifyContent: 'center' },
-  bas: { flexDirection: 'row', gap: s(8), alignItems: 'center' },
-  corbeille: {
-    width: s(46),
-    height: s(46),
-    borderRadius: rayon.lg,
-    borderWidth: 1,
-    borderColor: couleurs.liseretVif,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  bouton: { height: s(46), borderRadius: rayon.lg, alignItems: 'center', justifyContent: 'center', paddingHorizontal: s(12) },
+  cycle: { backgroundColor: couleurs.carte, borderRadius: rayon.xl, paddingHorizontal: s(9), paddingVertical: s(7), gap: s(4) },
+  suivi: { flexDirection: 'row', alignItems: 'center', gap: s(8) },
+  suiviTexte: { flex: 1, minWidth: 0 },
+  horloge: { alignItems: 'flex-end', maxWidth: '54%' },
+  temps: { color: couleurs.accent, fontSize: s(23), fontWeight: '900', fontVariant: ['tabular-nums'] },
+  actions: { flexDirection: 'row', alignItems: 'stretch', gap: s(5) },
+  carburant: { flexDirection: 'row', alignItems: 'center', gap: s(4), paddingHorizontal: s(7), borderRadius: rayon.md, borderWidth: 1, borderColor: couleurs.liseretVif },
+  bouton: { minHeight: s(34), borderRadius: rayon.lg, alignItems: 'center', justifyContent: 'center', paddingHorizontal: s(8) },
   boutonTexte: { fontSize: s(14), fontWeight: '900' },
   astuce: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: s(8),
-    paddingVertical: s(8),
+    paddingVertical: s(4),
     paddingHorizontal: s(10),
     borderRadius: rayon.lg,
     backgroundColor: 'rgba(233,184,74,0.08)',
   },
   astuceTexte: { flex: 1, color: couleurs.texte, fontSize: s(12), fontWeight: '600' },
-  lien: { color: couleurs.texteAttenue, fontSize: s(12.5), fontWeight: '700', textDecorationLine: 'underline' },
+  libelleCarburant: { color: couleurs.texte, fontSize: s(12), fontWeight: '700' },
   bloc: { backgroundColor: couleurs.carte, borderRadius: rayon.xl, paddingVertical: s(10), paddingHorizontal: s(12), gap: s(8) },
-  titreSection: { flexDirection: 'row', alignItems: 'center', minHeight: s(32) },
+  titreSection: { flexDirection: 'row', alignItems: 'center', minHeight: s(26) },
   sectionTexte: { color: couleurs.texte, fontSize: s(14), fontWeight: '900' },
 });

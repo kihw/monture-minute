@@ -1,6 +1,6 @@
-// Bloc « Tes montures » (1.1) : sérénité sur sa règle des zones, endurance, maturité, amour et
-// niveau, et « Ajuster selon le jeu » qui transforme chaque valeur en champ, sur place.
+// Les valeurs restent visibles et modifiables. Le brouillon est appliqué au parcours en une fois.
 
+import Slider from '@react-native-community/slider';
 import { useState } from 'react';
 import { Pressable, StyleSheet, TextInput, View } from 'react-native';
 
@@ -9,35 +9,22 @@ import { NIVEAU_MAX_MONTURE } from '../../data/xpTable';
 import { s } from '../../echelle';
 import { ContexteCalcul, niveauLot } from '../../engine/parcours';
 import { couleurs, rayon } from '../../theme';
-import { CARACTERISTIQUES, EtatLot, INFO_SUIVI } from '../../types/domain';
-import { formatPoints, formatSerenite } from '../../utils/format';
+import { CARACTERISTIQUES, EtatLot, INFO_SUIVI, ValeursMontures } from '../../types/domain';
+import { Confirmation } from '../Popup';
 import { Text } from '../Texte';
 import { phraseSerenite, RegleSerenite } from '../v2/enclos';
-
-export interface ValeursMontures {
-  serenite: number;
-  endurance: number;
-  maturite: number;
-  amour: number;
-  niveau: number;
-}
 
 type Brouillon = Record<keyof ValeursMontures, string>;
 
 const PAS_SERENITE = 500;
+const PAS_CURSEUR_SERENITE = 50;
 
 const borne = (n: number, min: number, max: number) => Math.max(min, Math.min(max, Math.round(Number.isFinite(n) ? n : min)));
 
-/** Valeurs saisies, ramenées dans les limites du jeu. */
-export function valeursDepuisSaisie(b: Brouillon, niveauMin: number): ValeursMontures {
-  const nombre = (t: string) => Number(t.replace(/[^\d-]/g, ''));
-  return {
-    serenite: borne(nombre(b.serenite), SERENITE_MIN, SERENITE_MAX),
-    endurance: borne(nombre(b.endurance), 0, CARACTERISTIQUE_MAX),
-    maturite: borne(nombre(b.maturite), 0, CARACTERISTIQUE_MAX),
-    amour: borne(nombre(b.amour), 0, CARACTERISTIQUE_MAX),
-    niveau: borne(nombre(b.niveau), niveauMin, NIVEAU_MAX_MONTURE),
-  };
+function lireEntier(saisie: string): number | undefined {
+  const texte = saisie.replace(/\s/g, '');
+  const nombre = Number(texte);
+  return /^-?\d+$/.test(texte) && Number.isSafeInteger(nombre) ? nombre : undefined;
 }
 
 function Champ({ valeur, onChange, libelle, large }: { valeur: string; onChange: (t: string) => void; libelle: string; large?: boolean }) {
@@ -53,42 +40,78 @@ function Champ({ valeur, onChange, libelle, large }: { valeur: string; onChange:
   );
 }
 
+function JaugeEditable({ valeur, min, max, pas, couleur, libelle, onChange }: {
+  valeur: number;
+  min: number;
+  max: number;
+  pas: number;
+  couleur: string;
+  libelle: string;
+  onChange: (t: string) => void;
+}) {
+  const position = `${((valeur - min) / (max - min || 1)) * 100}%` as const;
+  return (
+    <View style={styles.jauge}>
+      <View pointerEvents="none" style={styles.piste}>
+        <View style={[styles.remplissage, { width: position, backgroundColor: couleur }]} />
+        <View style={[styles.poignee, { left: position, backgroundColor: couleur }]} />
+      </View>
+      <Slider
+        accessibilityLabel={libelle}
+        accessibilityValue={{ min, max, now: valeur }}
+        value={valeur - min}
+        minimumValue={0}
+        maximumValue={max - min}
+        disabled={min === max}
+        step={pas}
+        minimumTrackTintColor="transparent"
+        maximumTrackTintColor="transparent"
+        thumbTintColor="transparent"
+        onValueChange={(n) => onChange(String(Math.round(n + min)))}
+        style={StyleSheet.absoluteFill}
+      />
+    </View>
+  );
+}
+
 export default function BlocMontures({
   lot,
   ctx,
-  cible,
+  etapeEnCours,
   onAjuster,
 }: {
   lot: EtatLot;
   ctx: ContexteCalcul;
-  /** Sérénité visée par l'étape (repère secondaire sur la règle). */
-  cible?: number;
-  onAjuster: (valeurs: ValeursMontures) => void;
+  etapeEnCours: boolean;
+  onAjuster: (valeurs: Partial<ValeursMontures>) => void;
 }) {
-  const niveau = Math.min(niveauLot(lot, ctx), ctx.niveauCible);
-  const [brouillon, setBrouillon] = useState<Brouillon | null>(null);
-  const edition = brouillon !== null;
-  const serenite = edition ? borne(Number(brouillon.serenite.replace(/[^\d-]/g, '')), SERENITE_MIN, SERENITE_MAX) : lot.serenite;
-
-  const ouvrir = () =>
-    setBrouillon({
-      serenite: String(lot.serenite),
-      endurance: String(lot.endurance),
-      maturite: String(lot.maturite),
-      amour: String(lot.amour),
-      niveau: String(niveau),
-    });
-  const maj = (cle: keyof Brouillon) => (t: string) => setBrouillon((b) => (b ? { ...b, [cle]: t } : b));
-  const pas = (delta: number) => setBrouillon((b) => (b ? { ...b, serenite: String(borne(serenite + delta, SERENITE_MIN, SERENITE_MAX)) } : b));
+  const niveau = niveauLot(lot, ctx);
+  const [brouillon, setBrouillon] = useState<Partial<Brouillon> | null>(null);
+  const [confirmation, setConfirmation] = useState(false);
+  const initial: ValeursMontures = { serenite: lot.serenite, endurance: lot.endurance, maturite: lot.maturite, amour: lot.amour, niveau };
+  const saisie = (cle: keyof Brouillon) => brouillon?.[cle] ?? String(initial[cle]);
+  const modifiees: Partial<ValeursMontures> = {};
+  let invalide = false;
+  for (const cle of Object.keys(brouillon ?? {}) as (keyof Brouillon)[]) {
+    const nombre = lireEntier(saisie(cle));
+    if (nombre === undefined) invalide = true;
+    else if (nombre !== initial[cle]) modifiees[cle] = nombre;
+  }
+  const appliquerPossible = !invalide && Object.keys(modifiees).length > 0;
+  const valeur = (cle: keyof Brouillon, min: number, max: number) => borne(lireEntier(saisie(cle)) ?? initial[cle], min, max);
+  const serenite = valeur('serenite', SERENITE_MIN, SERENITE_MAX);
+  const maj = (cle: keyof Brouillon) => (t: string) => setBrouillon((b) => ({ ...b, [cle]: t }));
+  const pas = (delta: number) => maj('serenite')(String(borne(serenite + delta, SERENITE_MIN, SERENITE_MAX)));
   const valider = () => {
-    if (!brouillon) return;
-    onAjuster(valeursDepuisSaisie(brouillon, ctx.niveauDepart));
+    if (!appliquerPossible) return;
+    onAjuster(modifiees);
     setBrouillon(null);
+    setConfirmation(false);
   };
 
   const lignes = [
-    ...CARACTERISTIQUES.map((c) => ({ cle: c as keyof Brouillon, nom: INFO_SUIVI[c].nom, couleur: INFO_SUIVI[c].couleur, valeur: lot[c], max: CARACTERISTIQUE_MAX })),
-    { cle: 'niveau' as const, nom: 'Niveau', couleur: couleurs.xp, valeur: niveau, max: ctx.niveauCible },
+    ...CARACTERISTIQUES.map((c) => ({ cle: c, nom: INFO_SUIVI[c].nom, couleur: INFO_SUIVI[c].couleur, max: CARACTERISTIQUE_MAX })),
+    { cle: 'niveau' as const, nom: 'Niveau', couleur: couleurs.xp, max: NIVEAU_MAX_MONTURE },
   ];
 
   return (
@@ -97,99 +120,98 @@ export default function BlocMontures({
         <Text style={styles.titre} accessibilityRole="header">
           Tes montures
         </Text>
-        {edition ? (
-          <View style={styles.boutons}>
-            <Pressable onPress={() => setBrouillon(null)} style={styles.bouton} accessibilityRole="button">
-              <Text style={styles.boutonTexte}>Annuler</Text>
-            </Pressable>
-            <Pressable onPress={valider} style={[styles.bouton, styles.boutonOk]} accessibilityRole="button">
-              <Text style={[styles.boutonTexte, { color: couleurs.surAccent, fontWeight: '900' }]}>OK</Text>
-            </Pressable>
-          </View>
-        ) : (
-          <Pressable onPress={ouvrir} style={[styles.bouton, styles.boutonAjuster]} accessibilityRole="button">
-            <Text style={[styles.boutonTexte, { color: couleurs.accent }]}>Ajuster selon le jeu</Text>
+        {brouillon && <View style={styles.boutons}>
+          <Pressable onPress={() => setBrouillon(null)} style={styles.bouton} accessibilityRole="button">
+            <Text style={styles.boutonTexte}>Annuler</Text>
           </Pressable>
-        )}
+          <Pressable disabled={!appliquerPossible} onPress={() => etapeEnCours ? setConfirmation(true) : valider()}
+            style={[styles.bouton, styles.boutonOk, !appliquerPossible && styles.inactif]} accessibilityRole="button">
+            <Text style={[styles.boutonTexte, { color: couleurs.surAccent, fontWeight: '900' }]}>Appliquer</Text>
+          </Pressable>
+        </View>}
       </View>
 
       <View style={styles.ligneSerenite}>
         <Text style={styles.libelle}>Sérénité</Text>
-        {edition ? (
-          <View style={styles.pas}>
-            <Pressable onPress={() => pas(-PAS_SERENITE)} style={styles.rond} accessibilityRole="button" accessibilityLabel="Sérénité moins 500">
-              <Text style={styles.rondTexte}>−</Text>
-            </Pressable>
-            <Champ valeur={brouillon.serenite} onChange={maj('serenite')} libelle="Sérénité" large />
-            <Pressable onPress={() => pas(PAS_SERENITE)} style={styles.rond} accessibilityRole="button" accessibilityLabel="Sérénité plus 500">
-              <Text style={styles.rondTexte}>+</Text>
-            </Pressable>
-          </View>
-        ) : (
-          <Text style={styles.valeurSerenite}>
-            {formatSerenite(lot.serenite)}
-            {cible !== undefined && cible !== lot.serenite ? <Text style={styles.cible}>{`  → ${formatSerenite(cible)}`}</Text> : null}
-          </Text>
-        )}
+        <View style={styles.pas}>
+          <Pressable onPress={() => pas(-PAS_SERENITE)} style={styles.rond} accessibilityRole="button" accessibilityLabel="Sérénité moins 500">
+            <Text style={styles.rondTexte}>−</Text>
+          </Pressable>
+          <Champ valeur={saisie('serenite')} onChange={maj('serenite')} libelle="Sérénité" large />
+          <Pressable onPress={() => pas(PAS_SERENITE)} style={styles.rond} accessibilityRole="button" accessibilityLabel="Sérénité plus 500">
+            <Text style={styles.rondTexte}>+</Text>
+          </Pressable>
+        </View>
       </View>
-      <RegleSerenite serenite={serenite} cible={edition ? undefined : cible} compact />
+      <RegleSerenite
+        serenite={serenite}
+        compact
+        edition={{ pas: PAS_CURSEUR_SERENITE, onChange: (valeur) => maj('serenite')(String(valeur)) }}
+      />
       <Text style={styles.phrase}>{phraseSerenite(serenite)}</Text>
 
       <View style={styles.grille}>
         {lignes.map((l) => (
           <View key={l.cle} style={styles.case}>
             <View style={styles.caseTete}>
-              <Text style={[styles.libelle, { color: l.couleur }]}>{l.nom}</Text>
-              {edition ? (
-                <Champ valeur={brouillon[l.cle]} onChange={maj(l.cle)} libelle={l.nom} />
-              ) : (
-                <Text style={[styles.valeur, l.valeur === 0 && { color: couleurs.texteFaible }]}>
-                  {l.cle === 'niveau' ? `${l.valeur} / ${l.max}` : formatPoints(l.valeur)}
-                  {l.valeur >= l.max ? ' ✓' : ''}
-                </Text>
-              )}
+              <Text style={styles.libelle}>{l.nom}</Text>
+              <Champ valeur={saisie(l.cle)} onChange={maj(l.cle)} libelle={l.nom} />
             </View>
-            <View style={styles.piste}>
-              <View style={[styles.barre, { width: `${Math.max(0, Math.min(1, l.valeur / Math.max(1, l.max))) * 100}%`, backgroundColor: l.couleur }]} />
-            </View>
+            <JaugeEditable
+              valeur={valeur(l.cle, l.cle === 'niveau' ? ctx.niveauDepart : 0, l.max)}
+              min={l.cle === 'niveau' ? ctx.niveauDepart : 0}
+              max={l.max}
+              pas={l.cle === 'niveau' ? 1 : 100}
+              couleur={l.couleur}
+              libelle={`Ajuster ${l.nom.toLowerCase()}`}
+              onChange={maj(l.cle)}
+            />
           </View>
         ))}
       </View>
-      {edition && <Text style={styles.aide}>Lis les valeurs dans la fiche d’une monture en jeu. Le parcours se recalcule dès que tu valides.</Text>}
+      {invalide && <Text style={styles.erreur} accessibilityRole="alert">Saisis un nombre entier dans chaque champ modifié.</Text>}
+      <Confirmation
+        visible={confirmation}
+        titre="Appliquer les corrections"
+        message="Le minuteur de l’étape s’arrêtera. Les valeurs corrigées, la progression acquise et le carburant restant serviront à calculer la prochaine étape."
+        libelle="Arrêter et appliquer"
+        onConfirmer={valider}
+        onFermer={() => setConfirmation(false)}
+      />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  bloc: { backgroundColor: couleurs.carte, borderRadius: rayon.xl, paddingVertical: s(9), paddingHorizontal: s(12), gap: s(6) },
-  tete: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: s(8) },
+  bloc: { backgroundColor: couleurs.carte, borderRadius: rayon.xl, paddingVertical: s(6), paddingHorizontal: s(10), gap: s(4) },
+  tete: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: s(8), minHeight: s(30) },
   titre: { color: couleurs.texte, fontSize: s(14.5), fontWeight: '900' },
   boutons: { flexDirection: 'row', gap: s(6) },
   bouton: { height: s(30), paddingHorizontal: s(11), borderRadius: s(15), borderWidth: 1, borderColor: couleurs.liseretVif, alignItems: 'center', justifyContent: 'center' },
-  boutonAjuster: { borderColor: 'rgba(233,184,74,0.35)' },
   boutonOk: { backgroundColor: couleurs.accent, borderColor: couleurs.accent },
+  inactif: { opacity: 0.48 },
+  erreur: { color: couleurs.danger, fontSize: s(12) },
   boutonTexte: { color: couleurs.texte, fontSize: s(12.5), fontWeight: '800' },
   ligneSerenite: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   libelle: { color: couleurs.texteAttenue, fontSize: s(12), fontWeight: '700' },
-  valeurSerenite: { color: couleurs.texte, fontSize: s(15.5), fontWeight: '900', fontVariant: ['tabular-nums'] },
-  cible: { color: couleurs.accent, fontSize: s(12.5), fontWeight: '700' },
   pas: { flexDirection: 'row', alignItems: 'center', gap: s(4) },
   rond: { width: s(30), height: s(30), borderRadius: s(15), borderWidth: 1, borderColor: couleurs.liseretVif, alignItems: 'center', justifyContent: 'center' },
   rondTexte: { color: couleurs.texte, fontSize: s(16), fontWeight: '800' },
   phrase: { color: couleurs.texte, fontSize: s(12), fontWeight: '600' },
-  grille: { flexDirection: 'row', flexWrap: 'wrap', columnGap: s(14), rowGap: s(6) },
-  case: { flexBasis: '45%', flexGrow: 1, gap: s(3) },
+  grille: { flexDirection: 'row', flexWrap: 'wrap', columnGap: s(12), rowGap: s(3) },
+  case: { flexBasis: '45%', flexGrow: 1 },
   caseTete: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: s(4), minHeight: s(22) },
-  valeur: { color: couleurs.texte, fontSize: s(12.5), fontWeight: '800', fontVariant: ['tabular-nums'] },
-  piste: { height: s(5), borderRadius: s(3), backgroundColor: couleurs.piste, overflow: 'hidden' },
-  barre: { height: '100%', borderRadius: s(3) },
+  jauge: { height: s(22), justifyContent: 'center' },
+  piste: { height: s(3), marginHorizontal: 10, borderRadius: s(2), backgroundColor: couleurs.piste },
+  remplissage: { height: '100%', borderRadius: s(2) },
+  poignee: { position: 'absolute', top: -s(3.5), width: s(10), height: s(10), marginLeft: -s(5), borderRadius: s(5), borderWidth: 1, borderColor: couleurs.fond },
   champ: {
     width: s(68),
-    height: s(30),
+    height: s(26),
     paddingHorizontal: s(6),
     borderRadius: s(8),
     borderWidth: 1,
-    borderColor: couleurs.accent,
+    borderColor: couleurs.liseretVif,
     backgroundColor: couleurs.fond,
     color: couleurs.texte,
     fontSize: s(13),
@@ -197,5 +219,4 @@ const styles = StyleSheet.create({
     textAlign: 'right',
     fontVariant: ['tabular-nums'],
   },
-  aide: { color: couleurs.texteAttenue, fontSize: s(11.5), fontWeight: '600' },
 });

@@ -46,15 +46,15 @@ function Tube({
   const bord = choisie ? '#ffffff' : active || aActiver ? couleurs.accent : 'rgba(255,240,220,0.08)';
   const contenu = (
     <>
-      <Text style={[styles.palier, { color: active || aActiver ? couleurs.accent : '#6a5c4c' }]}>{palier}</Text>
+      <View style={styles.etiquette}>
+        <Text style={[styles.initiale, { color: active || aActiver ? info.couleur : couleurs.texteAttenue }]}>{INITIALES[jauge]}</Text>
+        <Text style={[styles.palier, { color: active || aActiver ? couleurs.accent : couleurs.texteAttenue }]}>{palier}</Text>
+      </View>
       <View style={styles.cadreTube}>
         <View style={[styles.tube, { borderColor: bord }]}>
           <View style={[styles.remplissage, { height: `${ratio * 100}%`, backgroundColor: couleur }]} />
         </View>
         {aActiver && <Animated.View pointerEvents="none" style={[styles.halo, { opacity: pulsation }]} />}
-      </View>
-      <View style={[styles.pastille, { borderColor: couleur }]}>
-        <Text style={[styles.initiale, { color: couleur }]}>{INITIALES[jauge]}</Text>
       </View>
       <Text style={[styles.valeur, { color: active || aActiver ? couleurs.texte : '#6a5c4c' }]}>{carburantCourt(niveau)}</Text>
     </>
@@ -84,7 +84,6 @@ export default function PanneauJeu({
   actives,
   aActiver = [],
   choisie = null,
-  consigne,
   onToucher,
 }: {
   carburant: Carburant;
@@ -95,7 +94,6 @@ export default function PanneauJeu({
   /** Jauge sélectionnée (recharge sur place). */
   choisie?: JaugeType | null;
   /** Ligne sous les tubes (« Active en jeu les jauges qui clignotent »). */
-  consigne?: string;
   onToucher?: (j: JaugeType) => void;
 }) {
   const reduit = useMouvementReduit();
@@ -132,18 +130,18 @@ export default function PanneauJeu({
           />
         ))}
       </View>
-      {consigne && <Text style={styles.consigne}>{consigne}</Text>}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  panneau: { backgroundColor: '#1f1913', borderRadius: rayon.xl, paddingTop: s(6), paddingBottom: s(4), paddingHorizontal: s(4), gap: s(4) },
+  panneau: { paddingVertical: s(3) },
   rangee: { flexDirection: 'row', justifyContent: 'space-between' },
   colonne: { flex: 1, alignItems: 'center', gap: s(2), paddingVertical: s(2), borderRadius: rayon.md },
   colonneChoisie: { backgroundColor: 'rgba(233,184,74,0.14)' },
+  etiquette: { flexDirection: 'row', alignItems: 'baseline', gap: s(3) },
   palier: { fontSize: s(10.5), fontWeight: '800', fontVariant: ['tabular-nums'] },
-  cadreTube: { width: s(16), height: s(54) },
+  cadreTube: { width: s(14), height: s(34) },
   tube: {
     flex: 1,
     borderRadius: s(8),
@@ -154,8 +152,6 @@ const styles = StyleSheet.create({
   },
   remplissage: { width: '100%', borderRadius: s(5) },
   halo: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, borderRadius: s(8), borderWidth: 2, borderColor: '#f6d27a', margin: -s(3) },
-  pastille: { width: s(22), height: s(22), borderRadius: s(11), borderWidth: 1.5, alignItems: 'center', justifyContent: 'center' },
   initiale: { fontSize: s(9.5), fontWeight: '900' },
   valeur: { fontSize: s(10.5), fontWeight: '700', fontVariant: ['tabular-nums'] },
-  consigne: { textAlign: 'center', color: couleurs.accent, fontSize: s(12), fontWeight: '700' },
 });
